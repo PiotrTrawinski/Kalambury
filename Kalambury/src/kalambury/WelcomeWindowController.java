@@ -10,11 +10,12 @@ import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.Stage;
 
 
 
 public class WelcomeWindowController implements Initializable {
-    
+    private Kalambury kalambury;
     @FXML Label label_create_game;
     @FXML Label label_join_game;
     public void updateTime(){
@@ -22,9 +23,16 @@ public class WelcomeWindowController implements Initializable {
     }
     
     public void onCreateGameClicked(){
-        System.out.println("create");
+        try{kalambury.showMainWindow();}
+        catch(Exception ex){}
+        Stage stage = (Stage) label_create_game.getScene().getWindow();
+        //stage.close();
     }
     
+    public void setKalambury(Kalambury k){
+        System.out.print("Set kalambury");
+        kalambury = k;
+    }
     public void onJoinGameClicked(){
         System.out.println("join");
         
