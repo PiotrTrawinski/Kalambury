@@ -15,7 +15,7 @@
 
 .table-view .table-column{
     -fx-border-color: #C8C8C8;
-    -fx-border-width: 1 2 2 2;
+    -fx-border-width: 1 2 0 2;
 }
 
 .table-view .table-cell{

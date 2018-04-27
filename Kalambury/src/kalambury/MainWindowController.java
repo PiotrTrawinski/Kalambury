@@ -43,7 +43,12 @@ public class MainWindowController implements Initializable {
     @FXML private TextArea chatLog;
     @FXML private TextField chatInput;
     
-    
+    @FXML private Button playButton;
+    @FXML private Button stopButton;
+    @FXML private Button pauseButton;
+    @FXML private Button skipButton;
+    @FXML private Button skipRequestButton;
+    @FXML private Button quitGameButton;
     
     /*
         Canvas FXML functions
@@ -66,7 +71,14 @@ public class MainWindowController implements Initializable {
             canvas.decreaseLineThickness();
         }
     }
-   
+    
+    @FXML public void onQuitGameButtonPressed(){
+        playButton.setVisible(!playButton.isVisible());
+        stopButton.setVisible(!stopButton.isVisible());
+        pauseButton.setVisible(!pauseButton.isVisible());
+        skipButton.setVisible(!skipButton.isVisible());
+        skipRequestButton.setVisible(!skipRequestButton.isVisible());
+    }
     
     @FXML private void handleButtonAction(ActionEvent event) {
         
