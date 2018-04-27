@@ -80,8 +80,6 @@ public class MainWindowController implements Initializable {
         skipRequestButton.setVisible(!skipRequestButton.isVisible());
     }
     
-    
-    
     @FXML private void handleButtonAction(ActionEvent event) {
         
     }
