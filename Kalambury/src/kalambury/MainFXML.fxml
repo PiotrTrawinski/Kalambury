@@ -1,12 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.canvas.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
+
 <?import kalambury.TimeLabel?>
-<AnchorPane id="AnchorPane" prefHeight="200" prefWidth="320" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/9.0.4" fx:controller="kalambury.MainWindowController">
+<?import kalambury.DrawingBoard?>
+
+<GridPane prefHeight="467.0" prefWidth="512.0" onKeyPressed="#onKeyPressed" onMouseDragged="#onMouseDragged" onMouseReleased="#onMouseReleased" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kalambury.MainWindowController">
+   <columnConstraints>
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="127.0" minWidth="10.0" prefWidth="72.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="408.0" minWidth="10.0" prefWidth="365.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="135.0" minWidth="10.0" prefWidth="53.0" />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints maxHeight="98.0" minHeight="8.0" prefHeight="32.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="283.0" minHeight="10.0" prefHeight="92.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="230.0" minHeight="10.0" prefHeight="218.0" vgrow="SOMETIMES" />
+   </rowConstraints>
    <children>
-      <TimeLabel fx:id="label_time" layoutX="196.0" layoutY="59.0" text="Label" />
-      <Button fx:id="button_test" layoutX="108.0" layoutY="100.0" mnemonicParsing="false" text="Button" />
+      <TimeLabel fx:id="label_time" text="Label" GridPane.columnIndex="2" />
+      <Button fx:id="button_test" mnemonicParsing="false" text="Button" GridPane.rowIndex="2" />
+      <Pane fx:id="pane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #FFAA88;" GridPane.columnIndex="1" GridPane.rowIndex="1">
+         <children>
+            <DrawingBoard fx:id="canvas" height="135.0" onMousePressed="#onMousePressedInDrawingBoard" width="304.0" />
+         </children>
+      </Pane>
+      <Canvas fx:id="virtualTableCanvas" height="375.0" width="500.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
    </children>
-</AnchorPane>
+</GridPane>

@@ -14,6 +14,9 @@ public class Kalambury extends Application {
         
         Scene scene = new Scene(root);
         
+        // for mouse/keyboard events to work properly
+        scene.getRoot().requestFocus();
+        
         stage.setScene(scene);
         stage.show();
     }
