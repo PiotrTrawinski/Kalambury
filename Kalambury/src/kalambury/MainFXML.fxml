@@ -3,10 +3,10 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
-
+<?import kalambury.TimeLabel?>
 <AnchorPane id="AnchorPane" prefHeight="200" prefWidth="320" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/9.0.4" fx:controller="kalambury.MainWindowController">
    <children>
-      <Label fx:id="label_time" layoutX="196.0" layoutY="59.0" text="Label" />
+      <TimeLabel fx:id="label_time" layoutX="196.0" layoutY="59.0" text="Label" />
       <Button fx:id="button_test" layoutX="108.0" layoutY="100.0" mnemonicParsing="false" text="Button" />
    </children>
 </AnchorPane>
