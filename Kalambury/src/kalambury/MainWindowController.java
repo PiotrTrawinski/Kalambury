@@ -43,6 +43,8 @@ public class MainWindowController implements Initializable {
     @FXML private TextArea chatLog;
     @FXML private TextField chatInput;
     
+    
+    
     /*
         Canvas FXML functions
     */
@@ -64,8 +66,7 @@ public class MainWindowController implements Initializable {
             canvas.decreaseLineThickness();
         }
     }
-    
-    
+   
     
     @FXML private void handleButtonAction(ActionEvent event) {
         

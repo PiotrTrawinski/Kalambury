@@ -11,8 +11,12 @@ public class Kalambury extends Application {
     Stage stage;
     @Override
     public void start(Stage stage) throws Exception {
-        //Parent root = FXMLLoader.load(getClass().getResource("WelcomeWindowFXML.fxml"));
-        Parent root = FXMLLoader.load(getClass().getResource("WelcomeWindowFXML.fxml"));
+        
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("WelcomeWindowFXML.fxml"));
+        Parent root = fxmlLoader.load();
+        WelcomeWindowController controller = fxmlLoader.getController();
+        controller.setKalambury(this);
+        
         
         Scene scene = new Scene(root);
         // for mouse/keyboard events to work properly
@@ -21,14 +25,29 @@ public class Kalambury extends Application {
         stage.setTitle("Kalambury");
         stage.show();
         this.stage = stage;
-       
         
         // window's smallest size is the one it starts with
         stage.setMinHeight(stage.getHeight());
         stage.setMinWidth(stage.getWidth());
+
     }
-    public void closeWelcomeWindow(){
-        stage.close();
+    
+    
+    public void showMainWindow() throws Exception{
+        System.out.print("new window");
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("MainWindowFXML.fxml"));
+        Parent root = fxmlLoader.load();
+        
+        Scene scene = new Scene(root);
+        scene.getRoot().requestFocus();
+        
+        this.stage = new Stage();
+        stage.setScene(scene);
+        stage.setTitle("Kalambury");
+        stage.show();
+        stage.setMinHeight(stage.getHeight());
+        stage.setMinWidth(stage.getWidth());
+        
     }
     
     
