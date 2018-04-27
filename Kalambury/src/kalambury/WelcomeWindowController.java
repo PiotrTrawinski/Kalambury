@@ -21,28 +21,6 @@ public class WelcomeWindowController implements Initializable {
 
     }
     
-    
-    // trzeba zrobic funkcje zeby zmienialo tylko 1 style
-    public void onCreateGameMouseEnter(){
-        label_create_game.setStyle("-fx-background-color:#666666");
-        label_create_game.setCursor(Cursor.HAND);
-    }
-    
-    public void onCreateGameMouseExit(){
-        label_create_game.setStyle("-fx-background-color:#C8C8C8");
-    }
-    
-    
-    
-    public void onJoinGameMouseEnter(){
-        label_join_game.setStyle("-fx-background-color:#666666");
-        label_join_game.setCursor(Cursor.HAND);
-    }
-    
-    public void onJoinGameMouseExit(){
-        label_join_game.setStyle("-fx-background-color:#C8C8C8");
-    }
-    
     public void onCreateGameClicked(){
         System.out.println("create");
     }
