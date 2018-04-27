@@ -11,7 +11,7 @@ public class DrawingBoard extends ResizableCanvas{
     private final int maxHeight = 375;
     private final ArrayList<Integer> virtualPixelTable = new ArrayList<>();
     PixelWriter pixelWriter;
-    Canvas virtualTableView;
+    //Canvas virtualTableView;
     boolean inDrawingMode = false;
     int mouseLastPosX = 0;
     int mouseLastPosY = 0;
@@ -54,12 +54,12 @@ public class DrawingBoard extends ResizableCanvas{
         }
     }
     
-    public void setVirtualTableCanvas(Canvas canvas){
+    /*public void setVirtualTableCanvas(Canvas canvas){
         virtualTableView = canvas;
         GraphicsContext gc = virtualTableView.getGraphicsContext2D();
         gc.setFill(Color.GRAY);
         gc.fillRect(0, 0, virtualTableView.getWidth(), virtualTableView.getHeight());
-    }
+    }*/
     
     private void updatePixelInCanvas(int xToUpdate, int yToUpdate, double xRatio, double yRatio){
         ArrayList<Pixel> pixels = getCorrespondingVirtualTablePixels(xToUpdate, yToUpdate, xRatio, yRatio);
@@ -113,10 +113,10 @@ public class DrawingBoard extends ResizableCanvas{
     }
     
     private void sendToServer(ArrayList<Pixel> newPixels){
-        PixelWriter pixelWriter = virtualTableView.getGraphicsContext2D().getPixelWriter();
+        /*PixelWriter pixelWriter = virtualTableView.getGraphicsContext2D().getPixelWriter();
         for(Pixel pixel : newPixels){
             pixelWriter.setColor(pixel.x, pixel.y, Color.rgb(pixel.color, pixel.color, pixel.color));
-        }
+        }*/
     }
     
     private void createLine(int x1, int y1, int x2, int y2, int thickness){
