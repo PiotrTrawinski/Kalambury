@@ -19,6 +19,10 @@ public class Kalambury extends Application {
         
         stage.setScene(scene);
         stage.show();
+        
+        // window's smallest size is the one it starts with
+        stage.setMinHeight(stage.getHeight());
+        stage.setMinWidth(stage.getWidth());
     }
 
     public static void main(String[] args) {

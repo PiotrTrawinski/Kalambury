@@ -8,6 +8,12 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -19,10 +25,23 @@ public class MainWindowController implements Initializable {
     @FXML private TimeLabel label_time;
     @FXML private Button button_test;
     
-    @FXML DrawingBoard canvas;
-    @FXML Canvas virtualTableCanvas;
-    @FXML Pane pane;
+    @FXML private DrawingBoard canvas;
+    @FXML private Pane pane;
     
+    @FXML private Slider thicknessSlider;
+    @FXML private Label thicknessLabel;
+    
+    @FXML private Pane chosenColorPane;
+    @FXML private Pane colorChooserPane;
+    
+    @FXML private Label TurnLabel;
+    
+    @FXML private TableView scoreTableView;
+    @FXML private TableColumn scoreTablePlayerColumn;
+    @FXML private TableColumn scoreTablePointsColumn;
+    
+    @FXML private TextArea chatLog;
+    @FXML private TextField chatInput;
     
     /*
         Canvas FXML functions
@@ -73,7 +92,6 @@ public class MainWindowController implements Initializable {
         button_test.setOnAction(this::test_button_clicked);
         
         canvas.bindSize(pane.widthProperty(), pane.heightProperty());
-        canvas.setAspectRatio(4.0/3.0);
-        canvas.setVirtualTableCanvas(virtualTableCanvas);
+        canvas.setAspectRatio(16.0/9.0);
     }    
 }
