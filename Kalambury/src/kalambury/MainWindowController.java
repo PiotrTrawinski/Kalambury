@@ -1,34 +1,54 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package kalambury;
 
 import java.net.URL;
 import java.util.ResourceBundle;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.concurrent.Task;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 
-/**
- *
- * @author Piotr
- */
+
 public class MainWindowController implements Initializable {
     
     @FXML private TimeLabel label_time;
     @FXML private Button button_test;
     
-    @FXML
-    private void handleButtonAction(ActionEvent event) {
+    @FXML DrawingBoard canvas;
+    @FXML Canvas virtualTableCanvas;
+    @FXML Pane pane;
+    
+    
+    /*
+        Canvas FXML functions
+    */
+    @FXML public void onMouseDragged(MouseEvent me){
+        Point2D canvasLocation = canvas.sceneToLocal(me.getX(), me.getY());
+        canvas.mouseMovedTo((int)canvasLocation.getX(), (int)canvasLocation.getY());
+    }
+    @FXML public void onMousePressedInDrawingBoard(MouseEvent me){
+        canvas.startDrawing((int)me.getX(), (int)me.getY());
+    }
+    @FXML public void onMouseReleased(MouseEvent me){
+        canvas.stopDrawing();
+    }
+    @FXML public void onKeyPressed(KeyEvent ke){
+        if(ke.getCode() == KeyCode.P){
+            canvas.increaseLineThickness();
+        } 
+        else if(ke.getCode() == KeyCode.MINUS){
+            canvas.decreaseLineThickness();
+        }
+    }
+    
+    
+    
+    @FXML private void handleButtonAction(ActionEvent event) {
         
     }
     
@@ -48,10 +68,12 @@ public class MainWindowController implements Initializable {
     public void updateTime(){
 
     }
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
+    
+    @Override public void initialize(URL url, ResourceBundle rb) {
         button_test.setOnAction(this::test_button_clicked);
         
+        canvas.bindSize(pane.widthProperty(), pane.heightProperty());
+        canvas.setAspectRatio(4.0/3.0);
+        canvas.setVirtualTableCanvas(virtualTableCanvas);
     }    
-    
 }
