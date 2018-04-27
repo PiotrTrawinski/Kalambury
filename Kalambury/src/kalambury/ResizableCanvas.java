@@ -10,8 +10,8 @@ public class ResizableCanvas extends Canvas {
         
         protected int drawX = 0;
         protected int drawY = 0;
-        protected double drawWidth  = 0;
-        protected double drawHeight = 0;
+        protected int drawWidth  = 0;
+        protected int drawHeight = 0;
     
         
         public ResizableCanvas() {
@@ -19,21 +19,24 @@ public class ResizableCanvas extends Canvas {
             widthProperty().addListener(evt -> onResize());
             heightProperty().addListener(evt -> onResize());
             
-            drawWidth = getWidth();
-            drawHeight = getHeight();
+            drawWidth  = (int)Math.floor(getWidth());
+            drawHeight = (int)Math.floor(getHeight());
         }
 
         private void setDrawingArea(){
-            if(getWidth()/getHeight() > aspectRatio){
-                drawWidth = aspectRatio*getHeight();
-                drawHeight = getHeight();
-                drawX = (int)((getWidth() - drawWidth)/2);
+            int width = (int)Math.floor(getWidth());
+            int height = (int)Math.floor(getHeight());
+            
+            if((double)width/(double)height > aspectRatio){
+                drawWidth  = (int)Math.floor(aspectRatio * height);
+                drawHeight = height;
+                drawX = (width - drawWidth)/2;
                 drawY = 0;
             } else {
-                drawWidth = getWidth();
-                drawHeight = getWidth()/aspectRatio;
+                drawWidth = width;
+                drawHeight = (int)Math.floor((double)width/aspectRatio);
                 drawX = 0;
-                drawY = (int)((getHeight() - drawHeight)/2);
+                drawY = (height - drawHeight)/2;
             }
         }
         

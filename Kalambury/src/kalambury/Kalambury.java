@@ -11,7 +11,8 @@ public class Kalambury extends Application {
     Stage stage;
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("WelcomeWindowFXML.fxml"));
+        //Parent root = FXMLLoader.load(getClass().getResource("WelcomeWindowFXML.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("MainFXML.fxml"));
         
         Scene scene = new Scene(root);
         // for mouse/keyboard events to work properly

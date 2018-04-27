@@ -45,9 +45,9 @@
          <font>
             <Font name="System Bold" size="15.0" />
          </font></Button>
-      <Pane fx:id="pane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #BBBBBB; -fx-border-color: #C8C8C8; -fx-border-width: 2;" GridPane.columnSpan="5" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
+      <Pane fx:id="pane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #BBBBBB; -fx-border-color: #C8C8C8; -fx-border-width: 2;" GridPane.columnSpan="5" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.vgrow="ALWAYS">
          <children>
-            <DrawingBoard fx:id="canvas" height="135.0" onMousePressed="#onMousePressedInDrawingBoard" width="304.0" />
+            <DrawingBoard fx:id="canvas" height="273.0" onMousePressed="#onMousePressedInDrawingBoard" width="485.0" />
          </children>
       </Pane>
       <Slider fx:id="thicknessSlider" blockIncrement="1.0" majorTickUnit="1.0" max="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" min="1.0" minorTickCount="0" showTickMarks="true" style="-fx-border-color: #C8C8C8; -fx-border-width: 0 2 2 2;" value="1.0" GridPane.columnSpan="2" GridPane.hgrow="NEVER" GridPane.rowIndex="1" GridPane.vgrow="NEVER" />

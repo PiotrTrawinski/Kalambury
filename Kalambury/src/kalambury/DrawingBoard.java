@@ -1,17 +1,14 @@
 package kalambury;
 
 import java.util.ArrayList;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
 
 public class DrawingBoard extends ResizableCanvas{
-    private final int maxWidth = 500;
-    private final int maxHeight = 375;
+    private final int maxWidth = 3200;
+    private final int maxHeight = 1800;
     private final ArrayList<Integer> virtualPixelTable = new ArrayList<>();
     PixelWriter pixelWriter;
-    //Canvas virtualTableView;
     boolean inDrawingMode = false;
     int mouseLastPosX = 0;
     int mouseLastPosY = 0;
@@ -54,13 +51,6 @@ public class DrawingBoard extends ResizableCanvas{
         }
     }
     
-    /*public void setVirtualTableCanvas(Canvas canvas){
-        virtualTableView = canvas;
-        GraphicsContext gc = virtualTableView.getGraphicsContext2D();
-        gc.setFill(Color.GRAY);
-        gc.fillRect(0, 0, virtualTableView.getWidth(), virtualTableView.getHeight());
-    }*/
-    
     private void updatePixelInCanvas(int xToUpdate, int yToUpdate, double xRatio, double yRatio){
         ArrayList<Pixel> pixels = getCorrespondingVirtualTablePixels(xToUpdate, yToUpdate, xRatio, yRatio);
         int avarageColor = 0;
@@ -81,12 +71,12 @@ public class DrawingBoard extends ResizableCanvas{
     
     @Override protected void onResize(){
         super.onResize();
-        double xRatio = drawWidth / (double)maxWidth;
-        double yRatio = drawHeight / (double)maxHeight;
+        double xRatio = (double)drawWidth / (double)maxWidth;
+        double yRatio = (double)drawHeight / (double)maxHeight;
         
         if(xRatio != 0 && yRatio != 0){
-            for(int y = 0; y < Math.floor(drawHeight); ++y){
-                for(int x = 0; x < Math.floor(drawWidth); ++x){
+            for(int y = 0; y < drawHeight; ++y){
+                for(int x = 0; x < drawWidth; ++x){
                     updatePixelInCanvas(x, y, xRatio, yRatio);
                 }
             }
@@ -96,7 +86,10 @@ public class DrawingBoard extends ResizableCanvas{
     private ArrayList<Pixel> getCorrespondingVirtualTablePixels(int xCanvas, int yCanvas, double xRatio, double yRatio){
         ArrayList<Pixel> pixels = new ArrayList<>();
         
-        int startX = (int) Math.ceil(xCanvas/xRatio);
+        xRatio += 0.0001;
+        yRatio += 0.0001;
+        
+        int startX = (int) Math.ceil(xCanvas/(xRatio));
         int startY = (int) Math.ceil(yCanvas/yRatio);
         
         int x = startX;
@@ -113,10 +106,6 @@ public class DrawingBoard extends ResizableCanvas{
     }
     
     private void sendToServer(ArrayList<Pixel> newPixels){
-        /*PixelWriter pixelWriter = virtualTableView.getGraphicsContext2D().getPixelWriter();
-        for(Pixel pixel : newPixels){
-            pixelWriter.setColor(pixel.x, pixel.y, Color.rgb(pixel.color, pixel.color, pixel.color));
-        }*/
     }
     
     private void createLine(int x1, int y1, int x2, int y2, int thickness){
@@ -145,7 +134,7 @@ public class DrawingBoard extends ResizableCanvas{
     private void drawPixel(ArrayList<Pixel> pixels, int x, int y, int color, int thickness){
         for(int i = x-thickness; i <= x+thickness; ++i){
             for(int j = y-thickness; j <= y+thickness; ++j){
-                if(i >= drawX && i < drawX+Math.round(drawWidth) && j >= drawY && j < drawY+Math.round(drawHeight)){
+                if(i >= drawX && i < drawX+drawWidth && j >= drawY && j < drawY+drawHeight){
                     pixels.add(new Pixel(i-drawX ,j-drawY, color));
                 }
             }
