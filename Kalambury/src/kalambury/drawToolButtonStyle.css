@@ -1,0 +1,21 @@
+.button{
+    -fx-background-color: 
+        #BBBBBB,
+        linear-gradient(#EEEEEE, #BBBBBB),
+        linear-gradient(#FFFFFF 0%, #EEEEEE 49%, #E2E2E2 50%, #DEDEDE 100%);
+    -fx-cursor:hand;
+}
+
+.button:hover{
+    -fx-background-color: 
+        #AAAAAA,
+        linear-gradient(#DDDDDD, #AAAAAA),
+        linear-gradient(#EEEEEE 0%, #DDDDDD 49%, #D2D2D2 50%, #CECECE 100%);
+    -fx-cursor:hand;
+}
+.button:pressed{
+    -fx-background-color: 
+        #999999,
+        linear-gradient(#CCCCCC, #999999),
+        linear-gradient(#DDDDDD 0%, #CCCCCC 49%, #C2C2C2 50%, #BEBEBE 100%);
+}

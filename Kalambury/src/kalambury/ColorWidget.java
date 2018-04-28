@@ -121,6 +121,13 @@ public class ColorWidget {
     public Color getColor(){
         return fullyChosenColor;
     }
+    
+    public void setColor(Color color){
+        chosenColor = color;
+        brightnessSlider.setValue(brightnessSlider.getMax()/2);
+        updateChosenColor();
+        updateBrightnessCanvas();
+    }
 
     private void chooseColor(int x, int y){
         if(x >= 0 && x < (int)chooser.getWidth() && y >= 0 && y < (int)chooser.getHeight()){
