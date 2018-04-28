@@ -18,15 +18,28 @@ public class WelcomeWindowController implements Initializable {
     private Kalambury kalambury;
     @FXML Label label_create_game;
     @FXML Label label_join_game;
+    @FXML TextField textfield_port;
+    @FXML TextField textfield_ip;
+    @FXML TextField textfield_nick;
+    
     public void updateTime(){
 
     }
     
     public void onCreateGameClicked(){
+        // open main window
         try{kalambury.showMainWindow();}
         catch(Exception ex){System.out.println(ex.getMessage());}
+        
+        // close old window
         Stage stage = (Stage) label_create_game.getScene().getWindow();
-        //stage.close();
+        stage.close();
+        
+        //set the port that server is working on, and start it on a new thread
+        Server.setPort(Integer.parseInt(textfield_port.getText()));
+        Thread serverThread = new Thread(()->Server.start());
+        serverThread.start();
+
     }
     
     public void setKalambury(Kalambury k){
@@ -34,7 +47,10 @@ public class WelcomeWindowController implements Initializable {
         kalambury = k;
     }
     public void onJoinGameClicked(){
-        System.out.println("join");
+        Client.setIP(textfield_ip.getText());
+        Client.setPort(Integer.parseInt(textfield_port.getText()));
+        Client.setNick(textfield_nick.getText());
+        Client.connectToServer();
         
     }
     @Override public void initialize(URL url, ResourceBundle rb) {
