@@ -24,7 +24,7 @@ public class WelcomeWindowController implements Initializable {
     
     public void onCreateGameClicked(){
         try{kalambury.showMainWindow();}
-        catch(Exception ex){}
+        catch(Exception ex){System.out.println(ex.getMessage());}
         Stage stage = (Stage) label_create_game.getScene().getWindow();
         //stage.close();
     }
