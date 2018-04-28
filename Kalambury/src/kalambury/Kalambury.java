@@ -8,25 +8,37 @@ import javafx.stage.Stage;
 
 
 public class Kalambury extends Application {
-    Stage stage;
+    Stage welcomeStage;
+    Stage mainStage;
     @Override
     public void start(Stage stage) throws Exception {
         
+     
+        // Create main window but don't show it
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("MainFXML.fxml"));
+        Parent root = (Parent)loader.load();
+        Scene scene =  new Scene(root);
+        Stage s = new Stage();
+        s.setTitle("Kalambury");
+        s.setScene(scene);
+        mainStage = s;
+        //s.show();
+        
+        
+        // init welcome window
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("WelcomeWindowFXML.fxml"));
-        Parent root = fxmlLoader.load();
+        Parent welcomeRoot = fxmlLoader.load();
         WelcomeWindowController controller = fxmlLoader.getController();
         controller.setKalambury(this);
         
-        
-        Scene scene = new Scene(root);
-        // for mouse/keyboard events to work properly
+        scene = new Scene(welcomeRoot);
         scene.getRoot().requestFocus();
         stage.setScene(scene);
         stage.setTitle("Kalambury");
         stage.show();
-        this.stage = stage;
+        this.welcomeStage = stage;
         
-        // window's smallest size is the one it starts with
+        
         stage.setMinHeight(stage.getHeight());
         stage.setMinWidth(stage.getWidth());
 
@@ -34,19 +46,10 @@ public class Kalambury extends Application {
     
     
     public void showMainWindow() throws Exception{
-        System.out.print("new window");
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("MainWindowFXML.fxml"));
-        Parent root = fxmlLoader.load();
-        
-        Scene scene = new Scene(root);
-        scene.getRoot().requestFocus();
-        
-        this.stage = new Stage();
-        stage.setScene(scene);
-        stage.setTitle("Kalambury");
-        stage.show();
-        stage.setMinHeight(stage.getHeight());
-        stage.setMinWidth(stage.getWidth());
+
+        welcomeStage.close();
+        mainStage.show();
+
         
     }
     
