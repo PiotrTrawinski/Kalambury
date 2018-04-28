@@ -16,6 +16,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 
@@ -30,6 +32,10 @@ public class MainWindowController implements Initializable {
     
     @FXML private Slider thicknessSlider;
     @FXML private Label thicknessLabel;
+    
+    @FXML private Button pencilButton;
+    @FXML private Button colorPickerButton;
+    @FXML private Button bucketButton;
     
     @FXML private Canvas chosenColorView;
     @FXML private Pane chosenColorPane;
@@ -61,7 +67,7 @@ public class MainWindowController implements Initializable {
         Mouse events
     */
     @FXML public void onMousePressedInDrawingBoard(MouseEvent me){
-        drawingBoard.startDrawing((int)me.getX(), (int)me.getY());
+        drawingBoard.mousePressed((int)me.getX(), (int)me.getY());
     }
     @FXML public void onMousePressedInColorChooser(MouseEvent me){
         colorWidget.startChoosing((int)me.getX(), (int)me.getY());
@@ -75,10 +81,29 @@ public class MainWindowController implements Initializable {
         colorWidget.mouseMovedTo((int)colorChooserLocation.getX(), (int)colorChooserLocation.getY());
     }
     @FXML public void onMouseReleased(MouseEvent me){
-        drawingBoard.stopDrawing();
+        drawingBoard.mouseReleased();
         colorWidget.stopChoosing();
     }
     
+    
+    @FXML private void onPencilButtonClicked(){
+        drawingBoard.setDrawingTool(DrawingTool.PENCIL);
+        pencilButton.setStyle("-fx-background-color: #AAAAAA;");
+        colorPickerButton.setStyle("");
+        bucketButton.setStyle("");
+    }
+    @FXML private void onColorPickerButtonClicked(){
+        drawingBoard.setDrawingTool(DrawingTool.COLOR_PICKER);
+        pencilButton.setStyle("");
+        colorPickerButton.setStyle("-fx-background-color: #AAAAAA;");
+        bucketButton.setStyle("");
+    }
+    @FXML private void onBucketButtonClicked(){
+        drawingBoard.setDrawingTool(DrawingTool.BUCKET);
+        pencilButton.setStyle("");
+        colorPickerButton.setStyle("");
+        bucketButton.setStyle("-fx-background-color: #AAAAAA;");
+    }
     
     
     @FXML public void onQuitGameButtonPressed(){
@@ -127,6 +152,15 @@ public class MainWindowController implements Initializable {
                 drawingBoard.setLineThickness(newValue.intValue());
             }
         });
+        
+        // drawing tools
+        Image penImage = new Image(getClass().getResourceAsStream("images/pencil.png"));
+        pencilButton.setGraphic(new ImageView(penImage));
+        pencilButton.setStyle("-fx-background-color: #AAAAAA;");
+        Image bucketImage = new Image(getClass().getResourceAsStream("images/bucket.png"));
+        bucketButton.setGraphic(new ImageView(bucketImage));
+        Image colorPickerImage = new Image(getClass().getResourceAsStream("images/colorPicker.png"));
+        colorPickerButton.setGraphic(new ImageView(colorPickerImage));
         
         // drawingBoard
         drawingBoard.bindSize(pane.widthProperty(), pane.heightProperty());
