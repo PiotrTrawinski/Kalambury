@@ -1,6 +1,8 @@
 package kalambury;
 
+import java.awt.Point;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
@@ -31,7 +33,7 @@ public class DrawingBoard extends ResizableCanvas{
         case PENCIL:
             mouseLastPosX = x;
             mouseLastPosY = y;
-            createLine(x, y, x, y);
+            drawLine(x, y, x, y);
             break;
         case COLOR_PICKER:
             colorWidget.setColor(getPixelInCanvasRatio(x-drawX, y-drawY));
@@ -51,7 +53,7 @@ public class DrawingBoard extends ResizableCanvas{
         if(inDrawingMode){
             switch(drawingTool){
             case PENCIL:
-                createLine(mouseLastPosX, mouseLastPosY, x, y);
+                drawLine(mouseLastPosX, mouseLastPosY, x, y);
                 mouseLastPosX = x;
                 mouseLastPosY = y;
                 break;
@@ -176,12 +178,6 @@ public class DrawingBoard extends ResizableCanvas{
         return newPixels;
     } 
     
-    private void createLine(int x1, int y1, int x2, int y2){
-        ArrayList<Pixel> drawnPixels = drawLine(x1, y1, x2, y2);
-        ArrayList<Pixel> newPixelsToSend = updateVirtualTable(drawnPixels);
-        sendToServer(newPixelsToSend);
-    }
-    
     private void drawPixel(ArrayList<Pixel> pixels, int x, int y){
         int thickness = lineThickness-1;
         int x1 = x-thickness-drawX;
@@ -235,7 +231,7 @@ public class DrawingBoard extends ResizableCanvas{
         }
     }
     
-    private ArrayList<Pixel> drawLine(int x1, int y1, int x2, int y2){
+    private void drawLine(int x1, int y1, int x2, int y2){
         ArrayList<Pixel> drawnPixels = new ArrayList<>();
         
         int d, dx, dy, ai, bi, xi, yi;
@@ -287,7 +283,8 @@ public class DrawingBoard extends ResizableCanvas{
             }
         }
         
-        return drawnPixels;
+        ArrayList<Pixel> newPixelsToSend = updateVirtualTable(drawnPixels);
+        sendToServer(newPixelsToSend);
     }
 
     
@@ -296,6 +293,9 @@ public class DrawingBoard extends ResizableCanvas{
             && targetColor.equals(getPixelInCanvas(x-drawX, y-drawY, xRatio, yRatio));
     }
     private void floodFill(int x, int y, Color replacementColor){
+        ArrayList<Pixel> newPixelsToSend = new ArrayList<>();
+        newPixelsToSend.ensureCapacity(100000);
+        
         if(x < drawX || x >= drawX+drawWidth || y < drawY || y >= drawY+drawHeight){
             return;
         }
@@ -310,7 +310,9 @@ public class DrawingBoard extends ResizableCanvas{
         }
         
         LinkedList<Pixel> points = new LinkedList<>();
-        points.add(pixels.get(0));
+        Pixel pixel = pixels.get(0);
+        pixel.color = replacementColor;
+        points.add(pixel);
         while(!points.isEmpty()){
             int size = points.size();
             for(int i = 0; i < size; ++i){
@@ -328,6 +330,7 @@ public class DrawingBoard extends ResizableCanvas{
                 }
                 while(w.x >= e.x){
                     virtualPixelTable.set(w.x + w.y*maxWidth, replacementColor);
+                    newPixelsToSend.add(new Pixel(w.x, w.y, w.color));
                     if(w.y+1 < maxHeight && targetColor.equals(virtualPixelTable.get(w.x + (w.y+1)*maxWidth))){
                         points.add(new Pixel(w.x, w.y+1, w.color));
                     }
@@ -338,7 +341,21 @@ public class DrawingBoard extends ResizableCanvas{
                 }
             }
         }
-        refresh();
+        
+        if(newPixelsToSend.size() < 100000){
+            HashSet<Point> newPoints = new HashSet<>();
+            for(Pixel virtualPixel : newPixelsToSend){
+                newPoints.add(new Point((int)(virtualPixel.x*xRatio), (int)(virtualPixel.y*yRatio)));
+            }
+            
+            for(Point newPoint : newPoints){
+                updatePixelInCanvas(newPoint.x, newPoint.y, xRatio, yRatio);
+            }
+        } else {
+            refresh();
+        }
+        
+        sendToServer(newPixelsToSend);
     }
 }
 
