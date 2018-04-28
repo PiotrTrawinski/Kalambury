@@ -1,11 +1,13 @@
 package kalambury;
 
+import javafx.scene.paint.Color;
+
 public class Pixel {
-    public int color;
+    public Color color;
     public int x;
     public int y;
     
-    public Pixel(int x, int y, int color){
+    public Pixel(int x, int y, Color color){
         this.x = x;
         this.y = y;
         this.color = color;
