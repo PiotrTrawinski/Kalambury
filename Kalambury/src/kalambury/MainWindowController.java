@@ -69,7 +69,7 @@ public class MainWindowController implements Initializable {
     @FXML private Button quitGameButton;
     
     private ColorWidget colorWidget;
-    
+    private Chat chat;
     private final ObservableList<Player> players = FXCollections.observableArrayList();
     
     /*
@@ -123,74 +123,8 @@ public class MainWindowController implements Initializable {
         skipRequestButton.setVisible(!skipRequestButton.isVisible());
     }
     
-    private void addPlayerTextNodes(int index, Text time, Text status, Text nick, Text message, Text exactTime){
-        chatLog.getChildren().add(index, time);
-        chatLog.getChildren().add(index+1, status);
-        chatLog.getChildren().add(index+2, nick);
-        chatLog.getChildren().add(index+3, message);
-        chatLog.getChildren().add(index+4, exactTime);
-    }
-    private void addPlayerTextNodesToCorrectTimePlace(Text time, Text status, Text nick, Text message, Text exactTime){
-        double myMessageTime = Double.parseDouble(exactTime.getText());
-        ObservableList<Node> nodes = chatLog.getChildren();
-        for(int i = nodes.size()-1; i >= 0; --i){
-            if(i % 5 == 4){
-                double chatMessageTime = Double.parseDouble(((Text)nodes.get(i)).getText());
-                if(chatMessageTime <= myMessageTime){
-                    addPlayerTextNodes(i+1, time, status, nick, message, exactTime);
-                    return;
-                }
-            }
-        }
-        // if no message was earlier then this one
-        addPlayerTextNodes(0, time, status, nick, message, exactTime);
-    }
-    private void addPlayerChatMessage(String nickName, String message, double time, boolean isLocal){
-        // prepare time Text
-        Text timeText = new Text("<00:00:00>");
-        timeText.setFill(Color.GRAY);
-        
-        // prepare status Text
-        Text statusText = new Text("( HOST )");
-        statusText.setFill(Color.DARKGREEN);
-        
-        // prepare nickname Text
-        Text nickText = new Text("[" + nickName + "] ");
-        if(isLocal){
-            nickText.setFill(Color.BLUE);
-        } else {
-            nickText.setFill(Color.DARKCYAN);
-        }
-        nickText.setStyle("-fx-font-weight: bold;");
-        
-        // prepare message Text
-        Text messageText = new Text(message + "\n");
-        messageText.setFill(Color.BLACK);
-        
-        // prepare invisible exact time Text
-        Text exactTimeText = new Text(Double.toString(time));
-        exactTimeText.setVisible(false);
-        exactTimeText.setManaged(false);
-        
-        // place it correctly depending on the time
-        addPlayerTextNodesToCorrectTimePlace(timeText, statusText, nickText, messageText, exactTimeText);
-        
-        // scroll down
-        chatLogPane.setVvalue(1);
-    }
-    
     @FXML private void enteredChatMessage(){
-        if(!chatInput.getText().isEmpty()){
-            String chatMessage = chatInput.getText();
-            String nickName = players.get(0).getNickName();
-            double time = Math.random(); // for tests only
-            addPlayerChatMessage(nickName, chatMessage, time, true);
-            chatInput.setText("");
-            
-            // send to server chatMessage
-            //SendableData mess = new ChatMessageData(nickName,chatMessage,10000.0);
-            //Client.sendMessage(mess);
-        }
+        chat.handleNewClientMessage();
     }
     
     public void test_button_clicked(ActionEvent event){
@@ -246,7 +180,7 @@ public class MainWindowController implements Initializable {
         drawingBoard.setColorWidget(colorWidget);
         
         // chat
-        chatLog.prefWidthProperty().bind(chatLogPane.widthProperty());
+        chat = new Chat(chatLog, chatLogPane, chatInput);
         
         // player tableView
         scoreTableNickNameColumn.setCellValueFactory(
