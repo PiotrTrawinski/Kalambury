@@ -13,8 +13,7 @@ public class DrawingBoard extends ResizableCanvas{
     PixelWriter pixelWriter;
     ColorWidget colorWidget;
     boolean inDrawingMode = false;
-    int mouseLastPosX = 0;
-    int mouseLastPosY = 0;
+    Point mouseLastPos = new Point(0, 0);
     int lineThickness = 2;
     private DrawingTool drawingTool = DrawingTool.PENCIL;
     
@@ -30,12 +29,12 @@ public class DrawingBoard extends ResizableCanvas{
         inDrawingMode = true;
         switch(drawingTool){
         case PENCIL:
-            mouseLastPosX = x;
-            mouseLastPosY = y;
-            drawLine(x, y, x, y, drawX, drawY, drawWidth, drawHeight, lineThickness, colorWidget.getColor());
+            mouseLastPos.x = x;
+            mouseLastPos.y = y;
+            drawLine(x, y, x, y, drawArea, lineThickness, colorWidget.getColor());
             break;
         case COLOR_PICKER:
-            colorWidget.setColor(getPixelInCanvasRatio(x-drawX, y-drawY));
+            colorWidget.setColor(getPixelInCanvasRatio(x-drawArea.x, y-drawArea.y));
             break;
         case BUCKET:
             floodFill(x, y, colorWidget.getColor());
@@ -52,12 +51,12 @@ public class DrawingBoard extends ResizableCanvas{
         if(inDrawingMode){
             switch(drawingTool){
             case PENCIL:
-                drawLine(mouseLastPosX, mouseLastPosY, x, y, drawX, drawY, drawWidth, drawHeight, lineThickness, colorWidget.getColor());
-                mouseLastPosX = x;
-                mouseLastPosY = y;
+                drawLine(mouseLastPos.x, mouseLastPos.y, x, y, drawArea, lineThickness, colorWidget.getColor());
+                mouseLastPos.x = x;
+                mouseLastPos.y = y;
                 break;
             case COLOR_PICKER:
-                colorWidget.setColor(getPixelInCanvasRatio(x-drawX, y-drawY));
+                colorWidget.setColor(getPixelInCanvasRatio(x-drawArea.x, y-drawArea.y));
                 break;
             case BUCKET:
                 break;
@@ -103,23 +102,23 @@ public class DrawingBoard extends ResizableCanvas{
         return Color.color(rAvg, gAvg, bAvg);
     }
     private Color getPixelInCanvasRatio(int x, int y){
-        double xRatio = (double)drawWidth / (double)maxWidth;
-        double yRatio = (double)drawHeight / (double)maxHeight;
+        double xRatio = (double)drawArea.w / (double)maxWidth;
+        double yRatio = (double)drawArea.h / (double)maxHeight;
         return getPixelInCanvas(x, y, xRatio, yRatio);
     }
     
     private void updatePixelInCanvas(int xToUpdate, int yToUpdate, double xRatio, double yRatio){
         Color color = getPixelInCanvas(xToUpdate, yToUpdate, xRatio, yRatio);
-        pixelWriter.setColor(xToUpdate+drawX, yToUpdate+drawY, color);
+        pixelWriter.setColor(xToUpdate+drawArea.x, yToUpdate+drawArea.y, color);
     }
     
     private void refresh(){
-        double xRatio = (double)drawWidth / (double)maxWidth;
-        double yRatio = (double)drawHeight / (double)maxHeight;
+        double xRatio = (double)drawArea.w / (double)maxWidth;
+        double yRatio = (double)drawArea.h / (double)maxHeight;
         
         if(xRatio != 0 && yRatio != 0){
-            for(int y = 0; y < drawHeight; ++y){
-                for(int x = 0; x < drawWidth; ++x){
+            for(int y = 0; y < drawArea.h; ++y){
+                for(int x = 0; x < drawArea.w; ++x){
                     updatePixelInCanvas(x, y, xRatio, yRatio);
                 }
             }
@@ -166,8 +165,8 @@ public class DrawingBoard extends ResizableCanvas{
     } 
     private HashSet<Pixel> updateVirtualTableGetCorespondingChanged(ArrayList<Pixel> drawnPixels, double xRatio, double yRatio){
         HashSet<Pixel> changedPoints = new HashSet<>();
-        double myXRatio = (double)drawWidth / (double)maxWidth;
-        double myYRatio = (double)drawHeight / (double)maxHeight;
+        double myXRatio = (double)drawArea.w / (double)maxWidth;
+        double myYRatio = (double)drawArea.h / (double)maxHeight;
         
         for (Pixel pixel : drawnPixels){
             ArrayList<Pixel> virtualPixels = getCorrespondingVirtualTablePixels(pixel.x, pixel.y, xRatio, yRatio);
@@ -182,74 +181,60 @@ public class DrawingBoard extends ResizableCanvas{
         return changedPoints;
     } 
     
-    private void drawPixel(
-            ArrayList<Pixel> pixels, 
-            int x, int y, 
-            int drawX, int drawY, int drawWidth, int drawHeight, 
-            int thickness, Color color
-    ){
+    private void drawPixel(ArrayList<Pixel> pixels, int x, int y, Rect drawRect, int thickness, Color color){
         thickness -= 1;
-        int x1 = x-thickness-drawX;
-        int x2 = x+thickness-drawX;
-        int y1 = y-thickness-drawY;
-        int y2 = y+thickness-drawY;
+        int x1 = x-thickness-drawRect.x;
+        int x2 = x+thickness-drawRect.x;
+        int y1 = y-thickness-drawRect.y;
+        int y2 = y+thickness-drawRect.y;
         
         for(int i = x1; i <= x2; ++i){
             for(int j = y1; j <= y2; ++j){
-                if(i >= 0 && i < drawWidth && j >= 0 && j < drawHeight){
+                if(i >= 0 && i < drawRect.w && j >= 0 && j < drawRect.h){
                     pixels.add(new Pixel(i ,j, color));
                 }
             }
         }
     }
     
-    private void drawPixelPartly(
-            ArrayList<Pixel> pixels, 
-            int x, int y, 
-            int drawX, int drawY, int drawWidth, int drawHeight, 
-            int thickness, Color color
-    ){
+    private void drawPixelPartly(ArrayList<Pixel> pixels, int x, int y, Rect drawRect, int thickness, Color color){
         thickness -= 1;
-        int x1 = x-thickness-drawX;
-        int x2 = x+thickness-drawX;
-        int y1 = y-thickness-drawY;
-        int y2 = y+thickness-drawY;
+        int x1 = x-thickness-drawRect.x;
+        int x2 = x+thickness-drawRect.x;
+        int y1 = y-thickness-drawRect.y;
+        int y2 = y+thickness-drawRect.y;
         
-        if(y1 >= 0 && y1 < drawHeight){
+        if(y1 >= 0 && y1 < drawRect.h){
             for(int i = x1; i <= x2; ++i){
-                if(i >= 0 && i < drawWidth){
+                if(i >= 0 && i < drawRect.w){
                     pixels.add(new Pixel(i, y1, color));
                 }
             }
         }
-        if(y2 >= 0 && y2 < drawHeight){
+        if(y2 >= 0 && y2 < drawRect.h){
             for(int i = x1; i <= x2; ++i){
-                if(i >= 0 && i < drawWidth){
+                if(i >= 0 && i < drawRect.w){
                     pixels.add(new Pixel(i, y2, color));
                 }
             }
         }
-        if(x1 >= 0 && x1 < drawWidth){
+        if(x1 >= 0 && x1 < drawRect.w){
             for(int i = y-thickness; i <= y+thickness; ++i){
-                if(i >= 0 && i < drawHeight){
+                if(i >= 0 && i < drawRect.h){
                     pixels.add(new Pixel(x1, i, color));
                 }
             }
         }
-        if(x2 >= 0 && x2 < drawWidth){
+        if(x2 >= 0 && x2 < drawRect.w){
             for(int i = y-thickness; i <= y+thickness; ++i){
-                if(i >= 0 && i < drawHeight){
+                if(i >= 0 && i < drawRect.h){
                     pixels.add(new Pixel(x2, i, color));
                 }
             }
         }
     }
     
-    private void drawLine(
-            int x1, int y1, int x2, int y2, 
-            int drawX, int drawY, int drawWidth, int drawHeight, 
-            int lineThickness, Color color)
-    {
+    private void drawLine(int x1, int y1, int x2, int y2, Rect drawRect, int lineThickness, Color color){
         ArrayList<Pixel> drawnPixels = new ArrayList<>();
         
         int d, dx, dy, ai, bi, xi, yi;
@@ -268,7 +253,7 @@ public class DrawingBoard extends ResizableCanvas{
             yi = -1;
             dy = y1 - y2;
         }
-        drawPixel(drawnPixels, x, y, drawX, drawY, drawWidth, drawHeight, lineThickness, color);
+        drawPixel(drawnPixels, x, y, drawRect, lineThickness, color);
         if (dx > dy) {
             ai = (dy - dx) * 2;
             bi = dy * 2;
@@ -282,7 +267,7 @@ public class DrawingBoard extends ResizableCanvas{
                     d += bi;
                     x += xi;
                 }
-                drawPixelPartly(drawnPixels, x, y, drawX, drawY, drawWidth, drawHeight, lineThickness, color);
+                drawPixelPartly(drawnPixels, x, y, drawRect, lineThickness, color);
             }
         } else { 
             ai = ( dx - dy ) * 2;
@@ -297,17 +282,17 @@ public class DrawingBoard extends ResizableCanvas{
                     d += bi;
                     y += yi;
                 }
-                drawPixelPartly(drawnPixels, x, y, drawX, drawY, drawWidth, drawHeight, lineThickness, color);
+                drawPixelPartly(drawnPixels, x, y, drawRect, lineThickness, color);
             }
         }
         
-        double xRatio = (double)drawWidth / (double)maxWidth;
-        double yRatio = (double)drawHeight / (double)maxHeight; 
+        double xRatio = (double)drawRect.w / (double)maxWidth;
+        double yRatio = (double)drawRect.h / (double)maxHeight; 
         
     // if orginal writer
         updateVirtualTable(drawnPixels, xRatio, yRatio);
         for (Pixel pixel : drawnPixels){
-            pixelWriter.setColor(pixel.x+drawX, pixel.y+drawY, pixel.color);
+            pixelWriter.setColor(pixel.x+drawRect.x, pixel.y+drawRect.y, pixel.color);
         }
         //sendToServer({x1, y1, x2, y2, drawX, drawY, drawWidth, drawHeight, lineThickness, color});
         
@@ -321,14 +306,14 @@ public class DrawingBoard extends ResizableCanvas{
 
     
     private void floodFill(int x, int y, Color replacementColor){
-        if(x < drawX || x >= drawX+drawWidth || y < drawY || y >= drawY+drawHeight){
+        if(x < drawArea.x || x >= drawArea.x+drawArea.w || y < drawArea.y || y >= drawArea.y+drawArea.h){
             return;
         }
         
     // if orginal writer
-        double xRatio = (double)drawWidth / (double)maxWidth;
-        double yRatio = (double)drawHeight / (double)maxHeight;
-        Pixel pixel = getCorrespondingVirtualTablePixels(x-drawX, y-drawY, xRatio, yRatio).get(0);
+        double xRatio = (double)drawArea.w / (double)maxWidth;
+        double yRatio = (double)drawArea.h / (double)maxHeight;
+        Pixel pixel = getCorrespondingVirtualTablePixels(x-drawArea.x, y-drawArea.y, xRatio, yRatio).get(0);
     // if got pixels from server
         //Pixel pixel = pixelFromServer;
         
