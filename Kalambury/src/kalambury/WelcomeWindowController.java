@@ -52,9 +52,11 @@ public class WelcomeWindowController implements Initializable {
         Client.setNick(textfield_nick.getText());
         label_info.setText("Connecting...");
         Task<ConnectResult> serverConnectTask = new ServerConnectTask(textfield_ip.getText(),Integer.parseInt(textfield_port.getText()));
+        
         executor.submit(serverConnectTask);
 
         serverConnectTask.setOnSucceeded(event->{
+            
             if(Client.isSocketSet()){
                 System.out.print("Socket it set");  
                 label_info.setText("Connection established");
@@ -63,6 +65,7 @@ public class WelcomeWindowController implements Initializable {
             else{
                 label_info.setText("Failed to connect.");
             }
+            //executor.shutdown();
         });
     }
     

@@ -2,6 +2,7 @@
 package kalambury;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -32,4 +33,14 @@ public class Client {
     public static boolean isSocketSet(){
         return (socket != null);
     }
+    public static void sendMessage(byte[] buffer, int size){
+        try(OutputStream out = socket.getOutputStream()) {
+             out.write(buffer, 0, size);
+        }
+        catch(IOException ex){System.out.println(ex.getMessage());};
+        
+        
+    }
+    
+    
 }
