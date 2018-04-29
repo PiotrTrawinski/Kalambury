@@ -369,12 +369,16 @@ public class DrawingBoard extends ResizableCanvas{
             int yIndex2 = (w.y+1)*maxWidth;
             int yIndex3 = (w.y-1)*maxWidth;
 
-            while(w.x < maxWidth-1 && targetColor.equals(virtualPixelTable.get(w.x + yIndex1))){
+            do{
                 w.x += 1;
-            }
-            while(e.x > 0 && targetColor.equals(virtualPixelTable.get(e.x + yIndex1))){
+            }while(w.x < maxWidth && targetColor.equals(virtualPixelTable.get(w.x + yIndex1)));
+            w.x -= 1;
+            
+            do{
                 e.x -= 1;
-            }
+            }while(e.x >= 0 && targetColor.equals(virtualPixelTable.get(e.x + yIndex1)));
+            e.x += 1;
+            
             while(w.x >= e.x){
                 virtualPixelTable.set(w.x + yIndex1, replacementColor);
                 if(w.y+1 < maxHeight && targetColor.equals(virtualPixelTable.get(w.x + yIndex2))){
