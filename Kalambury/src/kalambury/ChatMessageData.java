@@ -33,6 +33,7 @@ public class ChatMessageData extends SendableData{
             out.writeUTF(nickName);
             out.writeUTF(message);
             out.writeDouble(time);
+            out.flush();
         } catch (IOException ex) {
             System.err.printf("error writing data to stream, system error: \"%s\"", ex.getMessage());
         }

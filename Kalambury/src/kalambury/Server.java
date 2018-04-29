@@ -1,6 +1,7 @@
 package kalambury;
 
 
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -32,6 +33,7 @@ public class Server {
                     try{
                         sockets[clientsCount] = socket;
                         inputStreams[clientsCount] = new DataInputStream(socket.getInputStream());
+                        outputStreams[clientsCount] = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                         clientsCount++;
                     }
                     catch(IOException ex){}
@@ -53,7 +55,8 @@ public class Server {
             for(int i = 0; i < clientsCount; i++){ // for every client
                 try{
                     if(inputStreams[i].available() > 0){
-                        String input = inputStreams[i].readUTF();
+                        System.out.print("Received something");
+                        SendableData input = SendableData.receive(inputStreams[i]);
                     }
                 }
                 catch(IOException ex){System.out.println(ex.getMessage());};
