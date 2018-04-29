@@ -25,19 +25,25 @@ public class DrawingBoard extends ResizableCanvas{
         pixelWriter = getGraphicsContext2D().getPixelWriter();
     }
     
+    private void sendToServer(SendableData sendableData){
+        //Client.sendMessage(sendableData);
+    }
+    
     public void mousePressed(int x, int y){
         inDrawingMode = true;
         switch(drawingTool){
         case PENCIL:
             mouseLastPos.x = x;
             mouseLastPos.y = y;
-            drawLineOwn(mouseLastPos, mouseLastPos);
+            LineDrawData lineDrawData = drawLineOwn(mouseLastPos, mouseLastPos);
+            sendToServer(lineDrawData);
             break;
         case COLOR_PICKER:
             colorWidget.setColor(getPixelInCanvasRatio(x-drawArea.x, y-drawArea.y));
             break;
         case BUCKET:
-            floodFillOwn(x, y, colorWidget.getColor());
+            FloodFillData floodFillData = floodFillOwn(x, y, colorWidget.getColor());
+            sendToServer(floodFillData);
             break;
         }
         
@@ -51,7 +57,8 @@ public class DrawingBoard extends ResizableCanvas{
         if(inDrawingMode){
             switch(drawingTool){
             case PENCIL:
-                drawLineOwn(mouseLastPos, new Point(x, y));
+                LineDrawData lineDrawData = drawLineOwn(mouseLastPos, new Point(x, y));
+                sendToServer(lineDrawData);
                 mouseLastPos.x = x;
                 mouseLastPos.y = y;
                 break;
