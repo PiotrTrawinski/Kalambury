@@ -31,13 +31,13 @@ public class DrawingBoard extends ResizableCanvas{
         case PENCIL:
             mouseLastPos.x = x;
             mouseLastPos.y = y;
-            drawLine(x, y, x, y, drawArea, lineThickness, colorWidget.getColor());
+            drawLineOwn(mouseLastPos, mouseLastPos);
             break;
         case COLOR_PICKER:
             colorWidget.setColor(getPixelInCanvasRatio(x-drawArea.x, y-drawArea.y));
             break;
         case BUCKET:
-            floodFill(x, y, colorWidget.getColor());
+            floodFillOwn(x, y, colorWidget.getColor());
             break;
         }
         
@@ -51,7 +51,7 @@ public class DrawingBoard extends ResizableCanvas{
         if(inDrawingMode){
             switch(drawingTool){
             case PENCIL:
-                drawLine(mouseLastPos.x, mouseLastPos.y, x, y, drawArea, lineThickness, colorWidget.getColor());
+                drawLineOwn(mouseLastPos, new Point(x, y));
                 mouseLastPos.x = x;
                 mouseLastPos.y = y;
                 break;
@@ -234,11 +234,42 @@ public class DrawingBoard extends ResizableCanvas{
         }
     }
     
-    private void drawLine(int x1, int y1, int x2, int y2, Rect drawRect, int lineThickness, Color color){
-        ArrayList<Pixel> drawnPixels = new ArrayList<>();
+    private LineDrawData drawLineOwn(Point start, Point end){
+        ArrayList<Pixel> drawnPixels = drawLine(start, end, drawArea, lineThickness, colorWidget.getColor());
         
+        double xRatio = (double)drawArea.w / (double)maxWidth;
+        double yRatio = (double)drawArea.h / (double)maxHeight; 
+        
+        updateVirtualTable(drawnPixels, xRatio, yRatio);
+        for (Pixel pixel : drawnPixels){
+            pixelWriter.setColor(pixel.x+drawArea.x, pixel.y+drawArea.y, pixel.color);
+        }
+        
+        return new LineDrawData(start, end, drawArea, lineThickness, colorWidget.getColor());
+    }
+    
+    private void drawLineRemote(LineDrawData data){
+        ArrayList<Pixel> drawnPixels = drawLine(data.startPoint, data.endPoint, data.drawRect, data.lineThickness, data.color);
+        
+        double xRatio = (double)data.drawRect.w / (double)maxWidth;
+        double yRatio = (double)data.drawRect.h / (double)maxHeight; 
+        
+        HashSet<Pixel> changed = updateVirtualTableGetCorespondingChanged(drawnPixels, xRatio, yRatio);
+        for (Pixel pixel : changed){
+            pixelWriter.setColor(pixel.x+drawArea.x, pixel.y+drawArea.y, pixel.color);
+        }
+    }
+    
+    private ArrayList<Pixel> drawLine(Point start, Point end, Rect drawRect, int lineThickness, Color color){
+        ArrayList<Pixel> drawnPixels = new ArrayList<>();
         int d, dx, dy, ai, bi, xi, yi;
-        int x = x1, y = y1;
+        int x1 = start.x;
+        int y1 = start.y;
+        int x2 = end.x;
+        int y2 = end.y;
+        
+        int x = x1;
+        int y = y1;
         if (x1 < x2){ 
             xi = 1;
             dx = x2 - x1;
@@ -286,42 +317,36 @@ public class DrawingBoard extends ResizableCanvas{
             }
         }
         
-        double xRatio = (double)drawRect.w / (double)maxWidth;
-        double yRatio = (double)drawRect.h / (double)maxHeight; 
-        
-    // if orginal writer
-        updateVirtualTable(drawnPixels, xRatio, yRatio);
-        for (Pixel pixel : drawnPixels){
-            pixelWriter.setColor(pixel.x+drawRect.x, pixel.y+drawRect.y, pixel.color);
-        }
-        //sendToServer({x1, y1, x2, y2, drawX, drawY, drawWidth, drawHeight, lineThickness, color});
-        
-    // if got pixels from server
-        /*HashSet<Pixel> changed = updateVirtualTableGetCorespondingChanged(drawnPixels, xRatio, yRatio);
-        for (Pixel pixel : changed){
-            pixelWriter.setColor(pixel.x+this.drawX, pixel.y+this.drawY, pixel.color);
-        }*/
+        return drawnPixels;
     }
 
 
-    
-    private void floodFill(int x, int y, Color replacementColor){
+    private BucketFillData floodFillOwn(int x, int y, Color replacementColor){
         if(x < drawArea.x || x >= drawArea.x+drawArea.w || y < drawArea.y || y >= drawArea.y+drawArea.h){
-            return;
+            return null;
         }
-        
-    // if orginal writer
+
         double xRatio = (double)drawArea.w / (double)maxWidth;
         double yRatio = (double)drawArea.h / (double)maxHeight;
+
         Pixel pixel = getCorrespondingVirtualTablePixels(x-drawArea.x, y-drawArea.y, xRatio, yRatio).get(0);
-    // if got pixels from server
-        //Pixel pixel = pixelFromServer;
         
         Color targetColor = pixel.color;
         if(targetColor.equals(replacementColor)){
-            return;
+            return null;
         }
         
+        floodFill(pixel, replacementColor);
+        refresh();
+        
+        return new BucketFillData(pixel, replacementColor);
+    }
+    private void floodFillRemote(BucketFillData data){
+        floodFill(data.pixel, data.replacementColor);
+        refresh();
+    }
+    private void floodFill(Pixel pixel, Color replacementColor){
+        Color targetColor = pixel.color;
         ArrayDeque<Point> points = new ArrayDeque<>();
         Point point = new Point(pixel.x, pixel.y);
         points.add(point);
@@ -354,11 +379,6 @@ public class DrawingBoard extends ResizableCanvas{
                 w.x -= 1;
             }
         }
-        
-        refresh();
-        
-    // if orginal writer
-        //sendToServer({pixels.get(0), replacementColor});
     }
 }
 
