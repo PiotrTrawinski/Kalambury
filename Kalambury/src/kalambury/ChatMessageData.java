@@ -2,17 +2,39 @@ package kalambury;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 
 public class ChatMessageData extends SendableData{
-    private int var1;
-    private String var2;
-    //...
+    public String nickName;
+    public String message;
+    double time;
+    
+    public ChatMessageData(String nickName, String message, double time){
+        this.nickName = nickName;
+        this.message  = message;
+        this.time     = time;
+    }
     
     public ChatMessageData(DataInputStream in){
-        //here read var1, var2 from outputStream
+        type = DataType.ChatMessage;
+        
+        try {
+            nickName = in.readUTF();
+            message  = in.readUTF();
+            time     = in.readDouble();
+        } catch (IOException ex) {
+            System.err.printf("error reading data from stream, system error: \"%s\"", ex.getMessage());
+        }
     }
 
     @Override public void send(DataOutputStream out) {
-        //here send var1, var2 to inputStream
+        try {
+            out.writeInt(type.toInt());
+            out.writeUTF(nickName);
+            out.writeUTF(message);
+            out.writeDouble(time);
+        } catch (IOException ex) {
+            System.err.printf("error writing data to stream, system error: \"%s\"", ex.getMessage());
+        }
     }
 }
