@@ -1,6 +1,5 @@
 package kalambury;
 
-import java.awt.Point;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -101,7 +100,7 @@ public class DrawingBoard extends ResizableCanvas{
             gAvg = 1;
             bAvg = 1;
         }
-        return Color.rgb((int)(rAvg*255),(int)(gAvg*255),(int)(bAvg*255));
+        return Color.color(rAvg, gAvg, bAvg);
     }
     private Color getPixelInCanvasRatio(int x, int y){
         double xRatio = (double)drawWidth / (double)maxWidth;

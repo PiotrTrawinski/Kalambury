@@ -5,20 +5,19 @@ public enum DataType {
     LineDraw(0),
     BucketFill(1),
     ChatMessage(2);
-    //...
     
     private final int value;
     private DataType(int value) {
         this.value = value;
     }
 
-    public int getValue() {
+    public int toInt() {
         return value;
     }
 
     public static DataType fromInt(int value){
         for (DataType type : DataType.values()) {
-            if(type.getValue() == value){
+            if(type.toInt() == value){
                 return type;
             }
         }

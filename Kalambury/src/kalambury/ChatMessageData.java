@@ -8,11 +8,11 @@ public class ChatMessageData extends SendableData{
     private String var2;
     //...
     
-    public ChatMessageData(DataOutputStream out){
+    public ChatMessageData(DataInputStream in){
         //here read var1, var2 from outputStream
     }
 
-    @Override public void send(DataInputStream in) {
+    @Override public void send(DataOutputStream out) {
         //here send var1, var2 to inputStream
     }
 }
