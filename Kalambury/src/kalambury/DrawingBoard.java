@@ -248,7 +248,7 @@ public class DrawingBoard extends ResizableCanvas{
         return new LineDrawData(start, end, drawArea, lineThickness, colorWidget.getColor());
     }
     
-    private void drawLineRemote(LineDrawData data){
+    public void drawLineRemote(LineDrawData data){
         ArrayList<Pixel> drawnPixels = drawLine(data.startPoint, data.endPoint, data.drawRect, data.lineThickness, data.color);
         
         double xRatio = (double)data.drawRect.w / (double)maxWidth;
@@ -321,7 +321,7 @@ public class DrawingBoard extends ResizableCanvas{
     }
 
 
-    private BucketFillData floodFillOwn(int x, int y, Color replacementColor){
+    private FloodFillData floodFillOwn(int x, int y, Color replacementColor){
         if(x < drawArea.x || x >= drawArea.x+drawArea.w || y < drawArea.y || y >= drawArea.y+drawArea.h){
             return null;
         }
@@ -339,9 +339,9 @@ public class DrawingBoard extends ResizableCanvas{
         floodFill(pixel, replacementColor);
         refresh();
         
-        return new BucketFillData(pixel, replacementColor);
+        return new FloodFillData(pixel, replacementColor);
     }
-    private void floodFillRemote(BucketFillData data){
+    public void floodFillRemote(FloodFillData data){
         floodFill(data.pixel, data.replacementColor);
         refresh();
     }

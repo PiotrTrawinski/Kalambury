@@ -3,7 +3,7 @@ package kalambury;
 public enum DataType {
     Unknown(-1),
     LineDraw(0),
-    BucketFill(1),
+    FloodFill(1),
     ChatMessage(2);
     
     private final int value;

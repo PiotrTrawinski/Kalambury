@@ -5,19 +5,19 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import javafx.scene.paint.Color;
 
-public class BucketFillData extends SendableData{
+public class FloodFillData extends SendableData{
     public Pixel pixel;
     public Color replacementColor;
     
-    public BucketFillData(Pixel pixel, Color replacementColor){
-        type = DataType.BucketFill;
+    public FloodFillData(Pixel pixel, Color replacementColor){
+        type = DataType.FloodFill;
         
         this.pixel = pixel;
         this.replacementColor = replacementColor;
     }
     
-    public BucketFillData(DataInputStream in){
-        type = DataType.BucketFill;
+    public FloodFillData(DataInputStream in){
+        type = DataType.FloodFill;
         
         try {
             int x = in.readInt();

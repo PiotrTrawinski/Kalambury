@@ -21,7 +21,7 @@ public abstract class SendableData {
         
         switch(type){
         case LineDraw:    return new LineDrawData(in);
-        case BucketFill:  return new BucketFillData(in);
+        case FloodFill:   return new FloodFillData(in);
         case ChatMessage: return new ChatMessageData(in);
         default:          return null;
         }
