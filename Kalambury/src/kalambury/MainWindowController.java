@@ -4,6 +4,8 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -16,6 +18,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -48,8 +51,8 @@ public class MainWindowController implements Initializable {
     @FXML private Label TurnLabel;
     
     @FXML private TableView scoreTableView;
-    @FXML private TableColumn scoreTablePlayerColumn;
-    @FXML private TableColumn scoreTablePointsColumn;
+    @FXML private TableColumn<Player,String> scoreTableNickNameColumn;
+    @FXML private TableColumn<Player,Number> scoreTablePointsColumn;
     
     @FXML private TextArea chatLog;
     @FXML private TextField chatInput;
@@ -62,6 +65,8 @@ public class MainWindowController implements Initializable {
     @FXML private Button quitGameButton;
     
     private ColorWidget colorWidget;
+    
+    private final ObservableList<Player> players = FXCollections.observableArrayList();
     
     /*
         Mouse events
@@ -166,5 +171,17 @@ public class MainWindowController implements Initializable {
         drawingBoard.bindSize(pane.widthProperty(), pane.heightProperty());
         drawingBoard.setAspectRatio(16.0/9.0);
         drawingBoard.setColorWidget(colorWidget);
+        
+        // player tableView
+        scoreTableNickNameColumn.setCellValueFactory(
+                player -> player.getValue().getNickNameProperty()
+        );
+        scoreTablePointsColumn.setCellValueFactory(
+                player -> player.getValue().getScoreProperty()
+        );
+        scoreTableView.setItems(players);
+        // example adding players to score table
+        players.add(new Player("Piotr", 0));
+        players.add(new Player("Oliwier", 13));
     }    
 }
