@@ -10,6 +10,8 @@ public class BucketFillData extends SendableData{
     public Color replacementColor;
     
     public BucketFillData(Pixel pixel, Color replacementColor){
+        type = DataType.BucketFill;
+        
         this.pixel = pixel;
         this.replacementColor = replacementColor;
     }

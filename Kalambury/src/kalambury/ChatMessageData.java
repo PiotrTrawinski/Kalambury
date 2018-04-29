@@ -10,6 +10,8 @@ public class ChatMessageData extends SendableData{
     double time;
     
     public ChatMessageData(String nickName, String message, double time){
+        type = DataType.ChatMessage;
+        
         this.nickName = nickName;
         this.message  = message;
         this.time     = time;

@@ -13,6 +13,8 @@ public class LineDrawData extends SendableData{
     public Color color;
     
     public LineDrawData(Point startPoint, Point endPoint, Rect drawRect, int lineThickness, Color color){
+        type = DataType.LineDraw;
+        
         this.startPoint = startPoint;
         this.endPoint = endPoint;
         this.drawRect = drawRect;

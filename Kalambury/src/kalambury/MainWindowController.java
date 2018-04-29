@@ -142,7 +142,7 @@ public class MainWindowController implements Initializable {
             chatLogPane.setVvalue(1);
             
             // send to server chatMessage
-            SendableData mess = new ChatMessageData(Client.getNick(),chatMessage,10000.0);
+            SendableData mess = new ChatMessageData(nickName,chatMessage,10000.0);
             Client.sendMessage(mess);
             
         }
