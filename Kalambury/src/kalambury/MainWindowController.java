@@ -13,22 +13,25 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.scene.web.WebView;
 
 
 public class MainWindowController implements Initializable {
     
     @FXML private TimeLabel label_time;
-    @FXML private Button button_test;
+    @FXML private Button chatSendButton;
     
     @FXML private DrawingBoard drawingBoard;
     @FXML private Pane pane;
@@ -54,7 +57,8 @@ public class MainWindowController implements Initializable {
     @FXML private TableColumn<Player,String> scoreTableNickNameColumn;
     @FXML private TableColumn<Player,Number> scoreTablePointsColumn;
     
-    @FXML private TextArea chatLog;
+    @FXML private TextFlow chatLog;
+    @FXML private ScrollPane chatLogPane;
     @FXML private TextField chatInput;
     
     @FXML private Button playButton;
@@ -119,10 +123,27 @@ public class MainWindowController implements Initializable {
         skipRequestButton.setVisible(!skipRequestButton.isVisible());
     }
     
-    @FXML private void handleButtonAction(ActionEvent event) {
-        
+    @FXML private void enteredChatMessage(){
+        if(!chatInput.getText().isEmpty()){
+            String chatMessage = chatInput.getText();
+            chatInput.setText("");
+            
+            String nickName = players.get(0).getNickName();
+            
+            Text textNick = new Text("[" + nickName + "] ");
+            textNick.setFill(Color.BLUE);
+            textNick.setStyle("-fx-font-weight: bold;");
+            
+            Text textMessage = new Text(chatMessage + "\n");
+            textMessage.setFill(Color.BLACK);
+            
+            chatLog.getChildren().add(textNick);
+            chatLog.getChildren().add(textMessage);
+            chatLogPane.setVvalue(1);
+            
+            // send to server chatMessage
+        }
     }
-    
     
     public void test_button_clicked(ActionEvent event){
         // these parameters will be chosen from GUI by host
@@ -141,7 +162,7 @@ public class MainWindowController implements Initializable {
     }
     
     @Override public void initialize(URL url, ResourceBundle rb) {
-        button_test.setOnAction(this::test_button_clicked);
+        //chatSendButton.setOnAction(this::test_button_clicked);
         
         // colorChooser
         colorWidget = new ColorWidget(
@@ -171,6 +192,9 @@ public class MainWindowController implements Initializable {
         drawingBoard.bindSize(pane.widthProperty(), pane.heightProperty());
         drawingBoard.setAspectRatio(16.0/9.0);
         drawingBoard.setColorWidget(colorWidget);
+        
+        // chat
+        chatLog.prefWidthProperty().bind(chatLogPane.widthProperty());
         
         // player tableView
         scoreTableNickNameColumn.setCellValueFactory(
