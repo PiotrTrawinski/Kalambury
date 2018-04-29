@@ -14,6 +14,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
+import static kalambury.Server.handleIncomingData;
 
 
 
@@ -43,6 +44,7 @@ public class WelcomeWindowController implements Initializable {
         Thread serverThread = new Thread(()->Server.start());
         serverThread.setDaemon(true);   // close with application
         serverThread.start();
+        
     }
     
     
@@ -52,10 +54,13 @@ public class WelcomeWindowController implements Initializable {
         Client.setNick(textfield_nick.getText());
         label_info.setText("Connecting...");
         Task<ConnectResult> serverConnectTask = new ServerConnectTask(textfield_ip.getText(),Integer.parseInt(textfield_port.getText()));
+        
         executor.submit(serverConnectTask);
 
         serverConnectTask.setOnSucceeded(event->{
+            
             if(Client.isSocketSet()){
+                executor.shutdown();
                 System.out.print("Socket it set");  
                 label_info.setText("Connection established");
                 switchToMainStage();
@@ -63,6 +68,7 @@ public class WelcomeWindowController implements Initializable {
             else{
                 label_info.setText("Failed to connect.");
             }
+            
         });
     }
     
