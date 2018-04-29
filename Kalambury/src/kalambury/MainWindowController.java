@@ -148,10 +148,9 @@ public class MainWindowController implements Initializable {
     public void test_button_clicked(ActionEvent event){
         // these parameters will be chosen from GUI by host
         //start_time_measuring_thread(1,50);
-        System.out.println("send");
         String message = chatInput.getText();
-        System.out.println(message);
-        Client.sendMessage(message);
+        //SendableData mess = new ChatMessageData();
+        //Client.sendMessage(message);
     }
     
     public void start_time_measuring_thread(long min, long sec){

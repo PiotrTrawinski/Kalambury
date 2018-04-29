@@ -1,7 +1,9 @@
 
 package kalambury;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -18,6 +20,7 @@ public class Client {
     private static int port;
     private static Socket socket;
     private static DataOutputStream out;
+    private static DataInputStream in;
     
     public static void setIP(String ip){
         Client.ip = ip;
@@ -26,6 +29,7 @@ public class Client {
        Client.socket = s;
        try {
             Client.out = new DataOutputStream(new BufferedOutputStream(Client.socket.getOutputStream()));
+            Client.in = new DataInputStream(new BufferedInputStream(Client.socket.getInputStream()));
       } catch(IOException e){
          System.err.println(e.getMessage());
       }
@@ -40,9 +44,10 @@ public class Client {
     public static boolean isSocketSet(){
         return (socket != null);
     }
-    public static void sendMessage(String buffer){
+    public static void sendMessage(SendableData data){
         try{
-            out.writeUTF(buffer);
+            data.send(out);
+            //out.writeUTF(buffer);
             out.flush();
             System.out.println("Success");
      }catch(IOException e){
