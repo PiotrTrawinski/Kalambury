@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.web.*?>
 <?import kalambury.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.image.*?>
@@ -46,7 +47,7 @@
             <Font name="System Bold" size="24.0" />
          </font>
       </TimeLabel>
-      <Button fx:id="button_test" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Wyślij" textFill="#555555" GridPane.columnIndex="8" GridPane.rowIndex="5">
+      <Button fx:id="chatSendButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#enteredChatMessage" text="Wyślij" textFill="#555555" GridPane.columnIndex="8" GridPane.rowIndex="5">
          <font>
             <Font name="System Bold" size="15.0" />
          </font></Button>
@@ -84,8 +85,7 @@
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
          </columnResizePolicy>
       </TableView>
-      <TextArea fx:id="chatLog" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #EEEEEE; -fx-border-color: #C8C8C8; -fx-border-width: 2;" GridPane.columnSpan="8" GridPane.rowIndex="4" />
-      <TextField fx:id="chatInput" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" style="-fx-border-color: #C8C8C8; -fx-border-width: 2;" GridPane.columnSpan="7" GridPane.rowIndex="5">
+      <TextField fx:id="chatInput" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onAction="#enteredChatMessage" style="-fx-border-color: #C8C8C8; -fx-border-width: 2;" GridPane.columnSpan="8" GridPane.rowIndex="5">
          <font>
             <Font size="18.0" />
          </font>
@@ -162,5 +162,10 @@
             <Canvas fx:id="colorBrightnessCanvas" height="21.0" layoutX="8.0" layoutY="7.0" width="83.0" />
          </children>
       </Pane>
+      <ScrollPane fx:id="chatLogPane" hbarPolicy="NEVER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" style="-fx-border-color: #C8C8C8; -fx-border-width: 2;" GridPane.columnSpan="9" GridPane.rowIndex="4">
+         <content>
+            <TextFlow fx:id="chatLog" prefHeight="84.0" prefWidth="553.0" />
+         </content>
+      </ScrollPane>
    </children>
 </GridPane>
