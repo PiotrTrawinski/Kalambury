@@ -1,9 +1,9 @@
 package kalambury;
 
 import java.awt.Point;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
 
@@ -33,7 +33,7 @@ public class DrawingBoard extends ResizableCanvas{
         case PENCIL:
             mouseLastPosX = x;
             mouseLastPosY = y;
-            drawLine(x, y, x, y);
+            drawLine(x, y, x, y, drawX, drawY, drawWidth, drawHeight, lineThickness, colorWidget.getColor());
             break;
         case COLOR_PICKER:
             colorWidget.setColor(getPixelInCanvasRatio(x-drawX, y-drawY));
@@ -53,7 +53,7 @@ public class DrawingBoard extends ResizableCanvas{
         if(inDrawingMode){
             switch(drawingTool){
             case PENCIL:
-                drawLine(mouseLastPosX, mouseLastPosY, x, y);
+                drawLine(mouseLastPosX, mouseLastPosY, x, y, drawX, drawY, drawWidth, drawHeight, lineThickness, colorWidget.getColor());
                 mouseLastPosX = x;
                 mouseLastPosY = y;
                 break;
@@ -154,32 +154,42 @@ public class DrawingBoard extends ResizableCanvas{
         return pixels;
     }
     
-    private void sendToServer(ArrayList<Pixel> newPixels){
-    }
     
-    private ArrayList<Pixel> updateVirtualTable(ArrayList<Pixel> drawnPixels){
-        ArrayList<Pixel> newPixels = new ArrayList<>();
-        
-        double xRatio = (double)drawWidth / (double)maxWidth;
-        double yRatio = (double)drawHeight / (double)maxHeight;
-        
+    private void updateVirtualTable(ArrayList<Pixel> drawnPixels, double xRatio, double yRatio){
         for (Pixel pixel : drawnPixels){
-            pixelWriter.setColor(pixel.x+drawX, pixel.y+drawY, pixel.color);
             ArrayList<Pixel> virtualPixels = getCorrespondingVirtualTablePixels(pixel.x, pixel.y, xRatio, yRatio);
             for (Pixel virtualPixel : virtualPixels){
                 if(virtualPixel.color != pixel.color){
-                    virtualPixel.color = pixel.color;
-                    newPixels.add(virtualPixel);
-                    virtualPixelTable.set(virtualPixel.x+virtualPixel.y*maxWidth, virtualPixel.color);
+                    virtualPixelTable.set(virtualPixel.x+virtualPixel.y*maxWidth, pixel.color);
+                }
+            }
+        }
+    } 
+    private HashSet<Pixel> updateVirtualTableGetCorespondingChanged(ArrayList<Pixel> drawnPixels, double xRatio, double yRatio){
+        HashSet<Pixel> changedPoints = new HashSet<>();
+        double myXRatio = (double)drawWidth / (double)maxWidth;
+        double myYRatio = (double)drawHeight / (double)maxHeight;
+        
+        for (Pixel pixel : drawnPixels){
+            ArrayList<Pixel> virtualPixels = getCorrespondingVirtualTablePixels(pixel.x, pixel.y, xRatio, yRatio);
+            for (Pixel virtualPixel : virtualPixels){
+                if(virtualPixel.color != pixel.color){
+                    virtualPixelTable.set(virtualPixel.x+virtualPixel.y*maxWidth, pixel.color);
+                    changedPoints.add(new Pixel((int)(virtualPixel.x*myXRatio), (int)(virtualPixel.y*myYRatio), pixel.color));
                 }
             }
         }
         
-        return newPixels;
+        return changedPoints;
     } 
     
-    private void drawPixel(ArrayList<Pixel> pixels, int x, int y){
-        int thickness = lineThickness-1;
+    private void drawPixel(
+            ArrayList<Pixel> pixels, 
+            int x, int y, 
+            int drawX, int drawY, int drawWidth, int drawHeight, 
+            int thickness, Color color
+    ){
+        thickness -= 1;
         int x1 = x-thickness-drawX;
         int x2 = x+thickness-drawX;
         int y1 = y-thickness-drawY;
@@ -188,14 +198,19 @@ public class DrawingBoard extends ResizableCanvas{
         for(int i = x1; i <= x2; ++i){
             for(int j = y1; j <= y2; ++j){
                 if(i >= 0 && i < drawWidth && j >= 0 && j < drawHeight){
-                    pixels.add(new Pixel(i ,j, colorWidget.getColor()));
+                    pixels.add(new Pixel(i ,j, color));
                 }
             }
         }
     }
     
-    private void drawPixelPartly(ArrayList<Pixel> pixels, int x, int y){
-        int thickness = lineThickness-1;
+    private void drawPixelPartly(
+            ArrayList<Pixel> pixels, 
+            int x, int y, 
+            int drawX, int drawY, int drawWidth, int drawHeight, 
+            int thickness, Color color
+    ){
+        thickness -= 1;
         int x1 = x-thickness-drawX;
         int x2 = x+thickness-drawX;
         int y1 = y-thickness-drawY;
@@ -204,34 +219,38 @@ public class DrawingBoard extends ResizableCanvas{
         if(y1 >= 0 && y1 < drawHeight){
             for(int i = x1; i <= x2; ++i){
                 if(i >= 0 && i < drawWidth){
-                    pixels.add(new Pixel(i, y1, colorWidget.getColor()));
+                    pixels.add(new Pixel(i, y1, color));
                 }
             }
         }
         if(y2 >= 0 && y2 < drawHeight){
             for(int i = x1; i <= x2; ++i){
                 if(i >= 0 && i < drawWidth){
-                    pixels.add(new Pixel(i, y2, colorWidget.getColor()));
+                    pixels.add(new Pixel(i, y2, color));
                 }
             }
         }
         if(x1 >= 0 && x1 < drawWidth){
             for(int i = y-thickness; i <= y+thickness; ++i){
                 if(i >= 0 && i < drawHeight){
-                    pixels.add(new Pixel(x1, i, colorWidget.getColor()));
+                    pixels.add(new Pixel(x1, i, color));
                 }
             }
         }
         if(x2 >= 0 && x2 < drawWidth){
             for(int i = y-thickness; i <= y+thickness; ++i){
                 if(i >= 0 && i < drawHeight){
-                    pixels.add(new Pixel(x2, i, colorWidget.getColor()));
+                    pixels.add(new Pixel(x2, i, color));
                 }
             }
         }
     }
     
-    private void drawLine(int x1, int y1, int x2, int y2){
+    private void drawLine(
+            int x1, int y1, int x2, int y2, 
+            int drawX, int drawY, int drawWidth, int drawHeight, 
+            int lineThickness, Color color)
+    {
         ArrayList<Pixel> drawnPixels = new ArrayList<>();
         
         int d, dx, dy, ai, bi, xi, yi;
@@ -250,7 +269,7 @@ public class DrawingBoard extends ResizableCanvas{
             yi = -1;
             dy = y1 - y2;
         }
-        drawPixel(drawnPixels, x, y);
+        drawPixel(drawnPixels, x, y, drawX, drawY, drawWidth, drawHeight, lineThickness, color);
         if (dx > dy) {
             ai = (dy - dx) * 2;
             bi = dy * 2;
@@ -264,7 +283,7 @@ public class DrawingBoard extends ResizableCanvas{
                     d += bi;
                     x += xi;
                 }
-                drawPixelPartly(drawnPixels, x, y);
+                drawPixelPartly(drawnPixels, x, y, drawX, drawY, drawWidth, drawHeight, lineThickness, color);
             }
         } else { 
             ai = ( dx - dy ) * 2;
@@ -279,83 +298,83 @@ public class DrawingBoard extends ResizableCanvas{
                     d += bi;
                     y += yi;
                 }
-                drawPixelPartly(drawnPixels, x, y);
+                drawPixelPartly(drawnPixels, x, y, drawX, drawY, drawWidth, drawHeight, lineThickness, color);
             }
         }
         
-        ArrayList<Pixel> newPixelsToSend = updateVirtualTable(drawnPixels);
-        sendToServer(newPixelsToSend);
+        double xRatio = (double)drawWidth / (double)maxWidth;
+        double yRatio = (double)drawHeight / (double)maxHeight; 
+        
+    // if orginal writer
+        updateVirtualTable(drawnPixels, xRatio, yRatio);
+        for (Pixel pixel : drawnPixels){
+            pixelWriter.setColor(pixel.x+drawX, pixel.y+drawY, pixel.color);
+        }
+        //sendToServer({x1, y1, x2, y2, drawX, drawY, drawWidth, drawHeight, lineThickness, color});
+        
+    // if got pixels from server
+        /*HashSet<Pixel> changed = updateVirtualTableGetCorespondingChanged(drawnPixels, xRatio, yRatio);
+        for (Pixel pixel : changed){
+            pixelWriter.setColor(pixel.x+this.drawX, pixel.y+this.drawY, pixel.color);
+        }*/
     }
 
+
     
-    private boolean isTargetColor(int x, int y, Color targetColor, double xRatio, double yRatio){
-        return x < drawX+drawWidth && x >= drawX && y < drawY+drawHeight && y >= drawY
-            && targetColor.equals(getPixelInCanvas(x-drawX, y-drawY, xRatio, yRatio));
-    }
     private void floodFill(int x, int y, Color replacementColor){
-        ArrayList<Pixel> newPixelsToSend = new ArrayList<>();
-        newPixelsToSend.ensureCapacity(100000);
-        
         if(x < drawX || x >= drawX+drawWidth || y < drawY || y >= drawY+drawHeight){
             return;
         }
         
+    // if orginal writer
         double xRatio = (double)drawWidth / (double)maxWidth;
         double yRatio = (double)drawHeight / (double)maxHeight;
-        ArrayList<Pixel> pixels = getCorrespondingVirtualTablePixels(x-drawX, y-drawY, xRatio, yRatio);
+        Pixel pixel = getCorrespondingVirtualTablePixels(x-drawX, y-drawY, xRatio, yRatio).get(0);
+    // if got pixels from server
+        //Pixel pixel = pixelFromServer;
         
-        Color targetColor = pixels.get(0).color;
+        Color targetColor = pixel.color;
         if(targetColor.equals(replacementColor)){
             return;
         }
         
-        LinkedList<Pixel> points = new LinkedList<>();
-        Pixel pixel = pixels.get(0);
-        pixel.color = replacementColor;
-        points.add(pixel);
+        ArrayDeque<Point> points = new ArrayDeque<>();
+        Point point = new Point(pixel.x, pixel.y);
+        points.add(point);
         while(!points.isEmpty()){
-            int size = points.size();
-            for(int i = 0; i < size; ++i){
-                Pixel w = points.removeFirst();
-                if(replacementColor.equals(virtualPixelTable.get(w.x + w.y*maxWidth))){
-                    continue;
-                }
-                Pixel e = new Pixel(w.x, w.y, w.color);
+            Point w = points.pollFirst();
+            if(replacementColor.equals(virtualPixelTable.get(w.x + w.y*maxWidth))){
+                continue;
+            }
+            Point e = new Point(w.x, w.y);
 
-                while(w.x < maxWidth-1 && targetColor.equals(virtualPixelTable.get(w.x + w.y*maxWidth))){
-                    w.x += 1;
+            // for optimization
+            int yIndex1 = w.y*maxWidth;
+            int yIndex2 = (w.y+1)*maxWidth;
+            int yIndex3 = (w.y-1)*maxWidth;
+
+            while(w.x < maxWidth-1 && targetColor.equals(virtualPixelTable.get(w.x + yIndex1))){
+                w.x += 1;
+            }
+            while(e.x > 0 && targetColor.equals(virtualPixelTable.get(e.x + yIndex1))){
+                e.x -= 1;
+            }
+            while(w.x >= e.x){
+                virtualPixelTable.set(w.x + yIndex1, replacementColor);
+                if(w.y+1 < maxHeight && targetColor.equals(virtualPixelTable.get(w.x + yIndex2))){
+                    points.add(new Point(w.x, w.y+1));
                 }
-                while(e.x > 0 && targetColor.equals(virtualPixelTable.get(e.x + e.y*maxWidth))){
-                    e.x -= 1;
+                if(w.y-1 >= 0 && targetColor.equals(virtualPixelTable.get(w.x + yIndex3))){
+                    points.add(new Point(w.x, w.y-1));
                 }
-                while(w.x >= e.x){
-                    virtualPixelTable.set(w.x + w.y*maxWidth, replacementColor);
-                    newPixelsToSend.add(new Pixel(w.x, w.y, w.color));
-                    if(w.y+1 < maxHeight && targetColor.equals(virtualPixelTable.get(w.x + (w.y+1)*maxWidth))){
-                        points.add(new Pixel(w.x, w.y+1, w.color));
-                    }
-                    if(w.y-1 >= 0 && targetColor.equals(virtualPixelTable.get(w.x + (w.y-1)*maxWidth))){
-                        points.add(new Pixel(w.x, w.y-1, w.color));
-                    }
-                    w.x -= 1;
-                }
+                w.x -= 1;
             }
         }
         
-        if(newPixelsToSend.size() < 100000){
-            HashSet<Point> newPoints = new HashSet<>();
-            for(Pixel virtualPixel : newPixelsToSend){
-                newPoints.add(new Point((int)(virtualPixel.x*xRatio), (int)(virtualPixel.y*yRatio)));
-            }
-            
-            for(Point newPoint : newPoints){
-                updatePixelInCanvas(newPoint.x, newPoint.y, xRatio, yRatio);
-            }
-        } else {
-            refresh();
-        }
+        refresh();
         
-        sendToServer(newPixelsToSend);
+    // if orginal writer
+        //sendToServer({pixels.get(0), replacementColor});
     }
 }
 
