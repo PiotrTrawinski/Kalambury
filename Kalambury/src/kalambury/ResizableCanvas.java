@@ -45,7 +45,7 @@ public class ResizableCanvas extends Canvas {
             gc.clearRect(0, 0, getWidth(), getHeight());
             setDrawingArea();
             
-            gc.setFill(Color.web("#C8C8C8"));
+            gc.setFill(Color.web("#AAAAAA"));
             gc.fillRect(0, 0, getWidth(), getHeight());
         }
         
