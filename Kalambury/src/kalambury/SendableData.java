@@ -10,7 +10,7 @@ public abstract class SendableData {
         return type;
     }
     
-    public static SendableData recive(int typeInt, DataOutputStream out){
+    public static SendableData receive(int typeInt, DataOutputStream out){
         DataType type = DataType.fromInt(typeInt);
         switch(type){
         case LineDraw:    return new LineDrawData(out);
