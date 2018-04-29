@@ -25,7 +25,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.scene.web.WebView;
 
 
 public class MainWindowController implements Initializable {
@@ -144,7 +143,6 @@ public class MainWindowController implements Initializable {
             // send to server chatMessage
             SendableData mess = new ChatMessageData(nickName,chatMessage,10000.0);
             Client.sendMessage(mess);
-            
         }
     }
     
