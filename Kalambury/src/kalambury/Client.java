@@ -42,7 +42,8 @@ public class Client {
     }
     public static void sendMessage(String buffer){
         try{
-             out.writeUTF(buffer);
+            out.writeUTF(buffer);
+            System.out.println("Success");
      }catch(IOException e){
             System.err.println(e.getMessage());
      }
