@@ -7,20 +7,15 @@ import javafx.scene.paint.Color;
 
 public class ResizableCanvas extends Canvas {
         private double aspectRatio = 1;
-        
-        protected int drawX = 0;
-        protected int drawY = 0;
-        protected int drawWidth  = 0;
-        protected int drawHeight = 0;
-    
+        protected Rect drawArea = new Rect(0, 0, 0, 0);
         
         public ResizableCanvas() {
             super();
             widthProperty().addListener(evt -> onResize());
             heightProperty().addListener(evt -> onResize());
             
-            drawWidth  = (int)Math.floor(getWidth());
-            drawHeight = (int)Math.floor(getHeight());
+            drawArea.w = (int)Math.floor(getWidth());
+            drawArea.h = (int)Math.floor(getHeight());
         }
 
         private void setDrawingArea(){
@@ -28,15 +23,15 @@ public class ResizableCanvas extends Canvas {
             int height = (int)Math.floor(getHeight());
             
             if((double)width/(double)height > aspectRatio){
-                drawWidth  = (int)Math.floor(aspectRatio * height);
-                drawHeight = height;
-                drawX = (width - drawWidth)/2;
-                drawY = 0;
+                drawArea.w = (int)Math.floor(aspectRatio * height);
+                drawArea.h = height;
+                drawArea.x = (width - drawArea.w)/2;
+                drawArea.y = 0;
             } else {
-                drawWidth = width;
-                drawHeight = (int)Math.floor((double)width/aspectRatio);
-                drawX = 0;
-                drawY = (height - drawHeight)/2;
+                drawArea.w = width;
+                drawArea.h = (int)Math.floor((double)width/aspectRatio);
+                drawArea.x = 0;
+                drawArea.y = (height - drawArea.h)/2;
             }
         }
         
