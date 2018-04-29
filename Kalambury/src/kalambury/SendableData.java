@@ -5,7 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 public abstract class SendableData {
-    protected DataType type;
+    protected DataType type = DataType.Unknown;
     
     public DataType getType(){
         return type;
