@@ -124,8 +124,8 @@ public class MainWindowController implements Initializable {
         //start_time_measuring_thread(1,50);
         System.out.println("send");
         String message = chatInput.getText();
-        byte messagebuffer[] = message.getBytes();
-        Client.sendMessage(messagebuffer, messagebuffer.length);
+        System.out.println(message);
+        Client.sendMessage(message);
     }
     
     public void start_time_measuring_thread(long min, long sec){

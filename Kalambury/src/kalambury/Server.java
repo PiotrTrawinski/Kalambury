@@ -15,19 +15,23 @@ public class Server {
     private static int port;
     private static  LinkedList<byte[]>  messagesToHandle = new LinkedList<byte[]>();
     
-    public static void start(){
-        Thread t = new Thread(()->handleIncomingData());
+    public static void start(){        
+        
+        Thread t = new Thread(()->Server.handleIncomingData());
         t.setDaemon(true);
         t.start();
+        
         
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
                 if(clientsCount < maxClients){
                     Socket socket = serverSocket.accept();
-                    try{InputStream in = socket.getInputStream();
+                    try{
+                        InputStream in = socket.getInputStream();
                         sockets[clientsCount] = socket;
                         streams[clientsCount] = in;
                         clientsCount++;
+                        System.out.print("plusplus");
                     }
                     catch(IOException ex){}
                     }
@@ -43,11 +47,11 @@ public class Server {
     
     
     public static void handleIncomingData(){
-        //System.out.println("Handle");
+        
         while(true){
-            //System.out.println("while");
+            System.out.println("while");
         for(int i = 0; i < clientsCount; i++){ // for every client
-                 //System.out.println("reading");
+                 System.out.println("For");
                 byte[] buffer = new byte[1024];
                 try{
                     int count;
@@ -65,7 +69,9 @@ public class Server {
                 catch(IOException ex){System.out.println(ex.getMessage());};
              }
         }
+
     }
+    
     
 
 }
