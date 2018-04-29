@@ -55,8 +55,8 @@ public class Server {
             for(int i = 0; i < clientsCount; i++){ // for every client
                 try{
                     if(inputStreams[i].available() > 0){
-                        SendableData input = SendableData.receive(inputStreams[i]);
                         System.out.print("Received something");
+                        SendableData input = SendableData.receive(inputStreams[i]);
                     }
                 }
                 catch(IOException ex){System.out.println(ex.getMessage());};

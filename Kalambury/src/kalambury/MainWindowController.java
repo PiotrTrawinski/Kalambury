@@ -142,14 +142,18 @@ public class MainWindowController implements Initializable {
             chatLogPane.setVvalue(1);
             
             // send to server chatMessage
+            SendableData mess = new ChatMessageData(Client.getNick(),chatMessage,10000.0);
+            Client.sendMessage(mess);
+            
         }
     }
     
     public void test_button_clicked(ActionEvent event){
         // these parameters will be chosen from GUI by host
         //start_time_measuring_thread(1,50);
-        String message = chatInput.getText();
-        //SendableData mess = new ChatMessageData();
+
+        
+       
         //Client.sendMessage(message);
     }
     

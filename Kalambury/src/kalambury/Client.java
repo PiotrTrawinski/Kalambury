@@ -22,17 +22,20 @@ public class Client {
     private static DataOutputStream out;
     private static DataInputStream in;
     
+    public static String getNick(){
+        return nick;
+    }
     public static void setIP(String ip){
         Client.ip = ip;
     }
     public static void setSocket(Socket s){
-       Client.socket = s;
-       try {
+        Client.socket = s;
+        try {
             Client.out = new DataOutputStream(new BufferedOutputStream(Client.socket.getOutputStream()));
             Client.in = new DataInputStream(new BufferedInputStream(Client.socket.getInputStream()));
-      } catch(IOException e){
-         System.err.println(e.getMessage());
-      }
+        } catch(IOException e){
+            System.err.println(e.getMessage());
+        }
     }
     
     public static void setPort(int port){
@@ -45,16 +48,7 @@ public class Client {
         return (socket != null);
     }
     public static void sendMessage(SendableData data){
-        try{
             data.send(out);
-            //out.writeUTF(buffer);
-            out.flush();
-            System.out.println("Success");
-     }catch(IOException e){
-            System.err.println(e.getMessage());
-     }
-        
-        
     }
     
     
