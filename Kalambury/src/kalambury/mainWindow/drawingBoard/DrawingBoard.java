@@ -3,6 +3,7 @@ package kalambury.mainWindow.drawingBoard;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
+import javafx.application.Platform;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
 import kalambury.client.Client;
@@ -47,7 +48,9 @@ public class DrawingBoard extends ResizableCanvas{
             break;
         case BUCKET:
             FloodFillData floodFillData = floodFillOwn(x, y, colorWidget.getColor());
-            sendToServer(floodFillData);
+            if(floodFillData != null){
+                sendToServer(floodFillData);
+            }
             break;
         }
         
@@ -252,9 +255,11 @@ public class DrawingBoard extends ResizableCanvas{
         double yRatio = (double)drawArea.h / (double)maxHeight; 
         
         updateVirtualTable(drawnPixels, xRatio, yRatio);
-        for (Pixel pixel : drawnPixels){
-            pixelWriter.setColor(pixel.x+drawArea.x, pixel.y+drawArea.y, pixel.color);
-        }
+        Platform.runLater(() -> {
+            for (Pixel pixel : drawnPixels){
+                pixelWriter.setColor(pixel.x+drawArea.x, pixel.y+drawArea.y, pixel.color);
+            }
+        });
         
         return new LineDrawData(start, end, drawArea, lineThickness, colorWidget.getColor());
     }
@@ -266,9 +271,11 @@ public class DrawingBoard extends ResizableCanvas{
         double yRatio = (double)data.drawRect.h / (double)maxHeight; 
         
         HashSet<Pixel> changed = updateVirtualTableGetCorespondingChanged(drawnPixels, xRatio, yRatio);
-        for (Pixel pixel : changed){
-            pixelWriter.setColor(pixel.x+drawArea.x, pixel.y+drawArea.y, pixel.color);
-        }
+        Platform.runLater(() -> {
+            for (Pixel pixel : changed){
+                pixelWriter.setColor(pixel.x+drawArea.x, pixel.y+drawArea.y, pixel.color);
+            }
+        });
     }
     
     private ArrayList<Pixel> drawLine(Point start, Point end, Rect drawRect, int lineThickness, Color color){
