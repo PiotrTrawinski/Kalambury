@@ -1,5 +1,6 @@
 package kalambury;
 
+import static java.lang.Thread.MAX_PRIORITY;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
@@ -56,7 +57,10 @@ public class WelcomeWindowController implements Initializable {
         Task<ConnectResult> serverConnectTask = new ServerConnectTask(textfield_ip.getText(),Integer.parseInt(textfield_port.getText()));
         
         executor.submit(serverConnectTask);
-
+        Client.timeThreadObject = new Thread(() -> Client.timeThread());
+        Client.timeThreadObject.setDaemon(true);
+        Client.timeThreadObject.setPriority(MAX_PRIORITY);
+        Client.timeThreadObject.start();
         serverConnectTask.setOnSucceeded(event->{
             
             if(Client.isSocketSet()){
