@@ -49,14 +49,30 @@ public class Server {
         Server.port = port;
     }
     
+    public static void sendExcept(SendableData data, int exceptIndex){
+        for(int i = 0; i < clientsCount; i++){
+            if(i != exceptIndex){
+                data.send(outputStreams[i]);
+                try{
+                outputStreams[i].flush();
+                }
+                catch(IOException ex){};
+            }
+        }
+        
+    }
     
     public static void handleIncomingData(){
         while(true){
             for(int i = 0; i < clientsCount; i++){ // for every client
                 try{
                     if(inputStreams[i].available() > 0){
-                        System.out.print("Received something");
-                        SendableData input = SendableData.receive(inputStreams[i]);
+                        final SendableData input = SendableData.receive(inputStreams[i]);
+                        final int skip = i;
+                        Thread sendOutDataThread = new Thread( () -> Server.sendExcept(input,skip));
+                        sendOutDataThread.setDaemon(true);
+                        sendOutDataThread.start();
+                        //message received, send it to clients except the sender client
                     }
                 }
                 catch(IOException ex){System.out.println(ex.getMessage());};
