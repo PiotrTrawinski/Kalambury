@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
+import kalambury.client.Client;
+import kalambury.sendableData.NewPlayerData;
+import kalambury.sendableData.StartServerData;
 
 public class Server {
     private static final int maxClients = 5;
@@ -16,7 +19,7 @@ public class Server {
     private static final DataOutputStream outputStreams[] = new DataOutputStream[maxClients];
     private static volatile int clientsCount = 0;
     private static int port;
-    private static final  LinkedList<byte[]>  messagesToHandle = new LinkedList<byte[]>();
+    private static final  LinkedList<byte[]>  messagesToHandle = new LinkedList<>();
     
     public static void initialize(int port){
         //set the port that server is working on, and start it on a new thread
@@ -39,7 +42,16 @@ public class Server {
                         sockets[clientsCount] = socket;
                         inputStreams[clientsCount] = new DataInputStream(socket.getInputStream());
                         outputStreams[clientsCount] = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+                        
+                        NewPlayerData newPlayerData = (NewPlayerData)SendableData.receive(inputStreams[clientsCount]);
+                        StartServerData startServerData = new StartServerData(Client.getPlayers());
+                        startServerData.send(outputStreams[clientsCount]);
+                        
                         clientsCount++;
+                        
+                        Thread sendOutDataThread = new Thread( () -> Server.sendExcept(newPlayerData, -1));
+                        sendOutDataThread.setDaemon(true);
+                        sendOutDataThread.start();
                     }
                     catch(IOException ex){
                         System.err.println(ex.getMessage());

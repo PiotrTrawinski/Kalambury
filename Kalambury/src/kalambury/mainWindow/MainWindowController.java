@@ -7,13 +7,10 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Label;
@@ -26,8 +23,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import kalambury.client.Client;
 
@@ -74,7 +69,7 @@ public class MainWindowController implements Initializable {
     
     private ColorWidget colorWidget;
     private Chat chat;
-    private final ObservableList<Player> players = FXCollections.observableArrayList();
+    
     
     /*
         Mouse events
@@ -196,10 +191,7 @@ public class MainWindowController implements Initializable {
         scoreTablePointsColumn.setCellValueFactory(
                 player -> player.getValue().getScoreProperty()
         );
-        scoreTableView.setItems(players);
-        // example adding players to score table
-        players.add(new Player("Piotr", 0));
-        players.add(new Player("Oliwier", 13));
+        scoreTableView.setItems(Client.getPlayers());
         
         Client.setChat(chat);
     }    
