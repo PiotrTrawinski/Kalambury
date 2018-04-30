@@ -7,10 +7,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.LinkedList;
+import java.util.ArrayDeque;
+import javafx.util.Pair;
 import kalambury.client.Client;
 import kalambury.sendableData.NewPlayerData;
 import kalambury.sendableData.StartServerData;
+
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Server {
     private static final int maxClients = 5;
@@ -19,7 +23,8 @@ public class Server {
     private static final DataOutputStream outputStreams[] = new DataOutputStream[maxClients];
     private static volatile int clientsCount = 0;
     private static int port;
-    private static final  LinkedList<byte[]>  messagesToHandle = new LinkedList<>();
+    private static volatile ArrayDeque< Pair<SendableData,Integer> >  messagesToHandle = new ArrayDeque<Pair<SendableData,Integer>>();
+    private static final Lock _mutex = new ReentrantLock(true);
     
     public static void initialize(int port){
         //set the port that server is working on, and start it on a new thread
@@ -30,9 +35,15 @@ public class Server {
     }
     
     public static void start(){        
+        // incoming data thread
         Thread t = new Thread(()->Server.handleIncomingData());
         t.setDaemon(true);
         t.start();
+        
+        // send incoming data to clients
+        Thread sendOutDataThread = new Thread( () -> Server.forwardDataToClients());
+        sendOutDataThread.setDaemon(true);
+        sendOutDataThread.start();
         
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
@@ -49,9 +60,9 @@ public class Server {
                         
                         clientsCount++;
                         
-                        Thread sendOutDataThread = new Thread( () -> Server.sendExcept(newPlayerData, -1));
-                        sendOutDataThread.setDaemon(true);
-                        sendOutDataThread.start();
+                        Thread sendOutNewUserDataThread = new Thread( () -> Server.sendExcept(newPlayerData, -1));
+                        sendOutNewUserDataThread.setDaemon(true);
+                        sendOutNewUserDataThread.start();
                     }
                     catch(IOException ex){
                         System.err.println(ex.getMessage());
@@ -62,8 +73,24 @@ public class Server {
             System.err.println(ex.getMessage());
         }
     }
-    
+    public static void forwardDataToClients(){
+        //System.out.println("Forward start");
+
+        while(true){
+            
+            if(messagesToHandle.size() > 0){
+                _mutex.lock();
+                Pair DataAndSkipIndex = messagesToHandle.removeFirst();
+                _mutex.unlock();
+                SendableData data = (SendableData)DataAndSkipIndex.getKey();
+                int skip = (Integer)DataAndSkipIndex.getValue();
+                //System.out.println("Sending except");
+                sendExcept(data,skip);
+            }
+        }   
+    }
     public static void sendExcept(SendableData data, int exceptIndex){
+        
         for(int i = 0; i < clientsCount; i++){
             if(i != exceptIndex){
                 data.send(outputStreams[i]);
@@ -75,7 +102,6 @@ public class Server {
                 }
             }
         }
-        
     }
     
     public static void handleIncomingData(){
@@ -85,10 +111,11 @@ public class Server {
                     if(inputStreams[i].available() > 0){
                         final SendableData input = SendableData.receive(inputStreams[i]);
                         final int skip = i;
-                        Thread sendOutDataThread = new Thread( () -> Server.sendExcept(input,skip));
-                        sendOutDataThread.setDaemon(true);
-                        sendOutDataThread.start();
                         //message received, send it to clients except the sender client
+                        _mutex.lock();
+                        messagesToHandle.addLast(new Pair(input,i));
+                        _mutex.unlock();
+                        //System.out.println("Adding message to queue");
                     }
                 } catch(IOException ex) {
                     System.err.println(ex.getMessage());
