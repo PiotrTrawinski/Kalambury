@@ -28,7 +28,7 @@ public class StartServerData extends SendableData{
                 players.add(new Player(nickName, score));
             }
         } catch (IOException ex) {
-            System.err.printf("error reading data from stream, system error: \"%s\"", ex.getMessage());
+            System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
         }
     }
 
@@ -42,7 +42,7 @@ public class StartServerData extends SendableData{
             }
             out.flush();
         } catch (IOException ex) {
-            System.err.printf("error writing data to stream, system error: \"%s\"", ex.getMessage());
+            System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());
         }
     }
 }

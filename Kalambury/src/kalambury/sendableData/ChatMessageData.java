@@ -28,7 +28,7 @@ public class ChatMessageData extends SendableData{
             time     = in.readDouble();
             isHost   = in.readBoolean();
         } catch (IOException ex) {
-            System.err.printf("error reading data from stream, system error: \"%s\"", ex.getMessage());
+            System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
         }
     }
 
@@ -41,7 +41,7 @@ public class ChatMessageData extends SendableData{
             out.writeBoolean(isHost);
             out.flush();
         } catch (IOException ex) {
-            System.err.printf("error writing data to stream, system error: \"%s\"", ex.getMessage());
+            System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());
         }
     }
 }

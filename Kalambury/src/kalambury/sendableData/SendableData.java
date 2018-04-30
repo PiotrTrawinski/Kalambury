@@ -16,7 +16,7 @@ public abstract class SendableData {
         try {
             type = DataType.fromInt(in.readInt());
         } catch (IOException ex) {
-            System.err.printf("error reading data type from stream, system error: \"%s\"", ex.getMessage());
+            System.err.printf("error reading data type from stream, system error: \"%s\"\n", ex.getMessage());
         }
         
         switch(type){

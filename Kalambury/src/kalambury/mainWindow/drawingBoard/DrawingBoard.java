@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
+import kalambury.client.Client;
 import kalambury.sendableData.FloodFillData;
 import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.SendableData;
@@ -29,7 +30,7 @@ public class DrawingBoard extends ResizableCanvas{
     }
     
     private void sendToServer(SendableData sendableData){
-        //Client.sendMessage(sendableData);
+        Client.sendMessage(sendableData);
     }
     
     public void mousePressed(int x, int y){
