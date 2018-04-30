@@ -126,6 +126,9 @@ public class MainWindowController implements Initializable {
     @FXML private void enteredChatMessage(){
         chat.handleNewClientMessage();
     }
+    public TextField getChatInputField(){
+        return chatInput;
+    }
     
     public void test_button_clicked(ActionEvent event){
         // these parameters will be chosen from GUI by host
@@ -193,5 +196,7 @@ public class MainWindowController implements Initializable {
         // example adding players to score table
         players.add(new Player("Piotr", 0));
         players.add(new Player("Oliwier", 13));
+        
+        Client.setChat(chat);
     }    
 }

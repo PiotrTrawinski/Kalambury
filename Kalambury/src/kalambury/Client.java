@@ -21,9 +21,13 @@ public class Client {
     private static Socket socket;
     private static DataOutputStream out;
     private static DataInputStream in;
+    private static Chat chat;
     
     public static String getNick(){
         return nick;
+    }
+    public static void setChat(Chat chat){
+        Client.chat = chat;
     }
     public static void setIP(String ip){
         Client.ip = ip;
@@ -50,6 +54,20 @@ public class Client {
     public static void sendMessage(SendableData data){
             data.send(out);
     }
-    
+    public static void listen(){
+        while(true){
+
+            try{
+                    if(in.available() > 0){
+                        final SendableData input = SendableData.receive(in);
+                        // tutaj obsluzyc te dane
+                        ChatMessageData cmd = (ChatMessageData)input;
+                        chat.handleNewServerMessage(cmd);
+                        System.out.println("Data received");
+                    }
+                }
+                catch(IOException ex){System.out.println(ex.getMessage());};
+        }
+    }
     
 }
