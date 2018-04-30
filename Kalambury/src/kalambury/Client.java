@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -21,6 +24,8 @@ public class Client {
     private static Socket socket;
     private static DataOutputStream out;
     private static DataInputStream in;
+    private static long time;
+    public static Thread timeThreadObject;
     private static Chat chat;
     
     public static String getNick(){
@@ -70,4 +75,38 @@ public class Client {
         }
     }
     
+    public static long getTime(){
+        return time;
+    }
+    public static void timeThread(){
+        time = 0;
+        long syncTime = 0;
+        long timeAfterSync = 0;
+        long sleepTime = 20;
+        long timeBeforeSleep = System.currentTimeMillis();
+        boolean firstTime = true;
+        while(true){
+            if("server has time" == "true"){
+                syncTime = 0; // timeSocket.getTime()
+                timeAfterSync = 0;
+                timeBeforeSleep = System.currentTimeMillis();
+            }
+            long deltaTimeAfterSync = System.currentTimeMillis() - timeBeforeSleep;
+            if(!firstTime && deltaTimeAfterSync < sleepTime/2){
+                // player changed his system clock
+                deltaTimeAfterSync = sleepTime;
+            }
+            timeAfterSync += deltaTimeAfterSync;
+            time = syncTime + timeAfterSync;
+            
+            timeBeforeSleep = System.currentTimeMillis();
+            try {
+                TimeUnit.MILLISECONDS.sleep(sleepTime);
+            } catch (InterruptedException ex) {
+                System.err.printf("error sleep: \"%s\"\n", ex.getMessage());
+            }
+
+            firstTime = false;
+        }
+    }
 }
