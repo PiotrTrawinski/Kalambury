@@ -10,10 +10,12 @@ import kalambury.mainWindow.Player;
 
 public class StartServerData extends SendableData{
     public ObservableList<Player> players;
+    public long time;
     
-    public StartServerData(ObservableList<Player> players){
+    public StartServerData(ObservableList<Player> players, long time){
         type = DataType.StartServerData;
         this.players = players;
+        this.time = time;
     }
     
     public StartServerData(DataInputStream in){
@@ -27,6 +29,7 @@ public class StartServerData extends SendableData{
                 int score = in.readInt();
                 players.add(new Player(nickName, score));
             }
+            time = in.readLong();
         } catch (IOException ex) {
             System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
         }
@@ -40,6 +43,7 @@ public class StartServerData extends SendableData{
                 out.writeUTF(players.get(i).getNickName());
                 out.writeInt(players.get(i).getScore());
             }
+            out.writeLong(time);
             out.flush();
         } catch (IOException ex) {
             System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());

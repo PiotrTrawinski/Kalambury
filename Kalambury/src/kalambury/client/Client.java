@@ -23,6 +23,7 @@ import kalambury.sendableData.FloodFillData;
 import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.NewPlayerData;
 import kalambury.sendableData.StartServerData;
+import kalambury.sendableData.TimeData;
 
 
 public class Client {
@@ -45,7 +46,10 @@ public class Client {
     
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     
-    
+    private static long syncTime;
+    private static long timeAfterSync;
+    private static long timeBeforeSleep;
+
     public static void initialize(
             String ip, int port, String nick, Label label_info, 
             Runnable switchToMainStage, boolean isHost
@@ -73,6 +77,7 @@ public class Client {
                 newPlayerData.send(out);
                 final StartServerData startData = (StartServerData)SendableData.receive(in);
                 players.addAll(startData.players);
+                time = startData.time;
                 
                 label_info.setText("Connection established");
                 switchToMainStage.run();
@@ -134,6 +139,13 @@ public class Client {
                         NewPlayerData npd = (NewPlayerData)input;
                         players.add(new Player(npd.nickName, 0));
                         break;
+                    case Time:
+                        TimeData td = (TimeData)input;
+                        syncTime = td.time;
+                        timeAfterSync = 0;
+                        timeBeforeSleep = System.currentTimeMillis();
+                        time = syncTime;
+                        break;
                     default:
                         break;
                     }
@@ -156,17 +168,12 @@ public class Client {
     }
     public static void timeThread(){
         time = 0;
-        long syncTime = 0;
-        long timeAfterSync = 0;
         long sleepTime = 20;
-        long timeBeforeSleep = System.currentTimeMillis();
+        syncTime = 0;
+        timeAfterSync = 0;
+        timeBeforeSleep = System.currentTimeMillis();
         boolean firstTime = true;
         while(true){
-            if("server has time" == "true"){
-                syncTime = 0; // timeSocket.getTime()
-                timeAfterSync = 0;
-                timeBeforeSleep = System.currentTimeMillis();
-            }
             long deltaTimeAfterSync = System.currentTimeMillis() - timeBeforeSleep;
             if(!firstTime && deltaTimeAfterSync < sleepTime/2){
                 // player changed his system clock

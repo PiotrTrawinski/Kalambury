@@ -5,9 +5,11 @@ import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import static java.lang.Thread.MAX_PRIORITY;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayDeque;
+import java.util.concurrent.TimeUnit;
 import javafx.util.Pair;
 import kalambury.client.Client;
 import kalambury.sendableData.NewPlayerData;
@@ -15,6 +17,7 @@ import kalambury.sendableData.StartServerData;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import kalambury.sendableData.TimeData;
 
 public class Server {
     private static final int maxClients = 5;
@@ -45,6 +48,12 @@ public class Server {
         sendOutDataThread.setDaemon(true);
         sendOutDataThread.start();
         
+        // time thread
+        Thread timeThreadObject = new Thread(() -> timeThread());
+        timeThreadObject.setDaemon(true);
+        timeThreadObject.setPriority(MAX_PRIORITY);
+        timeThreadObject.start();
+        
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
                 if(clientsCount < maxClients){
@@ -55,7 +64,7 @@ public class Server {
                         outputStreams[clientsCount] = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                         
                         NewPlayerData newPlayerData = (NewPlayerData)SendableData.receive(inputStreams[clientsCount]);
-                        StartServerData startServerData = new StartServerData(Client.getPlayers());
+                        StartServerData startServerData = new StartServerData(Client.getPlayers(), Client.getTime());
                         startServerData.send(outputStreams[clientsCount]);
                         
                         clientsCount++;
@@ -121,6 +130,25 @@ public class Server {
                     System.err.println(ex.getMessage());
                 }
             }
+        }
+    }
+    
+    public static void timeThread(){
+        long startTime = System.currentTimeMillis();
+        long sleepTime = 1000;
+        TimeData timeData = new TimeData(0);
+        
+        while(true){
+            try {
+                TimeUnit.MILLISECONDS.sleep(sleepTime);
+            } catch (InterruptedException ex) {
+                System.err.printf("error sleep: \"%s\"\n", ex.getMessage());
+            }
+            timeData.time = System.currentTimeMillis() - startTime;
+            
+            _mutex.lock();
+            messagesToHandle.addFirst(new Pair(timeData, -1));
+            _mutex.unlock();
         }
     }
 }
