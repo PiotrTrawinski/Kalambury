@@ -354,14 +354,18 @@ public class DrawingBoard extends ResizableCanvas{
             return null;
         }
         
-        floodFill(pixel, replacementColor);
-        refresh();
+        Platform.runLater(() -> {
+            floodFill(pixel, replacementColor);
+            refresh();
+        });
         
         return new FloodFillData(pixel, replacementColor);
     }
     public void floodFillRemote(FloodFillData data){
-        floodFill(data.pixel, data.replacementColor);
-        refresh();
+        Platform.runLater(() -> {
+            floodFill(data.pixel, data.replacementColor);
+            refresh();
+        });
     }
     private void floodFill(Pixel pixel, Color replacementColor){
         Color targetColor = pixel.color;
