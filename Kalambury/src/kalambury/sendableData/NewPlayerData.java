@@ -18,7 +18,7 @@ public class NewPlayerData extends SendableData{
         try {
             nickName = in.readUTF();
         } catch (IOException ex) {
-            System.err.printf("error reading data from stream, system error: \"%s\"", ex.getMessage());
+            System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
         }
     }
 
@@ -28,7 +28,7 @@ public class NewPlayerData extends SendableData{
             out.writeUTF(nickName);
             out.flush();
         } catch (IOException ex) {
-            System.err.printf("error writing data to stream, system error: \"%s\"", ex.getMessage());
+            System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());
         }
     }
 }

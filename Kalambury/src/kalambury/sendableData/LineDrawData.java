@@ -49,7 +49,7 @@ public class LineDrawData extends SendableData{
             double colorB = in.readDouble();
             color = Color.color(colorR, colorG, colorB);
         } catch (IOException ex) {
-            System.err.printf("error reading data from stream, system error: \"%s\"", ex.getMessage());
+            System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
         }
     }
 
@@ -72,8 +72,10 @@ public class LineDrawData extends SendableData{
             out.writeDouble(color.getRed());
             out.writeDouble(color.getGreen());
             out.writeDouble(color.getBlue());
+            
+            out.flush();
         } catch (IOException ex) {
-            System.err.printf("error writing data to stream, system error: \"%s\"", ex.getMessage());
+            System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());
         }
     }
 }

@@ -33,7 +33,7 @@ public class FloodFillData extends SendableData{
             pixel = new Pixel(x, y, Color.color(targetColorR, targetColorG, targetColorB));
             replacementColor = Color.color(replacementColorR, replacementColorG, replacementColorB);
         } catch (IOException ex) {
-            System.err.printf("error reading data from stream, system error: \"%s\"", ex.getMessage());
+            System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
         }
     }
 
@@ -48,8 +48,9 @@ public class FloodFillData extends SendableData{
             out.writeDouble(replacementColor.getRed());
             out.writeDouble(replacementColor.getGreen());
             out.writeDouble(replacementColor.getBlue());
+            out.flush();
         } catch (IOException ex) {
-            System.err.printf("error writing data to stream, system error: \"%s\"", ex.getMessage());
+            System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());
         }
     }
 }

@@ -18,6 +18,7 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.Label;
 import kalambury.mainWindow.Player;
+import kalambury.mainWindow.drawingBoard.DrawingBoard;
 import kalambury.sendableData.FloodFillData;
 import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.NewPlayerData;
@@ -39,6 +40,7 @@ public class Client {
     private static boolean isHostFlag;
     
     private static Chat chat;
+    private static DrawingBoard drawingBoard;
     private static final ObservableList<Player> players = FXCollections.observableArrayList();
     
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -91,6 +93,9 @@ public class Client {
     public static void setChat(Chat chat){
         Client.chat = chat;
     }
+    public static void setDrawingBoard(DrawingBoard drawingBoard){
+        Client.drawingBoard = drawingBoard;
+    }
     public static void setSocket(Socket s){
         Client.socket = s;
         try {
@@ -119,11 +124,11 @@ public class Client {
                         break;
                     case LineDraw:
                         LineDrawData ldd = (LineDrawData)input;
-                        //chat.handleNewServerMessage(data);
+                        drawingBoard.drawLineRemote(ldd);
                         break;
                     case FloodFill:
                         FloodFillData ffd = (FloodFillData)input;
-                        //chat.handleNewServerMessage(data);
+                        drawingBoard.floodFillRemote(ffd);
                         break;
                     case NewPlayerData:
                         NewPlayerData npd = (NewPlayerData)input;

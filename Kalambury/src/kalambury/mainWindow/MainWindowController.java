@@ -194,5 +194,6 @@ public class MainWindowController implements Initializable {
         scoreTableView.setItems(Client.getPlayers());
         
         Client.setChat(chat);
+        Client.setDrawingBoard(drawingBoard);
     }    
 }
