@@ -49,13 +49,18 @@ public class Chat {
         // if no message was earlier then this one
         addPlayerTextNodes(0, time, status, nick, message, exactTime);
     }
-    private void addPlayerChatMessage(String nickName, String message, double time, boolean isLocal){
+    private void addPlayerChatMessage(String nickName, String message, double time, boolean isHost, boolean isLocal){
         // prepare time Text
         Text timeText = new Text("<00:00:00>");
         timeText.setFill(Color.GRAY);
         
         // prepare status Text
-        Text statusText = new Text("( HOST )");
+        Text statusText;
+        if(isHost){
+            statusText = new Text("( HOST )");
+        } else {
+            statusText = new Text("(CLIENT)");
+        }
         statusText.setFill(Color.DARKGREEN);
         
         // prepare nickname Text
@@ -86,18 +91,18 @@ public class Chat {
     public void handleNewClientMessage(){
         if(!userInput.getText().isEmpty()){
             String chatMessage = userInput.getText();
-            String nickName = "asdf";
-            double time = Math.random(); // for tests only
-            addPlayerChatMessage(nickName, chatMessage, time, true);
+            String nickName = Client.getNick();
+            double time = 0; // Client.getTime()
+            addPlayerChatMessage(nickName, chatMessage, time, Client.isHost(), true);
             Platform.runLater(()->{userInput.setText("");});
             
             
-            SendableData mess = new ChatMessageData(nickName,chatMessage,10000.0);
+            SendableData mess = new ChatMessageData(nickName, chatMessage, time, Client.isHost());
             Client.sendMessage(mess);
         }
     }
 
     public void handleNewServerMessage(ChatMessageData data){
-        addPlayerChatMessage(data.nickName, data.message, data.time, false);
+        addPlayerChatMessage(data.nickName, data.message, data.time, data.isHost, false);
     }
 }

@@ -34,7 +34,8 @@ public class WelcomeWindowController implements Initializable {
             Integer.parseInt(textfield_port.getText()), 
             textfield_nick.getText(),
             label_info,
-            this::switchToMainStage
+            this::switchToMainStage,
+            true
         );
     }
     
@@ -45,7 +46,8 @@ public class WelcomeWindowController implements Initializable {
             Integer.parseInt(textfield_port.getText()), 
             textfield_nick.getText(),
             label_info,
-            this::switchToMainStage
+            this::switchToMainStage,
+            false
         );
     }
     
