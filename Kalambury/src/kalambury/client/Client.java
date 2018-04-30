@@ -1,6 +1,5 @@
 package kalambury.client;
 
-import kalambury.server.ServerConnectTask;
 import kalambury.mainWindow.Chat;
 import kalambury.sendableData.SendableData;
 import kalambury.sendableData.ChatMessageData;
@@ -14,10 +13,15 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.Label;
+import kalambury.mainWindow.Player;
 import kalambury.sendableData.FloodFillData;
 import kalambury.sendableData.LineDrawData;
+import kalambury.sendableData.NewPlayerData;
+import kalambury.sendableData.StartServerData;
 
 
 public class Client {
@@ -35,6 +39,7 @@ public class Client {
     private static boolean isHostFlag;
     
     private static Chat chat;
+    private static final ObservableList<Player> players = FXCollections.observableArrayList();
     
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     
@@ -61,6 +66,11 @@ public class Client {
         serverConnectTask.setOnSucceeded(event->{
             if(Client.isSocketSet()){
                 executor.shutdown();
+                
+                NewPlayerData newPlayerData = new NewPlayerData(Client.nick);
+                newPlayerData.send(out);
+                final StartServerData startData = (StartServerData)SendableData.receive(in);
+                players.addAll(startData.players);
                 
                 label_info.setText("Connection established");
                 switchToMainStage.run();
@@ -115,6 +125,10 @@ public class Client {
                         FloodFillData ffd = (FloodFillData)input;
                         //chat.handleNewServerMessage(data);
                         break;
+                    case NewPlayerData:
+                        NewPlayerData npd = (NewPlayerData)input;
+                        players.add(new Player(npd.nickName, 0));
+                        break;
                     default:
                         break;
                     }
@@ -123,6 +137,13 @@ public class Client {
                 System.err.println(ex.getMessage());
             }
         }
+    }
+    
+    public static ObservableList<Player> getPlayers(){
+        return players;
+    }
+    public static void addPlayer(Player player){
+        players.add(player);
     }
     
     public static long getTime(){

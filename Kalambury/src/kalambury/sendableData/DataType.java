@@ -4,7 +4,9 @@ public enum DataType {
     Unknown(-1),
     LineDraw(0),
     FloodFill(1),
-    ChatMessage(2);
+    ChatMessage(2),
+    StartServerData(3),
+    NewPlayerData(4);
     
     private final int value;
     private DataType(int value) {

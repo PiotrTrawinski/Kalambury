@@ -1,10 +1,8 @@
-package kalambury.server;
+package kalambury.client;
 
 import java.io.IOException;
 import java.net.Socket;
 import javafx.concurrent.Task;
-import kalambury.client.Client;
-import kalambury.client.ConnectResult;
 
 
 public class ServerConnectTask extends Task<ConnectResult> {

@@ -1,7 +1,5 @@
 package kalambury.sendableData;
 
-import kalambury.sendableData.LineDrawData;
-import kalambury.sendableData.FloodFillData;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -22,10 +20,12 @@ public abstract class SendableData {
         }
         
         switch(type){
-        case LineDraw:    return new LineDrawData(in);
-        case FloodFill:   return new FloodFillData(in);
-        case ChatMessage: return new ChatMessageData(in);
-        default:          return null;
+        case LineDraw:        return new LineDrawData(in);
+        case FloodFill:       return new FloodFillData(in);
+        case ChatMessage:     return new ChatMessageData(in);
+        case StartServerData: return new StartServerData(in);
+        case NewPlayerData:   return new NewPlayerData(in);
+        default:              return null;
         }
     }
 
