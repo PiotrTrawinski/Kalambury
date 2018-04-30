@@ -1,5 +1,7 @@
-package kalambury;
+package kalambury.mainWindow;
 
+import kalambury.sendableData.SendableData;
+import kalambury.sendableData.ChatMessageData;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -8,6 +10,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import kalambury.client.Client;
 
 public class Chat {
     private final TextFlow log;

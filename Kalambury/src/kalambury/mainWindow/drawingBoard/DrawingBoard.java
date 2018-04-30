@@ -1,10 +1,13 @@
-package kalambury;
+package kalambury.mainWindow.drawingBoard;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
+import kalambury.sendableData.FloodFillData;
+import kalambury.sendableData.LineDrawData;
+import kalambury.sendableData.SendableData;
 
 public class DrawingBoard extends ResizableCanvas{
     private final int maxWidth = 1920;

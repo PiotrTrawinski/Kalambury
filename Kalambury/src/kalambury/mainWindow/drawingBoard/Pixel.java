@@ -1,4 +1,4 @@
-package kalambury;
+package kalambury.mainWindow.drawingBoard;
 
 import javafx.scene.paint.Color;
 

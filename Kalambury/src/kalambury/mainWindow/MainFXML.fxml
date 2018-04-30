@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.net.*?>
 <?import javafx.scene.web.*?>
 <?import kalambury.*?>
 <?import javafx.scene.*?>
@@ -15,13 +16,13 @@
 <?import javafx.scene.layout.AnchorPane?>
 
 <!--
-<?import kalambury.TimeLabel?>
-<?import kalambury.DrawingBoard?>
+<?import kalambury.mainWindow.TimeLabel?>
+<?import kalambury.mainWindow.drawingBoard.DrawingBoard?>
 -->
-<?import kalambury.TimeLabel?>
-<?import kalambury.DrawingBoard?>
+<?import kalambury.mainWindow.TimeLabel?>
+<?import kalambury.mainWindow.drawingBoard.DrawingBoard?>
 
-<GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseDragged="#onMouseDragged" onMouseReleased="#onMouseReleased" prefHeight="493.0" prefWidth="792.0" style="-fx-border-color: #C8C8C8; -fx-border-width: 2;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kalambury.MainWindowController">
+<GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseDragged="#onMouseDragged" onMouseReleased="#onMouseReleased" prefHeight="493.0" prefWidth="792.0" style="-fx-border-color: #C8C8C8; -fx-border-width: 2;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kalambury.mainWindow.MainWindowController">
    <columnConstraints>
       <ColumnConstraints hgrow="NEVER" maxWidth="77.0" minWidth="77.0" prefWidth="77.0" />
       <ColumnConstraints hgrow="NEVER" maxWidth="23.0" minWidth="23.0" prefWidth="23.0" />
@@ -76,7 +77,7 @@
             <Font name="System Bold" size="24.0" />
          </font>
       </Label>
-      <TableView fx:id="scoreTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" stylesheets="@tableViewStyle.css" GridPane.columnIndex="7" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2">
+      <TableView fx:id="scoreTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" stylesheets="@../style/tableViewStyle.css" GridPane.columnIndex="7" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2">
         <columns>
           <TableColumn id="Gracz" fx:id="scoreTableNickNameColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="190.0" prefWidth="190.0" text="Gracz" />
           <TableColumn id="Punkty" fx:id="scoreTablePointsColumn" editable="false" maxWidth="1.7976931348623157E308" minWidth="79.0" prefWidth="79.0" text="Punkty" />
@@ -97,15 +98,15 @@
       </Label>
       <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="100.0" prefWidth="200.0" style="-fx-border-color: #C8C8C8; -fx-border-width: 0 2 2 2;" GridPane.columnIndex="2" GridPane.rowIndex="1">
          <children>
-            <Button fx:id="pencilButton" maxHeight="30.0" maxWidth="30.0" minHeight="30.0" minWidth="30.0" mnemonicParsing="false" onAction="#onPencilButtonClicked" prefHeight="30.0" prefWidth="30.0" stylesheets="@drawToolButtonStyle.css">
+            <Button fx:id="pencilButton" maxHeight="30.0" maxWidth="30.0" minHeight="30.0" minWidth="30.0" mnemonicParsing="false" onAction="#onPencilButtonClicked" prefHeight="30.0" prefWidth="30.0" stylesheets="@../style/drawToolButtonStyle.css">
                <HBox.margin>
                   <Insets left="5.0" right="5.0" />
                </HBox.margin></Button>
-            <Button fx:id="colorPickerButton" maxHeight="30.0" maxWidth="30.0" minHeight="30.0" minWidth="30.0" mnemonicParsing="false" onAction="#onColorPickerButtonClicked" prefHeight="30.0" prefWidth="30.0" stylesheets="@drawToolButtonStyle.css">
+            <Button fx:id="colorPickerButton" maxHeight="30.0" maxWidth="30.0" minHeight="30.0" minWidth="30.0" mnemonicParsing="false" onAction="#onColorPickerButtonClicked" prefHeight="30.0" prefWidth="30.0" stylesheets="@../style/drawToolButtonStyle.css">
                <HBox.margin>
                   <Insets left="5.0" right="5.0" />
                </HBox.margin></Button>
-            <Button fx:id="bucketButton" maxHeight="30.0" maxWidth="30.0" minHeight="30.0" minWidth="30.0" mnemonicParsing="false" onAction="#onBucketButtonClicked" prefHeight="30.0" prefWidth="30.0" stylesheets="@drawToolButtonStyle.css">
+            <Button fx:id="bucketButton" maxHeight="30.0" maxWidth="30.0" minHeight="30.0" minWidth="30.0" mnemonicParsing="false" onAction="#onBucketButtonClicked" prefHeight="30.0" prefWidth="30.0" stylesheets="@../style/drawToolButtonStyle.css">
                <HBox.margin>
                   <Insets left="5.0" right="5.0" />
                </HBox.margin></Button>

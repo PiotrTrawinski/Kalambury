@@ -1,4 +1,4 @@
-package kalambury;
+package kalambury.sendableData;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -7,7 +7,7 @@ import java.io.IOException;
 public class ChatMessageData extends SendableData{
     public String nickName;
     public String message;
-    double time;
+    public double time;
     
     public ChatMessageData(String nickName, String message, double time){
         type = DataType.ChatMessage;

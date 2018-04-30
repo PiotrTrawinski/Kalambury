@@ -1,6 +1,6 @@
-package kalambury;
+package kalambury.server;
 
-
+import kalambury.sendableData.SendableData;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -84,6 +84,5 @@ public class Server {
             }
         }
     }
-
 }
 

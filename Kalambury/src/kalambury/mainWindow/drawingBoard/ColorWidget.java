@@ -1,4 +1,4 @@
-package kalambury;
+package kalambury.mainWindow.drawingBoard;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;

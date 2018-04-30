@@ -1,5 +1,8 @@
-package kalambury;
+package kalambury.mainWindow;
 
+import kalambury.mainWindow.drawingBoard.ColorWidget;
+import kalambury.mainWindow.drawingBoard.DrawingBoard;
+import kalambury.mainWindow.drawingBoard.DrawingTool;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.beans.value.ChangeListener;
@@ -26,6 +29,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import kalambury.client.Client;
 
 
 public class MainWindowController implements Initializable {

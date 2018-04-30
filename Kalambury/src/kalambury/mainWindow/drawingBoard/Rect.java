@@ -1,4 +1,4 @@
-package kalambury;
+package kalambury.mainWindow.drawingBoard;
 
 public class Rect {
     public int x = 0;

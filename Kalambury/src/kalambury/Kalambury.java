@@ -1,5 +1,6 @@
 package kalambury;
 
+import kalambury.welcomeWindow.WelcomeWindowController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -10,12 +11,11 @@ import javafx.stage.Stage;
 public class Kalambury extends Application {
     Stage welcomeStage;
     Stage mainStage;
-    @Override
-    public void start(Stage stage) throws Exception {
-        
-     
+    
+    @Override public void start(Stage stage) throws Exception {
+
         // Create main window but don't show it
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("MainFXML.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("mainWindow/MainFXML.fxml"));
         Parent root = (Parent)loader.load();
         Scene scene =  new Scene(root);
         Stage s = new Stage();
@@ -26,7 +26,7 @@ public class Kalambury extends Application {
         
         
         // init welcome window
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("WelcomeWindowFXML.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("welcomeWindow/WelcomeWindowFXML.fxml"));
         Parent welcomeRoot = fxmlLoader.load();
         WelcomeWindowController controller = fxmlLoader.getController();
         controller.setKalambury(this);
@@ -41,20 +41,15 @@ public class Kalambury extends Application {
         
         stage.setMinHeight(stage.getHeight());
         stage.setMinWidth(stage.getWidth());
-
     }
     
     
     public void showMainWindow() throws Exception{
-
         welcomeStage.close();
         mainStage.show();
-
-        
     }
     
     
-
     public static void main(String[] args) {
         launch(args);
     }
