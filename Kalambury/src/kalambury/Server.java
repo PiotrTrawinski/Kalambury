@@ -5,26 +5,31 @@ import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
 
 public class Server {
     private static final int maxClients = 5;
-    private static Socket sockets[] = new Socket[maxClients];
-    private static DataInputStream inputStreams[] = new DataInputStream[maxClients];
-    private static DataOutputStream outputStreams[] = new DataOutputStream[maxClients];
+    private static final Socket sockets[] = new Socket[maxClients];
+    private static final DataInputStream inputStreams[] = new DataInputStream[maxClients];
+    private static final DataOutputStream outputStreams[] = new DataOutputStream[maxClients];
     private static volatile int clientsCount = 0;
     private static int port;
-    private static  LinkedList<byte[]>  messagesToHandle = new LinkedList<byte[]>();
+    private static final  LinkedList<byte[]>  messagesToHandle = new LinkedList<byte[]>();
+    
+    public static void initialize(int port){
+        //set the port that server is working on, and start it on a new thread
+        Server.port = port;
+        Thread serverThread = new Thread(()->Server.start());
+        serverThread.setDaemon(true);   // close with application
+        serverThread.start();
+    }
     
     public static void start(){        
-        
         Thread t = new Thread(()->Server.handleIncomingData());
         t.setDaemon(true);
         t.start();
-        
         
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
@@ -36,17 +41,14 @@ public class Server {
                         outputStreams[clientsCount] = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                         clientsCount++;
                     }
-                    catch(IOException ex){}
+                    catch(IOException ex){
+                        System.err.println(ex.getMessage());
                     }
                 }
             }
-        catch (IOException ex) {
-            System.out.println(ex.getMessage());
+        } catch (IOException ex) {
+            System.err.println(ex.getMessage());
         }
-    }
-    
-    public static void setPort(int port){
-        Server.port = port;
     }
     
     public static void sendExcept(SendableData data, int exceptIndex){
@@ -54,9 +56,11 @@ public class Server {
             if(i != exceptIndex){
                 data.send(outputStreams[i]);
                 try{
-                outputStreams[i].flush();
+                    outputStreams[i].flush();
                 }
-                catch(IOException ex){};
+                catch(IOException ex){
+                    System.err.println(ex.getMessage());
+                }
             }
         }
         
@@ -74,8 +78,9 @@ public class Server {
                         sendOutDataThread.start();
                         //message received, send it to clients except the sender client
                     }
+                } catch(IOException ex) {
+                    System.err.println(ex.getMessage());
                 }
-                catch(IOException ex){System.out.println(ex.getMessage());};
             }
         }
     }
