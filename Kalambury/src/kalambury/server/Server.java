@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Server {
     private static final int maxClients = 5;
     private static final Socket sockets[] = new Socket[maxClients];
+    private static final Socket timeSockets[] = new Socket[maxClients];
     private static final DataInputStream inputStreams[] = new DataInputStream[maxClients];
     private static final DataOutputStream outputStreams[] = new DataOutputStream[maxClients];
     private static volatile int clientsCount = 0;
@@ -32,6 +33,7 @@ public class Server {
         Thread serverThread = new Thread(()->Server.start());
         serverThread.setDaemon(true);   // close with application
         serverThread.start();
+       
     }
     
     public static void start(){        
@@ -73,9 +75,12 @@ public class Server {
             System.err.println(ex.getMessage());
         }
     }
+    
+    
+    
+    
     public static void forwardDataToClients(){
         //System.out.println("Forward start");
-
         while(true){
             
             if(messagesToHandle.size() > 0){
@@ -89,8 +94,9 @@ public class Server {
             }
         }   
     }
+    
+    
     public static void sendExcept(SendableData data, int exceptIndex){
-        
         for(int i = 0; i < clientsCount; i++){
             if(i != exceptIndex){
                 data.send(outputStreams[i]);
