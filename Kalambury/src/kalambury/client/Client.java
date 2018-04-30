@@ -16,6 +16,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javafx.concurrent.Task;
 import javafx.scene.control.Label;
+import kalambury.sendableData.FloodFillData;
+import kalambury.sendableData.LineDrawData;
 
 
 public class Client {
@@ -30,15 +32,21 @@ public class Client {
     private static long time;
     private static Thread timeThreadObject;
     
+    private static boolean isHostFlag;
+    
     private static Chat chat;
     
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     
     
-    public static void initialize(String ip, int port, String nick, Label label_info, Runnable switchToMainStage){
+    public static void initialize(
+            String ip, int port, String nick, Label label_info, 
+            Runnable switchToMainStage, boolean isHost
+    ){
         Client.ip = ip;
         Client.port = port;
-        Client.nick = nick;
+        Client.nick = (!nick.equals("") ? nick : "???");
+        Client.isHostFlag = isHost;
         
         label_info.setText("Connecting...");
         Task<ConnectResult> serverConnectTask = new ServerConnectTask(ip, port);
@@ -64,6 +72,9 @@ public class Client {
         });
     }
     
+    public static boolean isHost(){
+        return isHostFlag;
+    }
     public static String getNick(){
         return nick;
     }
@@ -91,8 +102,22 @@ public class Client {
             try {
                 if(in.available() > 0){
                     final SendableData input = SendableData.receive(in);
-                    ChatMessageData cmd = (ChatMessageData)input;
-                    chat.handleNewServerMessage(cmd);
+                    switch(input.getType()){
+                    case ChatMessage:
+                        ChatMessageData cmd = (ChatMessageData)input;
+                        chat.handleNewServerMessage(cmd);
+                        break;
+                    case LineDraw:
+                        LineDrawData ldd = (LineDrawData)input;
+                        //chat.handleNewServerMessage(data);
+                        break;
+                    case FloodFill:
+                        FloodFillData ffd = (FloodFillData)input;
+                        //chat.handleNewServerMessage(data);
+                        break;
+                    default:
+                        break;
+                    }
                 }
             } catch(IOException ex) {
                 System.err.println(ex.getMessage());
