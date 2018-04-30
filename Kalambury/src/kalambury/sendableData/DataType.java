@@ -6,8 +6,9 @@ public enum DataType {
     FloodFill(1),
     ChatMessage(2),
     StartServerData(3),
-    NewPlayerData(4);
-    
+    NewPlayerData(4),
+    Time(5);
+   
     private final int value;
     private DataType(int value) {
         this.value = value;

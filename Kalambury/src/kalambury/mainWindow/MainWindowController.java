@@ -7,7 +7,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Point2D;
@@ -29,7 +28,7 @@ import kalambury.client.Client;
 
 public class MainWindowController implements Initializable {
     
-    @FXML private TimeLabel label_time;
+    @FXML private TimeLabel timeLabel;
     @FXML private Button chatSendButton;
     
     @FXML private DrawingBoard drawingBoard;
@@ -129,19 +128,10 @@ public class MainWindowController implements Initializable {
         return chatInput;
     }
     
-    public void test_button_clicked(ActionEvent event){
-        // these parameters will be chosen from GUI by host
-        //start_time_measuring_thread(1,50);
-
-        
-       
-        //Client.sendMessage(message);
-    }
-    
-    public void start_time_measuring_thread(long min, long sec){
-        Thread update_time_thread = new Thread(()->label_time.startUpdating(min,sec));
-        update_time_thread.setDaemon(true);
-        update_time_thread.start();
+    public void startTimeLabelThread(){
+        Thread timeLabelThread = new Thread(()->timeLabel.startUpdating());
+        timeLabelThread.setDaemon(true);
+        timeLabelThread.start();
     }
     
     
@@ -149,8 +139,8 @@ public class MainWindowController implements Initializable {
 
     }
     
-    @Override public void initialize(URL url, ResourceBundle rb) {
-        //chatSendButton.setOnAction(this::test_button_clicked);
+    @Override public void initialize(URL url, ResourceBundle rb) { 
+        startTimeLabelThread();
         
         // colorChooser
         colorWidget = new ColorWidget(

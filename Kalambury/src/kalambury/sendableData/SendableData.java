@@ -25,6 +25,7 @@ public abstract class SendableData {
         case ChatMessage:     return new ChatMessageData(in);
         case StartServerData: return new StartServerData(in);
         case NewPlayerData:   return new NewPlayerData(in);
+        case Time:            return new TimeData(in);
         default:              return null;
         }
     }
