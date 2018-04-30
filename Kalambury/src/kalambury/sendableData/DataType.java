@@ -1,4 +1,4 @@
-package kalambury;
+package kalambury.sendableData;
 
 public enum DataType {
     Unknown(-1),

@@ -1,5 +1,9 @@
-package kalambury;
+package kalambury.client;
 
+import kalambury.server.ServerConnectTask;
+import kalambury.mainWindow.Chat;
+import kalambury.sendableData.SendableData;
+import kalambury.sendableData.ChatMessageData;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -87,10 +91,8 @@ public class Client {
             try {
                 if(in.available() > 0){
                     final SendableData input = SendableData.receive(in);
-                    // tutaj obsluzyc te dane
                     ChatMessageData cmd = (ChatMessageData)input;
                     chat.handleNewServerMessage(cmd);
-                    System.out.println("Data received");
                 }
             } catch(IOException ex) {
                 System.err.println(ex.getMessage());

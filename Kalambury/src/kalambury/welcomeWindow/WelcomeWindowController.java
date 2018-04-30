@@ -1,4 +1,4 @@
-package kalambury;
+package kalambury.welcomeWindow;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -7,6 +7,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import kalambury.client.Client;
+import kalambury.Kalambury;
+import kalambury.server.Server;
 
 
 public class WelcomeWindowController implements Initializable {

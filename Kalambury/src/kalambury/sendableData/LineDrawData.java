@@ -1,5 +1,7 @@
-package kalambury;
+package kalambury.sendableData;
 
+import kalambury.mainWindow.drawingBoard.Rect;
+import kalambury.mainWindow.drawingBoard.Point;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;

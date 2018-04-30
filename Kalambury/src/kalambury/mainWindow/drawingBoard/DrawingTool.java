@@ -1,4 +1,4 @@
-package kalambury;
+package kalambury.mainWindow.drawingBoard;
 
 public enum DrawingTool {
     PENCIL,

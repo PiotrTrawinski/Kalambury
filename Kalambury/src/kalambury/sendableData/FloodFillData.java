@@ -1,5 +1,6 @@
-package kalambury;
+package kalambury.sendableData;
 
+import kalambury.mainWindow.drawingBoard.Pixel;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;

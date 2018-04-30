@@ -1,5 +1,7 @@
-package kalambury;
+package kalambury.sendableData;
 
+import kalambury.sendableData.LineDrawData;
+import kalambury.sendableData.FloodFillData;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
