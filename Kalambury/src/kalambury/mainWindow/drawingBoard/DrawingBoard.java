@@ -47,7 +47,9 @@ public class DrawingBoard extends ResizableCanvas{
             break;
         case BUCKET:
             FloodFillData floodFillData = floodFillOwn(x, y, colorWidget.getColor());
-            sendToServer(floodFillData);
+            if(floodFillData != null){
+                sendToServer(floodFillData);
+            }
             break;
         }
         
