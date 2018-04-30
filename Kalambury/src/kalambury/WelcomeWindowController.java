@@ -65,12 +65,14 @@ public class WelcomeWindowController implements Initializable {
             
             if(Client.isSocketSet()){
                 executor.shutdown();
-                System.out.print("Socket it set");  
+                
                 label_info.setText("Connection established");
                 switchToMainStage();
-            }
-            else{
-                label_info.setText("Failed to connect.");
+                
+                Thread listenThread = new Thread(() -> Client.listen());
+                listenThread.setDaemon(true);
+                listenThread.start();
+                
             }
             
         });

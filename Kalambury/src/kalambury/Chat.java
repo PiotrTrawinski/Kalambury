@@ -1,5 +1,6 @@
 package kalambury;
 
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
@@ -22,11 +23,13 @@ public class Chat {
     }
     
     private void addPlayerTextNodes(int index, Text time, Text status, Text nick, Text message, Text exactTime){
+        Platform.runLater(()->{
         log.getChildren().add(index, time);
         log.getChildren().add(index+1, status);
         log.getChildren().add(index+2, nick);
         log.getChildren().add(index+3, message);
         log.getChildren().add(index+4, exactTime);
+        });
     }
     private void addPlayerTextNodesToCorrectTimePlace(Text time, Text status, Text nick, Text message, Text exactTime){
         double myMessageTime = Double.parseDouble(exactTime.getText());
@@ -83,10 +86,11 @@ public class Chat {
             String nickName = "asdf";
             double time = Math.random(); // for tests only
             addPlayerChatMessage(nickName, chatMessage, time, true);
-            userInput.setText("");
+            Platform.runLater(()->{userInput.setText("");});
             
-            //SendableData mess = new ChatMessageData(nickName,chatMessage,10000.0);
-            //Client.sendMessage(mess);
+            
+            SendableData mess = new ChatMessageData(nickName,chatMessage,10000.0);
+            Client.sendMessage(mess);
         }
     }
 
