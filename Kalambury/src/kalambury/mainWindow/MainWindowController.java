@@ -136,8 +136,11 @@ public class MainWindowController implements Initializable {
     
     
     @FXML public void onQuitGameButtonPressed(){
-        DrawingStartSignal end = new DrawingStartSignal();
-        Server.sendExcept(end, -1);
+        //DrawingStartSignal end = new DrawingStartSignal();
+        //Server.sendExcept(end, -1);
+        Server.startGame();
+        Server.getGame().setTimeLabel(timeLabel);
+        
         
         /*
         playButton.setVisible(!playButton.isVisible());

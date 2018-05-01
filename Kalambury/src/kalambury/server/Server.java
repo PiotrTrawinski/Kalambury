@@ -18,6 +18,7 @@ import kalambury.sendableData.StartServerData;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import kalambury.sendableData.ChatMessageData;
 import kalambury.sendableData.DataType;
 
 import kalambury.sendableData.TimeData;
@@ -44,7 +45,7 @@ public class Server {
     
     public static void start(){      
         // will be chosen from gui
-        game = new Game(maxClients,600,90,Client.getPlayers());
+
         
         // incoming data thread
         Thread t = new Thread(()->Server.handleIncomingData());
@@ -104,9 +105,15 @@ public class Server {
             if(messagesToHandle.size() > 0){
                 _mutex.lock();
                 Pair DataAndSkipIndex = messagesToHandle.removeFirst();
+                int skip = (Integer)DataAndSkipIndex.getValue();
                 _mutex.unlock();
                 SendableData data = (SendableData)DataAndSkipIndex.getKey();
-                int skip = (Integer)DataAndSkipIndex.getValue();
+                if(data.getType() == DataType.ChatMessage){
+                    ChatMessageData cmd = (ChatMessageData)data;
+                    game.verifyPassword(cmd.message,skip);
+                }
+                
+                
                 //System.out.println("Sending except");
                 sendExcept(data,skip);
             }
@@ -127,7 +134,9 @@ public class Server {
             }
         }
     }
-    
+    public static Game getGame(){
+        return game;
+    }
     public static void handleIncomingData(){
         while(true){
             for(int i = 0; i < clientsCount; i++){ // for every client
@@ -147,7 +156,10 @@ public class Server {
             }
         }
     }
-    
+
+    public static void sendTo(int id,SendableData data){
+        data.send(outputStreams[id]);
+    }
     public static void timeThread(){
         long startTime = System.currentTimeMillis();
         long sleepTime = 1000;
@@ -165,6 +177,10 @@ public class Server {
             messagesToHandle.addFirst(new Pair(timeData, -1));
             _mutex.unlock();
         }
+    }
+    public static void startGame(){
+        game = new Game(maxClients,600,90,Client.getPlayers());
+        game.start();
     }
 }
 

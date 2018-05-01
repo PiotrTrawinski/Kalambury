@@ -150,6 +150,7 @@ public class Client {
                         time = syncTime;
                         break;
                     case DrawingEndSignal:
+                        drawingBoard.setDisable(true);
                         System.out.print("End signal has came.");
                         break;
                     case DrawingStartSignal:

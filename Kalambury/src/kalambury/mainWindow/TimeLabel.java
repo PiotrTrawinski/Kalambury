@@ -12,7 +12,7 @@ public class TimeLabel extends Label{
         super();
     }
     
-    void startUpdating(){
+    public void startUpdating(){
         while(true){
             long fullTimeInSeconds = Client.getTime() / 1000;
             long minutes = fullTimeInSeconds / 60;

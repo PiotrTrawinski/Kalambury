@@ -37,6 +37,7 @@ public class RandomFileReader {
             }
             wordRead[i] = '\0';
             ret = new String(wordRead, "UTF-8");
+            ret = ret.trim();
         }
         catch(Exception ex){
             System.out.println(ex.getMessage());
