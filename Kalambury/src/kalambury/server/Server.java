@@ -33,7 +33,7 @@ public class Server {
     private static int port;
     private static volatile ArrayDeque< Pair<SendableData,Integer> >  messagesToHandle = new ArrayDeque<Pair<SendableData,Integer>>();
     private static final Lock _mutex = new ReentrantLock(true);
-    private static Game game;
+    private static Game game = null;
     public static void initialize(int port){
         //set the port that server is working on, and start it on a new thread
         Server.port = port;
@@ -79,11 +79,9 @@ public class Server {
                         
                         clientsCount++;
                         
-                        Thread sendOutNewUserDataThread = new Thread( () -> Server.sendExcept(newPlayerData, -1));
-                        sendOutNewUserDataThread.setDaemon(true);
-                        sendOutNewUserDataThread.start();
-                        
-                        
+                        _mutex.lock();
+                        messagesToHandle.addLast(new Pair(newPlayerData, -1));
+                        _mutex.unlock();
                     }
                     catch(IOException ex){
                         System.err.println(ex.getMessage());
@@ -110,7 +108,9 @@ public class Server {
                 SendableData data = (SendableData)DataAndSkipIndex.getKey();
                 if(data.getType() == DataType.ChatMessage){
                     ChatMessageData cmd = (ChatMessageData)data;
-                    game.verifyPassword(cmd.message,skip);
+                    if(game != null){
+                        game.verifyPassword(cmd.message,skip);
+                    }
                 }
                 
                 
