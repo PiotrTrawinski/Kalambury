@@ -28,6 +28,9 @@ public class Chat {
         this.font = font;
         
         userInput.setFont(this.font);
+        this.logPane.focusedProperty().addListener((observable,  oldValue,  newValue) -> {
+            this.userInput.requestFocus();
+        });
         
         this.log.prefWidthProperty().bind(this.logPane.widthProperty());
     }

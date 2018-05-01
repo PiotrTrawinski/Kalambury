@@ -28,6 +28,7 @@ public class WelcomeWindowController implements Initializable {
     }
     
     public void onCreateGameClicked(){
+        kalambury.getMainWindowController().setupHost();
         Server.initialize(Integer.parseInt(textfield_port.getText()));
         Client.initialize(
             textfield_ip.getText(), 
@@ -41,6 +42,7 @@ public class WelcomeWindowController implements Initializable {
     
     
     public void onJoinGameClicked(){
+        kalambury.getMainWindowController().setupClient();
         Client.initialize(
             textfield_ip.getText(), 
             Integer.parseInt(textfield_port.getText()), 

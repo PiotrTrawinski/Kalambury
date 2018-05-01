@@ -135,21 +135,26 @@ public class MainWindowController implements Initializable {
         bucketButton.setStyle("-fx-background-color: #AAAAAA;");
     }
     
-    
-    @FXML public void onQuitGameButtonPressed(){
+    @FXML public void onPlayButtonPressed(){
         //DrawingStartSignal end = new DrawingStartSignal();
         //Server.sendExcept(end, -1);
         Server.startGame();
         Server.getGame().setTimeLabel(timeLabel);
+    }
+    @FXML public void onStopButtonPressed(){
         
+    }
+    @FXML public void onPauseButtonPressed(){
         
-        /*
-        playButton.setVisible(!playButton.isVisible());
-        stopButton.setVisible(!stopButton.isVisible());
-        pauseButton.setVisible(!pauseButton.isVisible());
-        skipButton.setVisible(!skipButton.isVisible());
-        skipRequestButton.setVisible(!skipRequestButton.isVisible());
-        */
+    }
+    @FXML public void onSkipButtonPressed(){
+        
+    }
+    @FXML public void onSkipRequestButtonPressed(){
+        
+    }
+    @FXML public void onQuitGameButtonPressed(){
+        
     }
     
     @FXML private void enteredChatMessage(){
@@ -213,6 +218,16 @@ public class MainWindowController implements Initializable {
     private void scaleCanvas(Canvas canvas, double scalingFactor){
         canvas.setWidth((int)(canvas.getWidth()*scalingFactor));
         canvas.setHeight((int)(canvas.getHeight()*scalingFactor));
+    }
+    
+    public void setupHost(){
+        actionsGridPane.getChildren().remove(skipRequestButton);
+    }
+    public void setupClient(){
+        actionsGridPane.getChildren().remove(playButton);
+        actionsGridPane.getChildren().remove(pauseButton);
+        actionsGridPane.getChildren().remove(stopButton);
+        actionsGridPane.getChildren().remove(skipButton);
     }
     
     @Override public void initialize(URL url, ResourceBundle rb) { 
