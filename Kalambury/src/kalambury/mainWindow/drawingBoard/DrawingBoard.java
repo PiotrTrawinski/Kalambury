@@ -233,14 +233,14 @@ public class DrawingBoard extends ResizableCanvas{
             }
         }
         if(x1 >= 0 && x1 < drawRect.w){
-            for(int i = y-thickness; i <= y+thickness; ++i){
+            for(int i = y1; i <= y2; ++i){
                 if(i >= 0 && i < drawRect.h){
                     pixels.add(new Pixel(x1, i, color));
                 }
             }
         }
         if(x2 >= 0 && x2 < drawRect.w){
-            for(int i = y-thickness; i <= y+thickness; ++i){
+            for(int i = y1; i <= y2; ++i){
                 if(i >= 0 && i < drawRect.h){
                     pixels.add(new Pixel(x2, i, color));
                 }
