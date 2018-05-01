@@ -1,8 +1,6 @@
 package kalambury.mainWindow;
 
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.scene.control.Label;
 import kalambury.client.Client;
@@ -32,15 +30,7 @@ public class TimeLabel extends Label{
                 formattedText += "0";
             }
             formattedText += Long.toString(seconds);
-            
-            formattedText += ".";
-            if(miliSeconds < 100){
-                formattedText += "0";
-            }
-            if(miliSeconds < 10){
-                formattedText += "0";
-            }
-            formattedText += Long.toString(miliSeconds);
+
             final String finalText = formattedText;
 
 
