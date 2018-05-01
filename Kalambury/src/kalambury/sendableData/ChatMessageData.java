@@ -7,10 +7,10 @@ import java.io.IOException;
 public class ChatMessageData extends SendableData{
     public String nickName;
     public String message;
-    public double time;
+    public long time;
     public boolean isHost;
     
-    public ChatMessageData(String nickName, String message, double time, boolean isHost){
+    public ChatMessageData(String nickName, String message, long time, boolean isHost){
         type = DataType.ChatMessage;
         
         this.nickName = nickName;
@@ -25,7 +25,7 @@ public class ChatMessageData extends SendableData{
         try {
             nickName = in.readUTF();
             message  = in.readUTF();
-            time     = in.readDouble();
+            time     = in.readLong();
             isHost   = in.readBoolean();
         } catch (IOException ex) {
             System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
@@ -37,7 +37,7 @@ public class ChatMessageData extends SendableData{
             out.writeInt(type.toInt());
             out.writeUTF(nickName);
             out.writeUTF(message);
-            out.writeDouble(time);
+            out.writeLong(time);
             out.writeBoolean(isHost);
             out.flush();
         } catch (IOException ex) {
