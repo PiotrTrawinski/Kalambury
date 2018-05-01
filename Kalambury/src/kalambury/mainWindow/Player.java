@@ -8,15 +8,20 @@ public class Player {
     private final SimpleStringProperty nickName;
     private final SimpleIntegerProperty score;
     private final SimpleBooleanProperty isDrawing;
+    private final int id;
     
-    public Player(String nickName, int score){
+    public Player(String nickName, int score, int id){
         this.nickName = new SimpleStringProperty(nickName);
         this.score = new SimpleIntegerProperty(score);
         this.isDrawing = new SimpleBooleanProperty(false);
+        this.id = id;
     }
     
     public String getNickName(){
         return nickName.get();
+    }
+    public int getId(){
+        return id;
     }
     public void setNickName(String nickName){
         this.nickName.set(nickName);

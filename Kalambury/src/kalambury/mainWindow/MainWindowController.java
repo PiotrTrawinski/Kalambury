@@ -35,6 +35,9 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
 import kalambury.client.Client;
+import kalambury.sendableData.DrawingEndSignal;
+import kalambury.sendableData.DrawingStartSignal;
+import kalambury.server.Server;
 
 
 public class MainWindowController implements Initializable {
@@ -136,11 +139,19 @@ public class MainWindowController implements Initializable {
     
     
     @FXML public void onQuitGameButtonPressed(){
+        //DrawingStartSignal end = new DrawingStartSignal();
+        //Server.sendExcept(end, -1);
+        Server.startGame();
+        Server.getGame().setTimeLabel(timeLabel);
+        
+        
+        /*
         playButton.setVisible(!playButton.isVisible());
         stopButton.setVisible(!stopButton.isVisible());
         pauseButton.setVisible(!pauseButton.isVisible());
         skipButton.setVisible(!skipButton.isVisible());
         skipRequestButton.setVisible(!skipRequestButton.isVisible());
+        */
     }
     
     @FXML private void enteredChatMessage(){
@@ -353,5 +364,7 @@ public class MainWindowController implements Initializable {
         
         Client.setChat(chat);
         Client.setDrawingBoard(drawingBoard);
+        
+        drawingBoard.setDisable(true);
     }    
 }

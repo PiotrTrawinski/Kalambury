@@ -1,5 +1,6 @@
 package kalambury.server;
 
+import game.Game;
 import kalambury.sendableData.SendableData;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -17,6 +18,9 @@ import kalambury.sendableData.StartServerData;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import kalambury.sendableData.ChatMessageData;
+import kalambury.sendableData.DataType;
+
 import kalambury.sendableData.TimeData;
 
 public class Server {
@@ -29,7 +33,7 @@ public class Server {
     private static int port;
     private static volatile ArrayDeque< Pair<SendableData,Integer> >  messagesToHandle = new ArrayDeque<Pair<SendableData,Integer>>();
     private static final Lock _mutex = new ReentrantLock(true);
-    
+    private static Game game;
     public static void initialize(int port){
         //set the port that server is working on, and start it on a new thread
         Server.port = port;
@@ -39,7 +43,10 @@ public class Server {
        
     }
     
-    public static void start(){        
+    public static void start(){      
+        // will be chosen from gui
+
+        
         // incoming data thread
         Thread t = new Thread(()->Server.handleIncomingData());
         t.setDaemon(true);
@@ -66,6 +73,7 @@ public class Server {
                         outputStreams[clientsCount] = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                         
                         NewPlayerData newPlayerData = (NewPlayerData)SendableData.receive(inputStreams[clientsCount]);
+                        newPlayerData.id = clientsCount;
                         StartServerData startServerData = new StartServerData(Client.getPlayers(), Client.getTime());
                         startServerData.send(outputStreams[clientsCount]);
                         
@@ -74,6 +82,8 @@ public class Server {
                         Thread sendOutNewUserDataThread = new Thread( () -> Server.sendExcept(newPlayerData, -1));
                         sendOutNewUserDataThread.setDaemon(true);
                         sendOutNewUserDataThread.start();
+                        
+                        
                     }
                     catch(IOException ex){
                         System.err.println(ex.getMessage());
@@ -95,9 +105,15 @@ public class Server {
             if(messagesToHandle.size() > 0){
                 _mutex.lock();
                 Pair DataAndSkipIndex = messagesToHandle.removeFirst();
+                int skip = (Integer)DataAndSkipIndex.getValue();
                 _mutex.unlock();
                 SendableData data = (SendableData)DataAndSkipIndex.getKey();
-                int skip = (Integer)DataAndSkipIndex.getValue();
+                if(data.getType() == DataType.ChatMessage){
+                    ChatMessageData cmd = (ChatMessageData)data;
+                    game.verifyPassword(cmd.message,skip);
+                }
+                
+                
                 //System.out.println("Sending except");
                 sendExcept(data,skip);
             }
@@ -118,7 +134,9 @@ public class Server {
             }
         }
     }
-    
+    public static Game getGame(){
+        return game;
+    }
     public static void handleIncomingData(){
         while(true){
             for(int i = 0; i < clientsCount; i++){ // for every client
@@ -138,7 +156,10 @@ public class Server {
             }
         }
     }
-    
+
+    public static void sendTo(int id,SendableData data){
+        data.send(outputStreams[id]);
+    }
     public static void timeThread(){
         long startTime = System.currentTimeMillis();
         long sleepTime = 1000;
@@ -156,6 +177,10 @@ public class Server {
             messagesToHandle.addFirst(new Pair(timeData, -1));
             _mutex.unlock();
         }
+    }
+    public static void startGame(){
+        game = new Game(maxClients,600,90,Client.getPlayers());
+        game.start();
     }
 }
 
