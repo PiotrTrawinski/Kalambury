@@ -24,6 +24,8 @@ import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.NewPlayerData;
 import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TimeData;
+import kalambury.server.SystemMessage;
+import kalambury.server.SystemMessageType;
 
 
 public class Client {
@@ -140,6 +142,11 @@ public class Client {
                     case NewPlayerData:
                         NewPlayerData npd = (NewPlayerData)input;
                         players.add(new Player(npd.nickName, 0,npd.id));
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            npd.nickName + " dołączył do gry",
+                            Client.getTime(),
+                            SystemMessageType.Information
+                        ));
                         System.out.printf("ID:%d",npd.id);
                         break;
                     case Time:
@@ -151,11 +158,19 @@ public class Client {
                         break;
                     case DrawingEndSignal:
                         drawingBoard.setDisable(true);
-                        System.out.print("End signal has came.");
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            "Zgaduj hasło!",
+                            Client.getTime(),
+                            SystemMessageType.Information
+                        ));
                         break;
                     case DrawingStartSignal:
                         drawingBoard.setDisable(false);
-                        System.out.print("Start signal has came");
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            "Rysuj hasło!",
+                            Client.getTime(),
+                            SystemMessageType.Information
+                        ));
                         break;
                     default:
                         break;

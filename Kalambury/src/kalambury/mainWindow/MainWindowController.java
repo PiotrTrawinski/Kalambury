@@ -35,8 +35,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
 import kalambury.client.Client;
-import kalambury.sendableData.DrawingEndSignal;
-import kalambury.sendableData.DrawingStartSignal;
 import kalambury.server.Server;
 
 
@@ -295,7 +293,7 @@ public class MainWindowController implements Initializable {
         
         // chat
         Font font = chatInput.getFont();
-        font = new Font("System Regular", font.getSize()*scalingFactor);
+        font = Font.font("Monospaced", font.getSize()*scalingFactor);
         chat = new Chat(chatLog, chatLogPane, chatInput, font);
         
         

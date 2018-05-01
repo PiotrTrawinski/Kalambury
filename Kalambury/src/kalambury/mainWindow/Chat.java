@@ -13,6 +13,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import kalambury.client.Client;
+import kalambury.server.SystemMessage;
 
 public class Chat {
     private final TextFlow log;
@@ -33,14 +34,14 @@ public class Chat {
     
     private void addPlayerTextNodes(int index, Text time, Text status, Text nick, Text message, Text exactTime){
         Platform.runLater(()->{
-        log.getChildren().add(index, time);
-        log.getChildren().add(index+1, status);
-        log.getChildren().add(index+2, nick);
-        log.getChildren().add(index+3, message);
-        log.getChildren().add(index+4, exactTime);
+            log.getChildren().add(index, time);
+            log.getChildren().add(index+1, status);
+            log.getChildren().add(index+2, nick);
+            log.getChildren().add(index+3, message);
+            log.getChildren().add(index+4, exactTime);
         });
     }
-    private void addPlayerTextNodesToCorrectTimePlace(Text time, Text status, Text nick, Text message, Text exactTime){
+    private void addTextNodesToCorrectTimePlace(Text time, Text status, Text nick, Text message, Text exactTime){
         double myMessageTime = Long.parseLong(exactTime.getText());
         ObservableList<Node> nodes = log.getChildren();
         for(int i = nodes.size()-1; i >= 0; --i){
@@ -55,30 +56,30 @@ public class Chat {
         // if no message was earlier then this one
         addPlayerTextNodes(0, time, status, nick, message, exactTime);
     }
-    private void addPlayerChatMessage(String nickName, String message, long time, boolean isHost, boolean isLocal){
-        // prepare time Text
-        long miliseconds = time;
+    
+    private Text getTimeText(long time){
         String stringTime = String.format("%02d:%02d:%02d", 
-            TimeUnit.MILLISECONDS.toHours(miliseconds),
-            TimeUnit.MILLISECONDS.toMinutes(miliseconds) -  TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(miliseconds)),
-            TimeUnit.MILLISECONDS.toSeconds(miliseconds) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(miliseconds))
+            TimeUnit.MILLISECONDS.toHours(time),
+            TimeUnit.MILLISECONDS.toMinutes(time) -  TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(time)),
+            TimeUnit.MILLISECONDS.toSeconds(time) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time))
         );   
         Text timeText = new Text("<" + stringTime + ">");
         timeText.setFill(Color.GRAY);
         timeText.setFont(font);
         
-        // prepare status Text
-        Text statusText;
-        if(isHost){
-            statusText = new Text("( HOST )");
-        } else {
-            statusText = new Text("(CLIENT)");
-        }
+        return timeText;
+    }
+    
+    private Text getStatusText(String status){
+        Text statusText = new Text("(" + status + ")");
         statusText.setFill(Color.DARKGREEN);
         statusText.setFont(font);
-        
-        // prepare nickname Text
+        return statusText;
+    }
+    
+    private Text getNickNameText(String nickName, boolean isLocal){
         Text nickText = new Text("[" + nickName + "] ");
+        
         if(isLocal){
             nickText.setFill(Color.BLUE);
         } else {
@@ -87,21 +88,46 @@ public class Chat {
         nickText.setStyle("-fx-font-weight: bold;");
         nickText.setFont(font);
         
-        // prepare message Text
+        return nickText;
+    }
+    
+    private Text getMessageText(String message, Color color){
         Text messageText = new Text(message + "\n");
-        messageText.setFill(Color.BLACK);
+        messageText.setFill(color);
         messageText.setFont(font);
-        
-        // prepare invisible exact time Text
+        return messageText;
+    }
+    
+    private Text getExactTimeText(long time){
         Text exactTimeText = new Text(Long.toString(time));
         exactTimeText.setVisible(false);
         exactTimeText.setManaged(false);
+        return exactTimeText;
+    }
+    
+    private Text getEmptyText(){
+        Text emptyText = new Text("");
+        emptyText.setVisible(false);
+        emptyText.setManaged(false);
+        return emptyText;
+    }
+    
+    private void addPlayerChatMessage(String nickName, String message, long time, boolean isHost, boolean isLocal){
+        Text timeText = getTimeText(time);
+        Text statusText;
+        if(isHost){
+            statusText = getStatusText(" HOST ");
+        } else {
+            statusText = getStatusText("CLIENT");
+        }
+        Text nickText = getNickNameText(nickName, isLocal);
+        Text messageText = getMessageText(message, Color.BLACK);
+        Text exactTimeText = getExactTimeText(time);
         
-        // place it correctly depending on the time
-        addPlayerTextNodesToCorrectTimePlace(timeText, statusText, nickText, messageText, exactTimeText);
+        addTextNodesToCorrectTimePlace(timeText, statusText, nickText, messageText, exactTimeText);
         
         // scroll down
-        logPane.setVvalue(1);
+        logPane.setVvalue(1.0);
     }
     
     public void handleNewClientMessage(){
@@ -120,5 +146,29 @@ public class Chat {
 
     public void handleNewServerMessage(ChatMessageData data){
         addPlayerChatMessage(data.nickName, data.message, data.time, data.isHost, false);
+    }
+    
+    public void handleNewSystemMessage(SystemMessage systemMessage){
+        Text timeText = getTimeText(systemMessage.time);
+        Text statusText = getStatusText("SYSTEM");
+        Text nickText = getEmptyText();
+        Text messageText;
+        switch(systemMessage.type){
+        case Information:
+            messageText = getMessageText(" " + systemMessage.message, Color.DARKGREEN);
+            break;
+        case Error:
+            messageText = getMessageText(" " + systemMessage.message, Color.RED);
+            break;
+        default:
+            messageText = getEmptyText();
+            break;
+        }
+        Text exactTimeText = getExactTimeText(systemMessage.time);
+        
+        addTextNodesToCorrectTimePlace(timeText, statusText, nickText, messageText, exactTimeText);
+        
+        // scroll down
+        logPane.setVvalue(1.0);
     }
 }
