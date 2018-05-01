@@ -1,5 +1,6 @@
 package kalambury.server;
 
+import game.Game;
 import kalambury.sendableData.SendableData;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -17,6 +18,8 @@ import kalambury.sendableData.StartServerData;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import kalambury.sendableData.DataType;
+
 import kalambury.sendableData.TimeData;
 
 public class Server {
@@ -29,7 +32,7 @@ public class Server {
     private static int port;
     private static volatile ArrayDeque< Pair<SendableData,Integer> >  messagesToHandle = new ArrayDeque<Pair<SendableData,Integer>>();
     private static final Lock _mutex = new ReentrantLock(true);
-    
+    private static Game game;
     public static void initialize(int port){
         //set the port that server is working on, and start it on a new thread
         Server.port = port;
@@ -39,7 +42,10 @@ public class Server {
        
     }
     
-    public static void start(){        
+    public static void start(){      
+        // will be chosen from gui
+        game = new Game(maxClients,600,90,Client.getPlayers());
+        
         // incoming data thread
         Thread t = new Thread(()->Server.handleIncomingData());
         t.setDaemon(true);
@@ -66,6 +72,7 @@ public class Server {
                         outputStreams[clientsCount] = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                         
                         NewPlayerData newPlayerData = (NewPlayerData)SendableData.receive(inputStreams[clientsCount]);
+                        newPlayerData.id = clientsCount;
                         StartServerData startServerData = new StartServerData(Client.getPlayers(), Client.getTime());
                         startServerData.send(outputStreams[clientsCount]);
                         
@@ -74,6 +81,8 @@ public class Server {
                         Thread sendOutNewUserDataThread = new Thread( () -> Server.sendExcept(newPlayerData, -1));
                         sendOutNewUserDataThread.setDaemon(true);
                         sendOutNewUserDataThread.start();
+                        
+                        
                     }
                     catch(IOException ex){
                         System.err.println(ex.getMessage());

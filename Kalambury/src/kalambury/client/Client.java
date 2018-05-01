@@ -73,12 +73,14 @@ public class Client {
             if(Client.isSocketSet()){
                 executor.shutdown();
                 
-                NewPlayerData newPlayerData = new NewPlayerData(Client.nick);
+                
+                NewPlayerData newPlayerData = new NewPlayerData(Client.nick,-1); // id will be set by server, client has no idea of it
                 newPlayerData.send(out);
+                
                 final StartServerData startData = (StartServerData)SendableData.receive(in);
                 players.addAll(startData.players);
                 time = startData.time;
-                
+
                 label_info.setText("Connection established");
                 switchToMainStage.run();
                 
@@ -137,7 +139,8 @@ public class Client {
                         break;
                     case NewPlayerData:
                         NewPlayerData npd = (NewPlayerData)input;
-                        players.add(new Player(npd.nickName, 0));
+                        players.add(new Player(npd.nickName, 0,npd.id));
+                        System.out.printf("ID:%d",npd.id);
                         break;
                     case Time:
                         TimeData td = (TimeData)input;
@@ -145,6 +148,13 @@ public class Client {
                         timeAfterSync = 0;
                         timeBeforeSleep = System.currentTimeMillis();
                         time = syncTime;
+                        break;
+                    case DrawingEndSignal:
+                        System.out.print("End signal has came.");
+                        break;
+                    case DrawingStartSignal:
+                        drawingBoard.setDisable(false);
+                        System.out.print("Start signal has came");
                         break;
                     default:
                         break;

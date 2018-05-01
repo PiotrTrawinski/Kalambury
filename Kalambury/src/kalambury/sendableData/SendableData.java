@@ -20,12 +20,14 @@ public abstract class SendableData {
         }
         
         switch(type){
-        case LineDraw:        return new LineDrawData(in);
-        case FloodFill:       return new FloodFillData(in);
-        case ChatMessage:     return new ChatMessageData(in);
-        case StartServerData: return new StartServerData(in);
-        case NewPlayerData:   return new NewPlayerData(in);
-        case Time:            return new TimeData(in);
+        case LineDraw:              return new LineDrawData(in);
+        case FloodFill:             return new FloodFillData(in);
+        case ChatMessage:           return new ChatMessageData(in);
+        case StartServerData:       return new StartServerData(in);
+        case NewPlayerData:         return new NewPlayerData(in);
+        case Time:                  return new TimeData(in);
+        case DrawingEndSignal:      return new DrawingEndSignal(in);
+        case DrawingStartSignal:    return new DrawingStartSignal(in);
         default:              return null;
         }
     }
