@@ -11,6 +11,7 @@ import java.util.List;
 import javafx.collections.ObservableList;
 import kalambury.mainWindow.Player;
 import kalambury.server.Server;
+import sample.RandomFileReader;
 
 /**
  *
@@ -25,9 +26,10 @@ public class Game {
     private int playersCount;
     private String currentPassword;
     private int currentlyDrawingUserID;
-    RandomFileReader randomGenerator = new RandomFileReader();
+    private RandomFileReader randomGenerator = new RandomFileReader("slowa.txt",'\n');
     
     public Game(int maxPlayers, int maxPoints, int maxTimeSeconds, ObservableList<Player> players){
+
         this.maxTimeSeconds = maxTimeSeconds;
         this.maxPoints = maxPoints;
         this.round = 0;
