@@ -49,18 +49,18 @@ public class ColorWidget {
         double sectionSize = this.chooser.getWidth() / 6;
         double interval = 255/sectionSize;
         double startX = 0;
-        paintSection(chooserPixelWriter, (int)startX, (int)(startX+sectionSize), interval, '1', '+', '0');
+        paintSection(chooserPixelWriter, (int)startX, (int)(startX+sectionSize), '1', '+', '0');
         startX += sectionSize;
-        paintSection(chooserPixelWriter, (int)startX, (int)(startX+sectionSize), interval, '-', '1', '0');
+        paintSection(chooserPixelWriter, (int)startX, (int)(startX+sectionSize), '-', '1', '0');
         startX += sectionSize;
-        paintSection(chooserPixelWriter, (int)startX, (int)(startX+sectionSize), interval, '0', '1', '+');
+        paintSection(chooserPixelWriter, (int)startX, (int)(startX+sectionSize), '0', '1', '+');
         startX += sectionSize;
-        paintSection(chooserPixelWriter, (int)startX, (int)(startX+sectionSize), interval, '0', '-', '1');
+        paintSection(chooserPixelWriter, (int)startX, (int)(startX+sectionSize), '0', '-', '1');
         startX += sectionSize;
-        paintSection(chooserPixelWriter, (int)startX, (int)(startX+sectionSize), interval, '+', '0', '1');
+        paintSection(chooserPixelWriter, (int)startX, (int)(startX+sectionSize), '+', '0', '1');
         startX += sectionSize;
-        paintSection(chooserPixelWriter, (int)startX, (int)(startX+sectionSize), interval, '1', '0', '-');
-    
+        paintSection(chooserPixelWriter, (int)startX, (int)this.chooser.getWidth(), '1', '0', '-');
+        
         brightnessSlider.setValue(brightnessSlider.getMax()/4);
         chooseColor((int)(3*chooser.getWidth()/5), 0);
     }
@@ -84,7 +84,8 @@ public class ColorWidget {
             default:  return -1;
         }
     }
-    private void paintSection(PixelWriter pixelWriter, int startX, int koniecX, double interval, char rArg, char gArg, char bArg){
+    private void paintSection(PixelWriter pixelWriter, int startX, int koniecX, char rArg, char gArg, char bArg){
+        double interval = 255/(koniecX-startX);
         for(int x = startX; x < koniecX; ++x){
             int value = (int)((x-startX)*interval);
             double rChg = paintSectionGetColorChange(rArg, value, this.chooser.getHeight());

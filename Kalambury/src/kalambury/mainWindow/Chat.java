@@ -1,5 +1,6 @@
 package kalambury.mainWindow;
 
+import java.util.concurrent.TimeUnit;
 import kalambury.sendableData.SendableData;
 import kalambury.sendableData.ChatMessageData;
 import javafx.application.Platform;
@@ -8,6 +9,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import kalambury.client.Client;
@@ -16,11 +18,15 @@ public class Chat {
     private final TextFlow log;
     private final ScrollPane logPane;
     private final TextField userInput;
+    private final Font font;
     
-    public Chat(TextFlow log, ScrollPane logPane, TextField userInput){
+    public Chat(TextFlow log, ScrollPane logPane, TextField userInput, Font font){
         this.log = log;
         this.logPane = logPane;
         this.userInput = userInput;
+        this.font = font;
+        
+        userInput.setFont(this.font);
         
         this.log.prefWidthProperty().bind(this.logPane.widthProperty());
     }
@@ -35,11 +41,11 @@ public class Chat {
         });
     }
     private void addPlayerTextNodesToCorrectTimePlace(Text time, Text status, Text nick, Text message, Text exactTime){
-        double myMessageTime = Double.parseDouble(exactTime.getText());
+        double myMessageTime = Long.parseLong(exactTime.getText());
         ObservableList<Node> nodes = log.getChildren();
         for(int i = nodes.size()-1; i >= 0; --i){
             if(i % 5 == 4){
-                double chatMessageTime = Double.parseDouble(((Text)nodes.get(i)).getText());
+                double chatMessageTime = Long.parseLong(((Text)nodes.get(i)).getText());
                 if(chatMessageTime <= myMessageTime){
                     addPlayerTextNodes(i+1, time, status, nick, message, exactTime);
                     return;
@@ -49,10 +55,17 @@ public class Chat {
         // if no message was earlier then this one
         addPlayerTextNodes(0, time, status, nick, message, exactTime);
     }
-    private void addPlayerChatMessage(String nickName, String message, double time, boolean isHost, boolean isLocal){
+    private void addPlayerChatMessage(String nickName, String message, long time, boolean isHost, boolean isLocal){
         // prepare time Text
-        Text timeText = new Text("<00:00:00>");
+        long miliseconds = time;
+        String stringTime = String.format("%02d:%02d:%02d", 
+            TimeUnit.MILLISECONDS.toHours(miliseconds),
+            TimeUnit.MILLISECONDS.toMinutes(miliseconds) -  TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(miliseconds)),
+            TimeUnit.MILLISECONDS.toSeconds(miliseconds) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(miliseconds))
+        );   
+        Text timeText = new Text("<" + stringTime + ">");
         timeText.setFill(Color.GRAY);
+        timeText.setFont(font);
         
         // prepare status Text
         Text statusText;
@@ -62,6 +75,7 @@ public class Chat {
             statusText = new Text("(CLIENT)");
         }
         statusText.setFill(Color.DARKGREEN);
+        statusText.setFont(font);
         
         // prepare nickname Text
         Text nickText = new Text("[" + nickName + "] ");
@@ -71,13 +85,15 @@ public class Chat {
             nickText.setFill(Color.DARKCYAN);
         }
         nickText.setStyle("-fx-font-weight: bold;");
+        nickText.setFont(font);
         
         // prepare message Text
         Text messageText = new Text(message + "\n");
         messageText.setFill(Color.BLACK);
+        messageText.setFont(font);
         
         // prepare invisible exact time Text
-        Text exactTimeText = new Text(Double.toString(time));
+        Text exactTimeText = new Text(Long.toString(time));
         exactTimeText.setVisible(false);
         exactTimeText.setManaged(false);
         
@@ -92,13 +108,13 @@ public class Chat {
         if(!userInput.getText().isEmpty()){
             String chatMessage = userInput.getText();
             String nickName = Client.getNick();
-            double time = 0; // Client.getTime()
-            addPlayerChatMessage(nickName, chatMessage, time, Client.isHost(), true);
-            Platform.runLater(()->{userInput.setText("");});
-            
-            
+            long time = Client.getTime();
             SendableData mess = new ChatMessageData(nickName, chatMessage, time, Client.isHost());
+            
             Client.sendMessage(mess);
+            addPlayerChatMessage(nickName, chatMessage, time, Client.isHost(), true);
+            
+            Platform.runLater(()->{userInput.setText("");}); 
         }
     }
 
