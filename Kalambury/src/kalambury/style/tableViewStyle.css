@@ -9,7 +9,6 @@
     -fx-background-color: transparent; 
     -fx-font-weight:bold;
     -fx-text-fill: #555555;
-    -fx-font-size: 15px;
 }
 
 .table-view .table-column{
@@ -18,7 +17,6 @@
 }
 
 .table-view .table-cell{
-    -fx-font-size:15px;
     -fx-border-color: #C8C8C8;
     -fx-border-width: 1;
 }

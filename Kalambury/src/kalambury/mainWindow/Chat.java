@@ -8,6 +8,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import kalambury.client.Client;
@@ -16,11 +17,15 @@ public class Chat {
     private final TextFlow log;
     private final ScrollPane logPane;
     private final TextField userInput;
+    private final Font font;
     
-    public Chat(TextFlow log, ScrollPane logPane, TextField userInput){
+    public Chat(TextFlow log, ScrollPane logPane, TextField userInput, Font font){
         this.log = log;
         this.logPane = logPane;
         this.userInput = userInput;
+        this.font = font;
+        
+        userInput.setFont(this.font);
         
         this.log.prefWidthProperty().bind(this.logPane.widthProperty());
     }
@@ -53,6 +58,7 @@ public class Chat {
         // prepare time Text
         Text timeText = new Text("<00:00:00>");
         timeText.setFill(Color.GRAY);
+        timeText.setFont(font);
         
         // prepare status Text
         Text statusText;
@@ -62,6 +68,7 @@ public class Chat {
             statusText = new Text("(CLIENT)");
         }
         statusText.setFill(Color.DARKGREEN);
+        statusText.setFont(font);
         
         // prepare nickname Text
         Text nickText = new Text("[" + nickName + "] ");
@@ -71,10 +78,12 @@ public class Chat {
             nickText.setFill(Color.DARKCYAN);
         }
         nickText.setStyle("-fx-font-weight: bold;");
+        nickText.setFont(font);
         
         // prepare message Text
         Text messageText = new Text(message + "\n");
         messageText.setFill(Color.BLACK);
+        messageText.setFont(font);
         
         // prepare invisible exact time Text
         Text exactTimeText = new Text(Double.toString(time));
