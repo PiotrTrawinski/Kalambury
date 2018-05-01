@@ -47,6 +47,8 @@ public class Kalambury extends Application {
     public void showMainWindow() throws Exception{
         welcomeStage.close();
         mainStage.show();
+        mainStage.setMinHeight(mainStage.getHeight());
+        mainStage.setMinWidth(mainStage.getWidth());
     }
     
     public static void main(String[] args) {

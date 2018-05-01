@@ -50,6 +50,7 @@ public class MainWindowController implements Initializable {
     @FXML private Pane colorBrightnessPane;
     
     @FXML private Label TurnLabel;
+    @FXML private Label wyrazLabel;
     
     @FXML private TableView scoreTableView;
     @FXML private TableColumn<Player,String> scoreTableNickNameColumn;
