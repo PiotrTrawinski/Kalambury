@@ -66,7 +66,8 @@ public class MainWindowController implements Initializable {
     @FXML private Pane colorBrightnessPane;
     
     @FXML private Label TurnLabel;
-    @FXML private Label wyrazLabel;
+    @FXML private Label passwordLabelLabel;
+    @FXML private Label passwordLabel;
     
     @FXML private TableView scoreTableView;
     @FXML private TableColumn<Player,String> scoreTableNickNameColumn;
@@ -211,7 +212,8 @@ public class MainWindowController implements Initializable {
         scaleGridPane(actionsGridPane, scalingFactor);
         scaleLabel(timeLabel, "System Bold", scalingFactor);
         scaleLabel(TurnLabel, "System Bold", scalingFactor);
-        scaleLabel(wyrazLabel, "System Regular", scalingFactor);
+        scaleLabel(passwordLabel, "System Regular", scalingFactor);
+        scaleLabel(passwordLabelLabel, "System Bold", scalingFactor);
         scaleLabel(thicknessLabel, "System Bold", scalingFactor);
         scaleLabel(thicknessLabelLabel, "System Bold", scalingFactor);
         scaleLabel(drawToolsLabel, "System Bold", scalingFactor);
@@ -231,6 +233,11 @@ public class MainWindowController implements Initializable {
         scaleCanvas(chosenColorView, scalingFactor);
         scaleCanvas(colorChooser, scalingFactor);
         scaleCanvas(colorBrightnessCanvas, scalingFactor);
+        chosenColorView.setWidth(gridPane.getColumnConstraints().get(3).getMaxWidth()-4);
+        chosenColorView.setHeight(gridPane.getRowConstraints().get(1).getMaxHeight()-4);
+        colorChooser.setWidth(gridPane.getColumnConstraints().get(4).getMaxWidth()-4);
+        colorChooser.setHeight(gridPane.getRowConstraints().get(0).getMaxHeight()+gridPane.getRowConstraints().get(1).getMaxHeight()-4);
+        
          
         startTimeLabelThread();
         
@@ -250,13 +257,22 @@ public class MainWindowController implements Initializable {
         });
         
         // drawing tools
-        Image penImage = new Image(getClass().getResourceAsStream("images/pencil.png"));
-        pencilButton.setGraphic(new ImageView(penImage));
+        Image penImage = new Image(getClass().getResourceAsStream("images/pencil2.png"));
+        ImageView penImageView = new ImageView(penImage);
+        penImageView.setFitHeight(30*scalingFactor);
+        penImageView.setFitWidth(30*scalingFactor);
+        pencilButton.setGraphic(penImageView);
         pencilButton.setStyle("-fx-background-color: #AAAAAA;");
-        Image bucketImage = new Image(getClass().getResourceAsStream("images/bucket.png"));
-        bucketButton.setGraphic(new ImageView(bucketImage));
-        Image colorPickerImage = new Image(getClass().getResourceAsStream("images/colorPicker.png"));
-        colorPickerButton.setGraphic(new ImageView(colorPickerImage));
+        Image bucketImage = new Image(getClass().getResourceAsStream("images/bucket2.png"));
+        ImageView bucketImageView = new ImageView(bucketImage);
+        bucketImageView.setFitHeight(30*scalingFactor);
+        bucketImageView.setFitWidth(30*scalingFactor);
+        bucketButton.setGraphic(bucketImageView);
+        Image colorPickerImage = new Image(getClass().getResourceAsStream("images/colorPicker2.png"));
+        ImageView colorPickerImageView = new ImageView(colorPickerImage);
+        colorPickerImageView.setFitHeight(30*scalingFactor);
+        colorPickerImageView.setFitWidth(30*scalingFactor);
+        colorPickerButton.setGraphic(colorPickerImageView);
         
         // drawingBoard
         drawingBoard.bindSize(pane.widthProperty(), pane.heightProperty());
@@ -264,15 +280,16 @@ public class MainWindowController implements Initializable {
         drawingBoard.setColorWidget(colorWidget);
         
         // chat
-        chat = new Chat(chatLog, chatLogPane, chatInput);
         Font font = chatInput.getFont();
-        chatInput.setFont(new Font("System Regular", font.getSize()*scalingFactor));
+        font = new Font("System Regular", font.getSize()*scalingFactor);
+        chat = new Chat(chatLog, chatLogPane, chatInput, font);
+        
         
         // player tableView
         scoreTableNickNameColumn.setCellValueFactory(
                 player -> player.getValue().getNickNameProperty()
         );
-        TableCell<Player, String> tableCell;
+        scoreTableView.setFixedCellSize(40*scalingFactor);
         scoreTableNickNameColumn.setCellFactory(new Callback<TableColumn<Player, String>, TableCell<Player,String>>() {
             @Override public TableCell call(TableColumn param) {
                 return new TableCell<Player, String>() {
@@ -281,6 +298,8 @@ public class MainWindowController implements Initializable {
                         if(isEmpty()){
                             setText("");
                         } else{
+                            Font timeLabelFont = this.getFont();
+                            this.setFont(new Font("System Regular", 22*scalingFactor));
                             setText(item);
                         }
                     }
@@ -290,6 +309,22 @@ public class MainWindowController implements Initializable {
         scoreTablePointsColumn.setCellValueFactory(
                 player -> player.getValue().getScoreProperty()
         );
+        scoreTablePointsColumn.setCellFactory(new Callback<TableColumn<Player, Number>, TableCell<Player,Number>>() {
+            @Override public TableCell call(TableColumn param) {
+                return new TableCell<Player, Number>() {
+                    @Override public void updateItem(Number item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if(isEmpty()){
+                            setText("");
+                        } else{
+                            Font timeLabelFont = this.getFont();
+                            this.setFont(new Font("System Regular", 22*scalingFactor));
+                            setText(item.toString());
+                        }
+                    }
+                };
+            }
+        });
         scoreTableView.setItems(Client.getPlayers());
         
         Client.setChat(chat);

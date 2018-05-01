@@ -163,7 +163,7 @@
       <Slider fx:id="colorBrightnessSlider" blockIncrement="16.0" majorTickUnit="16.0" max="255.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minorTickCount="0" showTickMarks="true" style="-fx-border-color: #C8C8C8; -fx-border-width: 0 2 2 2;" GridPane.columnIndex="5" GridPane.rowIndex="1" />
       <Pane fx:id="colorBrightnessPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" style="-fx-border-color: #C8C8C8; -fx-border-width: 2 2 0 2;" GridPane.columnIndex="5">
          <children>
-            <Canvas fx:id="colorBrightnessCanvas" height="21.0" layoutX="8.0" layoutY="7.0" width="83.0" />
+            <Canvas fx:id="colorBrightnessCanvas" height="21.0" layoutX="8.0" layoutY="7.0" width="86.0" />
          </children>
       </Pane>
       <ScrollPane fx:id="chatLogPane" hbarPolicy="NEVER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" style="-fx-border-color: #C8C8C8; -fx-border-width: 2;" GridPane.columnSpan="10" GridPane.rowIndex="4">
@@ -171,12 +171,12 @@
             <TextFlow fx:id="chatLog" prefHeight="84.0" prefWidth="553.0" />
          </content>
       </ScrollPane>
-      <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" style="-fx-border-color: #C8C8C8; -fx-border-width: 2  2 0 2;" text="Wyraz:" GridPane.columnIndex="6" GridPane.columnSpan="2">
+      <Label fx:id="passwordLabelLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" style="-fx-border-color: #C8C8C8; -fx-border-width: 2  2 0 2;" text="Wyraz:" GridPane.columnIndex="6" GridPane.columnSpan="2">
          <font>
             <Font name="System Bold" size="15.0" />
          </font>
       </Label>
-      <Label fx:id="wyrazLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" style="-fx-border-color: #C8C8C8; -fx-border-width: 0 2 2 2;" text="wyraz" GridPane.columnIndex="6" GridPane.columnSpan="2" GridPane.rowIndex="1">
+      <Label fx:id="passwordLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" style="-fx-border-color: #C8C8C8; -fx-border-width: 0 2 2 2;" text="wyraz" GridPane.columnIndex="6" GridPane.columnSpan="2" GridPane.rowIndex="1">
          <font>
             <Font size="15.0" />
          </font>
