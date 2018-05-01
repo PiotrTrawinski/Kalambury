@@ -1,4 +1,4 @@
-package game;
+package sample;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -17,14 +17,14 @@ public class RandomFileReader {
     public String chooseRandom(){
         String ret = "";
         long fileSize = file.length();
-        char wordRead[] = new char[64];
+        byte wordRead[] = new byte[64];
         try {
             RandomAccessFile f = new RandomAccessFile(file, "r");
             long pos = rand.nextInt((int) fileSize-1);
             f.seek(pos);
-            char read;
+            byte read;
             if(pos != 0){
-                while((read = (char)f.readByte()) != separator){
+                while((read = f.readByte()) != separator){
                     f.seek(f.getFilePointer() - 2);
                     if(f.getFilePointer() == 0){
                         break;
@@ -32,11 +32,11 @@ public class RandomFileReader {
                 }
             }
             int i = 0;
-            while((read = (char)f.readByte()) != separator){
+            while((read = f.readByte()) != separator){
                 wordRead[i++] = read;
             }
             wordRead[i] = '\0';
-            ret = String.valueOf(wordRead);
+            ret = new String(wordRead, "UTF-8");
         }
         catch(Exception ex){
             System.out.println(ex.getMessage());
