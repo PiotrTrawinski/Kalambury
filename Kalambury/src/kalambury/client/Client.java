@@ -188,7 +188,7 @@ public class Client {
             } catch (InterruptedException ex) {
                 System.err.printf("error sleep: \"%s\"\n", ex.getMessage());
             }
-
+            
             firstTime = false;
         }
     }

@@ -19,8 +19,10 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -70,8 +72,9 @@ public class MainWindowController implements Initializable {
     @FXML private Label passwordLabel;
     
     @FXML private TableView scoreTableView;
-    @FXML private TableColumn<Player,String> scoreTableNickNameColumn;
-    @FXML private TableColumn<Player,Number> scoreTablePointsColumn;
+    @FXML private TableColumn<Player, String> scoreTableNickNameColumn;
+    @FXML private TableColumn<Player, Number> scoreTablePointsColumn;
+    @FXML private TableColumn<Player, Boolean> scoreTableStateColumn;
     
     @FXML private TextFlow chatLog;
     @FXML private ScrollPane chatLogPane;
@@ -287,7 +290,7 @@ public class MainWindowController implements Initializable {
         
         // player tableView
         scoreTableNickNameColumn.setCellValueFactory(
-                player -> player.getValue().getNickNameProperty()
+            player -> player.getValue().getNickNameProperty()
         );
         scoreTableView.setFixedCellSize(40*scalingFactor);
         scoreTableNickNameColumn.setCellFactory(new Callback<TableColumn<Player, String>, TableCell<Player,String>>() {
@@ -307,7 +310,7 @@ public class MainWindowController implements Initializable {
             }
         });
         scoreTablePointsColumn.setCellValueFactory(
-                player -> player.getValue().getScoreProperty()
+            player -> player.getValue().getScoreProperty()
         );
         scoreTablePointsColumn.setCellFactory(new Callback<TableColumn<Player, Number>, TableCell<Player,Number>>() {
             @Override public TableCell call(TableColumn param) {
@@ -320,6 +323,27 @@ public class MainWindowController implements Initializable {
                             Font timeLabelFont = this.getFont();
                             this.setFont(new Font("System Regular", 22*scalingFactor));
                             setText(item.toString());
+                        }
+                    }
+                };
+            }
+        });
+        scoreTableStateColumn.setCellValueFactory(
+            player -> player.getValue().getIsDrawingProperty()
+        );
+        scoreTableStateColumn.setCellFactory(new Callback<TableColumn<Player, Boolean>, TableCell<Player,Boolean>>() {
+            @Override public TableCell call(TableColumn param) {
+                return new TableCell<Player, Boolean>() {
+                    @Override public void updateItem(Boolean isDrawing, boolean empty) {
+                        super.updateItem(isDrawing, empty);
+                        setText("");
+                        if(!isEmpty()){
+                            TableRow<Player> currentRow = getTableRow();
+                            if(isDrawing){
+                                currentRow.setStyle("-fx-background-color:lightgreen");
+                            } else {
+                                currentRow.setStyle("");
+                            }
                         }
                     }
                 };
