@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package game;
 
 import java.util.ArrayList;
@@ -11,27 +6,24 @@ import java.util.List;
 import javafx.collections.ObservableList;
 import kalambury.mainWindow.Player;
 import kalambury.mainWindow.TimeLabel;
-import kalambury.sendableData.DrawingEndSignal;
-import kalambury.sendableData.DrawingStartSignal;
+import kalambury.sendableData.DataType;
 import kalambury.sendableData.GamePasswordData;
+import kalambury.sendableData.SendableSignal;
 import kalambury.server.Server;
 
-/**
- *
- * @author honzi
- */
+
 public class Game {
     private final int pointsForDrawing = 10;
     private final int pointsForGuess = 8;
-    private ObservableList<Player> players;
-    private List<Player> playersSequence = new ArrayList<>();
-    private int round;
-    private int maxPoints;
-    private int maxTimeSeconds;
-    private int playersCount;
+    private final ObservableList<Player> players;
+    private final List<Player> playersSequence = new ArrayList<>();
+    private final int round;
+    private final int maxPoints;
+    private final int maxTimeSeconds;
+    private final int playersCount;
     private String currentPassword;
     private int currentlyDrawingUserID;
-    private RandomFileReader randomGenerator = new RandomFileReader("slowa.txt",'\n');
+    private final RandomFileReader randomGenerator = new RandomFileReader("slowa.txt",'\n');
     TimeLabel gameTimeLabel;
     
     long winnerTime = 0;
@@ -62,7 +54,7 @@ public class Game {
     public void chooseNextPlayer(){
         
         // send stop drawing signal to last drawing player
-        DrawingEndSignal des = new DrawingEndSignal();
+        SendableSignal des = new SendableSignal(DataType.DrawingEndSignal);
         System.out.println(playersSequence.get(playersCount-1).getId());
         Server.sendTo(des, playersSequence.get(playersCount-1).getId());
         
@@ -70,7 +62,7 @@ public class Game {
         playersSequence.add(p);
         currentlyDrawingUserID = p.getId();
         
-        DrawingStartSignal dss = new DrawingStartSignal();
+        SendableSignal dss = new SendableSignal(DataType.DrawingStartSignal);
         Server.sendTo(dss, p.getId());
 
         currentPassword = randomGenerator.chooseRandom();

@@ -1,17 +1,12 @@
 package kalambury.sendableData;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class DrawingStartSignal extends SendableData{
+public class SendableSignal extends SendableData{
     
-    public DrawingStartSignal(){
-        type = DataType.DrawingStartSignal;
-    }
-    
-    public DrawingStartSignal(DataInputStream in){
-        type = DataType.DrawingStartSignal;
+    public SendableSignal(DataType signal){
+        this.type = signal;
     }
 
     @Override public void send(DataOutputStream out) {

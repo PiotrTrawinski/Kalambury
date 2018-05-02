@@ -20,13 +20,14 @@ import javafx.concurrent.Task;
 import javafx.scene.control.Label;
 import kalambury.mainWindow.Player;
 import kalambury.mainWindow.drawingBoard.DrawingBoard;
+import kalambury.sendableData.DataType;
 import kalambury.sendableData.FloodFillData;
 import kalambury.sendableData.GamePasswordData;
 import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.NewPlayerData;
+import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TimeData;
-import kalambury.sendableData.TurnEndedAcceptSignal;
 import kalambury.sendableData.TurnEndedData;
 import kalambury.server.SystemMessage;
 import kalambury.server.SystemMessageType;
@@ -196,8 +197,7 @@ public class Client {
                             Client.getTime(),
                             SystemMessageType.Information
                         ));
-                        TurnEndedAcceptSignal teas = new TurnEndedAcceptSignal();
-                        teas.send(out);
+                        new SendableSignal(DataType.TurnEndedAcceptSignal).send(out);
                         break;
                     case TurnEndedData:
                         TurnEndedData ted = (TurnEndedData)input;
