@@ -130,6 +130,10 @@ public class Server {
                 SendableData data = message.getData();
                 
                 switch(data.getType()){
+                case GameStoppedSignal:
+                    game = null;
+                    sendAll(data);
+                    break;
                 case TurnEndedAcceptSignal:
                     acceptEndSignalCount++;
                     if(acceptEndSignalCount == clientsCount){
@@ -143,9 +147,10 @@ public class Server {
                         TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick);
                         sendAll(ted);
                         
-                        int drawingPlayerIndex = getPlayerIndex(game.chooseNextPlayer());
+                        int drawingPlayerId = game.chooseNextPlayer();
+                        int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
                         GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-                        TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true);
+                        TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true, drawingPlayerId);
                         sendTo(tsd, drawingPlayerIndex);
                         sendTo(passwordData, drawingPlayerIndex);
                         tsd.isDrawing = false;
@@ -286,13 +291,25 @@ public class Server {
     public static void startGame(){
         game = new Game(maxClients,600,90,Client.getPlayers());
         game.start();
-        int drawingPlayerIndex = getPlayerIndex(game.chooseNextPlayer());
+        addLastMessageToHandle(new ServerMessage(
+            new SendableSignal(DataType.GameStartedSignal), 
+            ServerMessage.ReceiverType.All
+        ));
+        int drawingPlayerId = game.chooseNextPlayer();
+        int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
         GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-        TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true);
-        sendTo(tsd, drawingPlayerIndex);
-        sendTo(passwordData, drawingPlayerIndex);
-        tsd.isDrawing = false;
-        sendExcept(tsd, drawingPlayerIndex);
+        TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true, drawingPlayerId);
+        addLastMessageToHandle(new ServerMessage(tsd, ServerMessage.ReceiverType.One, drawingPlayerIndex));
+        addLastMessageToHandle(new ServerMessage(passwordData, ServerMessage.ReceiverType.One, drawingPlayerIndex));
+        TurnStartedData tsd2 = new TurnStartedData(tsd.startTime, tsd.turnTime, false, drawingPlayerId);
+        addLastMessageToHandle(new ServerMessage(tsd2, ServerMessage.ReceiverType.AllExcept, drawingPlayerIndex));
+    }
+    
+    public static void stopGame(){
+        addLastMessageToHandle(new ServerMessage(
+            new SendableSignal(DataType.GameStoppedSignal), 
+            ServerMessage.ReceiverType.All
+        ));
     }
 }
 

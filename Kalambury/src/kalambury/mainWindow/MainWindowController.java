@@ -140,12 +140,23 @@ public class MainWindowController implements Initializable {
         //Server.sendExcept(end, -1);
         Server.startGame();
         Server.getGame().setTimeLabel(timeLabel);
+        playButton.setDisable(true);
+        pauseButton.setDisable(false);
+        stopButton.setDisable(false);
+        skipButton.setDisable(false);
     }
     @FXML public void onStopButtonPressed(){
-        
+        Server.stopGame();
+        playButton.setDisable(false);
+        pauseButton.setDisable(true);
+        stopButton.setDisable(true);
+        skipButton.setDisable(true);
     }
     @FXML public void onPauseButtonPressed(){
-        
+        playButton.setDisable(false);
+        pauseButton.setDisable(true);
+        stopButton.setDisable(false);
+        skipButton.setDisable(true);
     }
     @FXML public void onSkipButtonPressed(){
         
@@ -374,6 +385,11 @@ public class MainWindowController implements Initializable {
             }
         });
         scoreTableView.setItems(Client.getPlayers());
+        
+        playButton.setDisable(false);
+        pauseButton.setDisable(true);
+        stopButton.setDisable(true);
+        skipButton.setDisable(true);
         
         Client.setChat(chat);
         Client.setDrawingBoard(drawingBoard);
