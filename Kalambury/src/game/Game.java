@@ -20,31 +20,29 @@ public class Game {
     private final int round;
     private final int maxPoints;
     private final int maxTimeSeconds;
-    private final int playersCount;
     private String currentPassword;
     private int currentlyDrawingUserID;
+    private final int NO_ID = -1;
     private final RandomFileReader randomGenerator = new RandomFileReader("slowa.txt",'\n');
     TimeLabel gameTimeLabel;
     
     long winnerTime = 0;
-    int winnerId = -1;
+    int winnerId = NO_ID;
     
     public Game(int maxPlayers, int maxPoints, int maxTimeSeconds, ObservableList<Player> players){
-
         this.maxTimeSeconds = maxTimeSeconds;
         this.maxPoints = maxPoints;
         this.round = 0;
-        this.playersCount = players.size();
         this.players = players;
-        this.currentlyDrawingUserID = -1;
+        this.currentlyDrawingUserID = NO_ID;
     }
     public void setTimeLabel(TimeLabel timeLabel){
         this.gameTimeLabel = timeLabel;
     }
     
     public void start(){
-        System.out.println(playersCount);
-        for(int i = 0 ; i < playersCount; i++){
+        System.out.println(players.size());
+        for(int i = 0 ; i < players.size(); i++){
             playersSequence.add(players.get(i));
         }
         Collections.shuffle(playersSequence);
@@ -55,20 +53,20 @@ public class Game {
         
         // send stop drawing signal to last drawing player
         SendableSignal des = new SendableSignal(DataType.DrawingEndSignal);
-        System.out.println(playersSequence.get(playersCount-1).getId());
-        Server.sendTo(des, playersSequence.get(playersCount-1).getId());
+        System.out.println(playersSequence.get(players.size()-1).getId());
+        Server.sendToById(des, playersSequence.get(players.size()-1).getId());
         
         Player p = playersSequence.remove(0);
         playersSequence.add(p);
         currentlyDrawingUserID = p.getId();
         
         SendableSignal dss = new SendableSignal(DataType.DrawingStartSignal);
-        Server.sendTo(dss, p.getId());
+        Server.sendToById(dss, p.getId());
 
         currentPassword = randomGenerator.chooseRandom();
         
         GamePasswordData gpd = new GamePasswordData(currentPassword);
-        Server.sendTo(gpd, p.getId());
+        Server.sendToById(gpd, p.getId());
         
         
         System.out.println("Current password is:"+currentPassword);
@@ -82,22 +80,26 @@ public class Game {
     }
     
     public String endTurn(){
-        players.get(currentlyDrawingUserID).setScore(players.get(currentlyDrawingUserID).getScore() + pointsForDrawing);
-        players.get(winnerId).setScore(players.get(winnerId).getScore() + pointsForGuess);
+        players.get(Server.getPlayerIndex(currentlyDrawingUserID)).setScore(
+                players.get(Server.getPlayerIndex(currentlyDrawingUserID)).getScore() + pointsForDrawing
+        );
+        players.get(Server.getPlayerIndex(winnerId)).setScore(
+                players.get(Server.getPlayerIndex(winnerId)).getScore() + pointsForGuess
+        );
         int tempWinnerId = winnerId;
         clearTurnWinner();
         //chooseNextPlayer();
-        return players.get(tempWinnerId).getNickName();
+        return players.get(Server.getPlayerIndex(tempWinnerId)).getNickName();
     }
     
     public void updateCurrentTurnWinner(long correctAnswerTime, int playerId){
-        if(winnerId == -1 || correctAnswerTime < winnerTime){
+        if(winnerId == NO_ID || correctAnswerTime < winnerTime){
             winnerId = playerId;
             winnerTime = correctAnswerTime;
         }
     }
     
     private void clearTurnWinner(){
-        winnerId = -1;
+        winnerId = NO_ID;
     }
 }

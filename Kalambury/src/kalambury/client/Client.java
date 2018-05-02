@@ -82,7 +82,7 @@ public class Client {
                 executor.shutdown();
                 
                 
-                NewPlayerData newPlayerData = new NewPlayerData(Client.nick,-1); // id will be set by server, client has no idea of it
+                NewPlayerData newPlayerData = new NewPlayerData(Client.nick, -1); // id will be set by server, client has no idea of it
                 newPlayerData.send(out);
                 
                 final StartServerData startData = (StartServerData)SendableData.receive(in);
@@ -150,13 +150,13 @@ public class Client {
                         break;
                     case NewPlayerData:
                         NewPlayerData npd = (NewPlayerData)input;
-                        players.add(new Player(npd.nickName, 0,npd.id));
+                        players.add(new Player(npd.nickName, 0, npd.id));
                         chat.handleNewSystemMessage(new SystemMessage(
                             npd.nickName + " dołączył do gry",
                             Client.getTime(),
                             SystemMessageType.Information
                         ));
-                        System.out.printf("ID:%d",npd.id);
+                        System.out.printf("ID:%d", npd.id);
                         break;
                     case Time:
                         TimeData td = (TimeData)input;
