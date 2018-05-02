@@ -19,6 +19,7 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.Label;
 import kalambury.mainWindow.Player;
+import kalambury.mainWindow.TimeLabel;
 import kalambury.mainWindow.drawingBoard.DrawingBoard;
 import kalambury.sendableData.DataType;
 import kalambury.sendableData.FloodFillData;
@@ -51,6 +52,7 @@ public class Client {
     private static Label wordLabel;
     private static Chat chat;
     private static DrawingBoard drawingBoard;
+    private static TimeLabel timeLabel;
     private static final ObservableList<Player> players = FXCollections.observableArrayList();
     
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -115,6 +117,9 @@ public class Client {
     public static void setDrawingBoard(DrawingBoard drawingBoard){
         Client.drawingBoard = drawingBoard;
     }
+    public static void setTimeLabel(TimeLabel timeLabel){
+        Client.timeLabel = timeLabel;
+    }
     public static void setSocket(Socket s){
         Client.socket = s;
         try {
@@ -168,6 +173,7 @@ public class Client {
                         break;
                     case TurnStarted:
                         TurnStartedData tsd = (TurnStartedData)input;
+                        timeLabel.setNew(tsd.startTime, tsd.turnTime);
                         if(tsd.isDrawing){
                             drawingBoard.setDisable(false);
                             chat.handleNewSystemMessage(new SystemMessage(
