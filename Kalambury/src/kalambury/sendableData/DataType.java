@@ -8,12 +8,11 @@ public enum DataType {
     StartServerData(3),
     NewPlayerData(4),
     Time(5),
-    DrawingEndSignal(6),
-    DrawingStartSignal(7),
     GamePassword(8),
     TurnEndedSignal(9),
     TurnEndedAcceptSignal(10),
-    TurnEndedData(11);
+    TurnEndedData(11),
+    TurnStarted(12);
    
     private final int value;
     private DataType(int value) {

@@ -11,6 +11,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Random;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import kalambury.client.Client;
 import kalambury.sendableData.NewPlayerData;
@@ -19,9 +22,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import kalambury.sendableData.ChatMessageData;
 import kalambury.sendableData.DataType;
+import kalambury.sendableData.GamePasswordData;
 import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.TimeData;
 import kalambury.sendableData.TurnEndedData;
+import kalambury.sendableData.TurnStartedData;
 
 public class Server {
     private static final int maxClients = 5;
@@ -32,7 +37,7 @@ public class Server {
     
     private static int port;
     
-    private static volatile ArrayDeque<ServerMessage>  messagesToHandle = new ArrayDeque<ServerMessage>();
+    private static volatile ArrayDeque<ServerMessage>  messagesToHandle = new ArrayDeque<>();
     private static final Lock messagesToHandleMutex = new ReentrantLock(true);
     
     private static int acceptEndSignalCount = -1;
@@ -40,6 +45,8 @@ public class Server {
     private static final TimeData timeData = new TimeData(0);
     
     private static Game game = null;
+    
+    private static final TreeMap<Integer, Integer> playerIndexes = new TreeMap<>();
     
     
     public static void initialize(int port){
@@ -74,6 +81,22 @@ public class Server {
         }
     }
     
+    private static int createNewId(){
+        Random random = new Random();
+        boolean uniqueId = true;
+        int newId;
+        do{
+            newId = random.nextInt(Integer.MAX_VALUE);
+            for(Map.Entry<Integer, Integer> entry : playerIndexes.entrySet()){
+                if(entry.getKey() == newId){
+                    uniqueId = false;
+                    break;
+                }
+            }
+        }while(!uniqueId);
+        
+        return newId;
+    }
     
     private static void acceptNewClient(Socket socket) throws IOException{
         sockets[clientsCount] = socket;
@@ -81,7 +104,8 @@ public class Server {
         outputStreams[clientsCount] = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
         NewPlayerData newPlayerData = (NewPlayerData)SendableData.receive(inputStreams[clientsCount]);
-        newPlayerData.id = clientsCount;
+        newPlayerData.id = createNewId();
+        playerIndexes.put(newPlayerData.id, clientsCount);
         StartServerData startServerData = new StartServerData(Client.getPlayers(), timeData.time);
         startServerData.send(outputStreams[clientsCount]);
 
@@ -118,15 +142,23 @@ public class Server {
                         }
                         TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick);
                         sendAll(ted);
-                        game.chooseNextPlayer();
+                        
+                        int drawingPlayerIndex = getPlayerIndex(game.chooseNextPlayer());
+                        GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+                        TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true);
+                        sendTo(tsd, drawingPlayerIndex);
+                        sendTo(passwordData, drawingPlayerIndex);
+                        tsd.isDrawing = false;
+                        sendExcept(tsd, drawingPlayerIndex);
                     }
                     break;
                 case ChatMessage:
                     ChatMessageData cmd = (ChatMessageData)data;
-                    int sender = message.getParam();
-                    sendExcept(data, sender);
-                    if(game != null && game.verifyPassword(cmd.message, sender)){
-                        game.updateCurrentTurnWinner(cmd.time, sender);
+                    int senderIndex = message.getParam();
+                    int senderId = getPlayerId(senderIndex);
+                    sendExcept(data, senderIndex);
+                    if(game != null && game.verifyPassword(cmd.message, senderId)){
+                        game.updateCurrentTurnWinner(cmd.time, senderId);
                         // tell every client that the turn has ended
                         if(acceptEndSignalCount == -1){
                             acceptEndSignalCount = 0;
@@ -179,15 +211,28 @@ public class Server {
         }
     }
     
-    public static void sendTo(SendableData data, int clientId){
-        data.send(outputStreams[clientId]);
+    public static Integer getPlayerIndex(int id){
+        return playerIndexes.get(id);
+    }
+    public static Integer getPlayerId(int index){
+        for(Map.Entry<Integer, Integer> entry : playerIndexes.entrySet()){
+            if(entry.getValue() == index){
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+    
+    public static void sendTo(SendableData data, int clientIndex){
+        data.send(outputStreams[clientIndex]);
         try{
-            outputStreams[clientId].flush();
+            outputStreams[clientIndex].flush();
         }
         catch(IOException ex){
             System.err.println(ex.getMessage());
         }
     }
+    
     public static void sendExcept(SendableData data, int exceptIndex){
         for(int i = 0; i < clientsCount; i++){
             if(i != exceptIndex){
@@ -212,7 +257,7 @@ public class Server {
                         //receive messsage and send it to all clients except the sender
                         final SendableData input = SendableData.receive(inputStreams[i]);
                         addLastMessageToHandle(
-                           new ServerMessage(input, ServerMessage.ReceiverType.AllExcept, i)
+                            new ServerMessage(input, ServerMessage.ReceiverType.AllExcept, i)
                         );
                     }
                 } catch(IOException ex) {
@@ -241,6 +286,13 @@ public class Server {
     public static void startGame(){
         game = new Game(maxClients,600,90,Client.getPlayers());
         game.start();
+        int drawingPlayerIndex = getPlayerIndex(game.chooseNextPlayer());
+        GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+        TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true);
+        sendTo(tsd, drawingPlayerIndex);
+        sendTo(passwordData, drawingPlayerIndex);
+        tsd.isDrawing = false;
+        sendExcept(tsd, drawingPlayerIndex);
     }
 }
 

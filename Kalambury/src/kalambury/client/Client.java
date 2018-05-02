@@ -19,6 +19,7 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.Label;
 import kalambury.mainWindow.Player;
+import kalambury.mainWindow.TimeLabel;
 import kalambury.mainWindow.drawingBoard.DrawingBoard;
 import kalambury.sendableData.DataType;
 import kalambury.sendableData.FloodFillData;
@@ -29,6 +30,7 @@ import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TimeData;
 import kalambury.sendableData.TurnEndedData;
+import kalambury.sendableData.TurnStartedData;
 import kalambury.server.SystemMessage;
 import kalambury.server.SystemMessageType;
 
@@ -50,6 +52,7 @@ public class Client {
     private static Label wordLabel;
     private static Chat chat;
     private static DrawingBoard drawingBoard;
+    private static TimeLabel timeLabel;
     private static final ObservableList<Player> players = FXCollections.observableArrayList();
     
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -82,7 +85,7 @@ public class Client {
                 executor.shutdown();
                 
                 
-                NewPlayerData newPlayerData = new NewPlayerData(Client.nick,-1); // id will be set by server, client has no idea of it
+                NewPlayerData newPlayerData = new NewPlayerData(Client.nick, -1); // id will be set by server, client has no idea of it
                 newPlayerData.send(out);
                 
                 final StartServerData startData = (StartServerData)SendableData.receive(in);
@@ -113,6 +116,9 @@ public class Client {
     }
     public static void setDrawingBoard(DrawingBoard drawingBoard){
         Client.drawingBoard = drawingBoard;
+    }
+    public static void setTimeLabel(TimeLabel timeLabel){
+        Client.timeLabel = timeLabel;
     }
     public static void setSocket(Socket s){
         Client.socket = s;
@@ -150,13 +156,13 @@ public class Client {
                         break;
                     case NewPlayerData:
                         NewPlayerData npd = (NewPlayerData)input;
-                        players.add(new Player(npd.nickName, 0,npd.id));
+                        players.add(new Player(npd.nickName, 0, npd.id));
                         chat.handleNewSystemMessage(new SystemMessage(
                             npd.nickName + " dołączył do gry",
                             Client.getTime(),
                             SystemMessageType.Information
                         ));
-                        System.out.printf("ID:%d",npd.id);
+                        System.out.printf("ID:%d", npd.id);
                         break;
                     case Time:
                         TimeData td = (TimeData)input;
@@ -165,24 +171,27 @@ public class Client {
                         timeBeforeSleep = System.currentTimeMillis();
                         time = syncTime;
                         break;
-                    case DrawingEndSignal:
-                        drawingBoard.setDisable(true);
-                        Platform.runLater(()->{
-                            wordLabel.setText("???");
-                        });
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            "Zgaduj hasło!",
-                            Client.getTime(),
-                            SystemMessageType.Information
-                        ));
-                        break;
-                    case DrawingStartSignal:
-                        drawingBoard.setDisable(false);
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            "Rysuj hasło!",
-                            Client.getTime(),
-                            SystemMessageType.Information
-                        ));
+                    case TurnStarted:
+                        TurnStartedData tsd = (TurnStartedData)input;
+                        timeLabel.setNew(tsd.startTime, tsd.turnTime);
+                        if(tsd.isDrawing){
+                            drawingBoard.setDisable(false);
+                            chat.handleNewSystemMessage(new SystemMessage(
+                                "Rysuj hasło!",
+                                Client.getTime(),
+                                SystemMessageType.Information
+                            ));
+                        } else {
+                            drawingBoard.setDisable(true);
+                            Platform.runLater(()->{
+                                wordLabel.setText("???");
+                            });
+                            chat.handleNewSystemMessage(new SystemMessage(
+                                "Zgaduj hasło!",
+                                Client.getTime(),
+                                SystemMessageType.Information
+                            ));
+                        }
                         break;
                     case GamePassword:
                         GamePasswordData gpd = (GamePasswordData)input;
