@@ -174,6 +174,7 @@ public class Client {
                         break;
                     case TurnStarted:
                         TurnStartedData tsd = (TurnStartedData)input;
+                        drawingBoard.clear();
                         timeLabel.setNew(tsd.startTime, tsd.turnTime);
                         updateDrawingPlayer(tsd.drawingPlayerId);
                         if(tsd.isDrawing){
