@@ -28,7 +28,10 @@ public abstract class SendableData {
         case Time:                  return new TimeData(in);
         case DrawingEndSignal:      return new DrawingEndSignal(in);
         case DrawingStartSignal:    return new DrawingStartSignal(in);
-        default:              return null;
+        case TurnEndedAcceptSignal: return new TurnEndedAcceptSignal(in);
+        case TurnEndedSignal:       return new TurnEndedSignal(in);
+        case TurnEndedData:         return new TurnEndedData(in);
+        default:                    return null;
         }
     }
 

@@ -24,6 +24,8 @@ import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.NewPlayerData;
 import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TimeData;
+import kalambury.sendableData.TurnEndedAcceptSignal;
+import kalambury.sendableData.TurnEndedData;
 import kalambury.server.SystemMessage;
 import kalambury.server.SystemMessageType;
 
@@ -171,6 +173,27 @@ public class Client {
                             Client.getTime(),
                             SystemMessageType.Information
                         ));
+                        break;
+                    case TurnEndedSignal:
+                        drawingBoard.setDisable(true);
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            "Koniec tury!",
+                            Client.getTime(),
+                            SystemMessageType.Information
+                        ));
+                        TurnEndedAcceptSignal teas = new TurnEndedAcceptSignal();
+                        teas.send(out);
+                        break;
+                    case TurnEndedData:
+                        TurnEndedData ted = (TurnEndedData)input;
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            ted.winnerNickName + " wygrał!",
+                            Client.getTime(),
+                            SystemMessageType.Information
+                        ));
+                        for(int i = 0; i < players.size(); ++i){
+                            players.get(i).setScore(ted.updatedScores.get(i));
+                        }
                         break;
                     default:
                         break;

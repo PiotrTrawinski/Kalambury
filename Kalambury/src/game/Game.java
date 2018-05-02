@@ -33,6 +33,9 @@ public class Game {
     private RandomFileReader randomGenerator = new RandomFileReader("slowa.txt",'\n');
     TimeLabel gameTimeLabel;
     
+    long winnerTime = 0;
+    int winnerId = -1;
+    
     public Game(int maxPlayers, int maxPoints, int maxTimeSeconds, ObservableList<Player> players){
 
         this.maxTimeSeconds = maxTimeSeconds;
@@ -77,18 +80,28 @@ public class Game {
         System.out.println(p.getNickName() + " is now drawing.");
         
     }
-    public void verifyPassword(String password, int guesserID){
-        if(password.equals(currentPassword) && guesserID != currentlyDrawingUserID){   // user has chosen correct password
-            // be aware of the references
-            players.get(currentlyDrawingUserID).setScore(players.get(currentlyDrawingUserID).getScore() + pointsForDrawing);
-            players.get(guesserID).setScore(players.get(guesserID).getScore() + pointsForGuess);
-            // update rank list
-            // ..
-            
-            chooseNextPlayer();
+    
+    public boolean verifyPassword(String password, int guesserID){
+        return password.equals(currentPassword) && guesserID != currentlyDrawingUserID;
+    }
+    
+    public String endTurn(){
+        players.get(currentlyDrawingUserID).setScore(players.get(currentlyDrawingUserID).getScore() + pointsForDrawing);
+        players.get(winnerId).setScore(players.get(winnerId).getScore() + pointsForGuess);
+        int tempWinnerId = winnerId;
+        clearTurnWinner();
+        //chooseNextPlayer();
+        return players.get(tempWinnerId).getNickName();
+    }
+    
+    public void updateCurrentTurnWinner(long correctAnswerTime, int playerId){
+        if(winnerId == -1 || correctAnswerTime < winnerTime){
+            winnerId = playerId;
+            winnerTime = correctAnswerTime;
         }
-        else{
-                System.out.println("wrong password");
-        }
+    }
+    
+    private void clearTurnWinner(){
+        winnerId = -1;
     }
 }

@@ -10,6 +10,7 @@ import static java.lang.Thread.MAX_PRIORITY;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import javafx.util.Pair;
 import kalambury.client.Client;
@@ -22,6 +23,8 @@ import kalambury.sendableData.ChatMessageData;
 import kalambury.sendableData.DataType;
 
 import kalambury.sendableData.TimeData;
+import kalambury.sendableData.TurnEndedData;
+import kalambury.sendableData.TurnEndedSignal;
 
 public class Server {
     private static final int maxClients = 5;
@@ -33,6 +36,8 @@ public class Server {
     private static int port;
     private static volatile ArrayDeque< Pair<SendableData,Integer> >  messagesToHandle = new ArrayDeque<Pair<SendableData,Integer>>();
     private static final Lock _mutex = new ReentrantLock(true);
+    private static int acceptEndSignalCount = -1;
+    private static TimeData timeData = new TimeData(0);
     private static Game game = null;
     public static void initialize(int port){
         //set the port that server is working on, and start it on a new thread
@@ -106,10 +111,35 @@ public class Server {
                 int skip = (Integer)DataAndSkipIndex.getValue();
                 _mutex.unlock();
                 SendableData data = (SendableData)DataAndSkipIndex.getKey();
+                if(data.getType() == DataType.TurnEndedAcceptSignal){
+                    acceptEndSignalCount++;
+                    if(acceptEndSignalCount == clientsCount){
+                        // everyone accepted that turn has ended
+                        
+                        acceptEndSignalCount = -1;
+                        String winnerNick = game.endTurn();
+                        ArrayList<Integer> updatedScores = new ArrayList<>();
+                        for(int i = 0; i < Client.getPlayers().size(); ++i){
+                            updatedScores.add(Client.getPlayers().get(i).getScore());
+                        }
+                        TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick);
+                        _mutex.lock();
+                        messagesToHandle.addLast(new Pair(ted, -1));
+                        _mutex.unlock();
+                        game.chooseNextPlayer();
+                    }
+                }
                 if(data.getType() == DataType.ChatMessage){
                     ChatMessageData cmd = (ChatMessageData)data;
-                    if(game != null){
-                        game.verifyPassword(cmd.message,skip);
+                    if(game != null && game.verifyPassword(cmd.message,skip)){
+                        game.updateCurrentTurnWinner(cmd.time, skip);
+                        // tell every client that the turn has ended
+                        if(acceptEndSignalCount == -1){
+                            acceptEndSignalCount = 0;
+                            _mutex.lock();
+                            messagesToHandle.addLast(new Pair(new TurnEndedSignal(), -1));
+                            _mutex.unlock();
+                        }
                     }
                 }
                 
@@ -163,7 +193,6 @@ public class Server {
     public static void timeThread(){
         long startTime = System.currentTimeMillis();
         long sleepTime = 1000;
-        TimeData timeData = new TimeData(0);
         
         while(true){
             try {
