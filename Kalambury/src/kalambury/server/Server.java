@@ -12,19 +12,16 @@ import java.net.Socket;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
-import javafx.util.Pair;
 import kalambury.client.Client;
 import kalambury.sendableData.NewPlayerData;
 import kalambury.sendableData.StartServerData;
-
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import kalambury.sendableData.ChatMessageData;
 import kalambury.sendableData.DataType;
-
+import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.TimeData;
 import kalambury.sendableData.TurnEndedData;
-import kalambury.sendableData.TurnEndedSignal;
 
 public class Server {
     private static final int maxClients = 5;
@@ -133,7 +130,7 @@ public class Server {
                         // tell every client that the turn has ended
                         if(acceptEndSignalCount == -1){
                             acceptEndSignalCount = 0;
-                            sendAll(new TurnEndedSignal());
+                            sendAll(new SendableSignal(DataType.TurnEndedSignal));
                         }
                     }
                     break;
