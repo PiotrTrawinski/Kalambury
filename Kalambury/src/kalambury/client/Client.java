@@ -241,6 +241,19 @@ public class Client {
                             players.get(i).setScore(0);
                         }
                         break;
+                    case TurnSkippedSignal:
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            "Tura została pominięta przez hosta",
+                            Client.getTime(),
+                            SystemMessageType.Information
+                        ));
+                        break;
+                    case SkipRequestSignal:
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            "Gracz poprosił o pominięcie tury",
+                            Client.getTime(),
+                            SystemMessageType.Information
+                        ));
                     default:
                         break;
                     }
@@ -249,6 +262,15 @@ public class Client {
                 System.err.println(ex.getMessage());
             }
         }
+    }
+    
+    public static void skipRequest(){
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Poprosiłeś o pominięcie tury",
+            Client.getTime(),
+            SystemMessageType.Information
+        ));
+        new SendableSignal(DataType.SkipRequestSignal).send(out);
     }
     
     public static void updateDrawingPlayer(int drawingId){

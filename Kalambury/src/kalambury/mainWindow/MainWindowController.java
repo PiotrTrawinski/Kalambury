@@ -159,10 +159,10 @@ public class MainWindowController implements Initializable {
         skipButton.setDisable(true);
     }
     @FXML public void onSkipButtonPressed(){
-        
+        Server.skipTurn();
     }
     @FXML public void onSkipRequestButtonPressed(){
-        
+        Client.skipRequest();
     }
     @FXML public void onQuitGameButtonPressed(){
         

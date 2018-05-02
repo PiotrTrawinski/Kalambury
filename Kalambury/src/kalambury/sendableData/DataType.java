@@ -14,7 +14,9 @@ public enum DataType {
     TurnEndedData(11),
     TurnStarted(12),
     GameStoppedSignal(13),
-    GameStartedSignal(14);
+    GameStartedSignal(14),
+    TurnSkippedSignal(15),
+    SkipRequestSignal(16);
    
     private final int value;
     private DataType(int value) {

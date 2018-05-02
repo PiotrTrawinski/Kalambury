@@ -134,7 +134,19 @@ public class Server {
                     game = null;
                     sendAll(data);
                     break;
-                case TurnEndedAcceptSignal:
+                case TurnSkippedSignal:{
+                    acceptEndSignalCount = -1;
+                    sendAll(data);
+                    int drawingPlayerId = game.chooseNextPlayer();
+                    int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
+                    GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+                    TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true, drawingPlayerId);
+                    sendTo(tsd, drawingPlayerIndex);
+                    sendTo(passwordData, drawingPlayerIndex);
+                    tsd.isDrawing = false;
+                    sendExcept(tsd, drawingPlayerIndex);
+                    break;
+                }case TurnEndedAcceptSignal:{
                     acceptEndSignalCount++;
                     if(acceptEndSignalCount == clientsCount){
                         // everyone accepted that turn has ended
@@ -157,7 +169,7 @@ public class Server {
                         sendExcept(tsd, drawingPlayerIndex);
                     }
                     break;
-                case ChatMessage:
+                }case ChatMessage:
                     ChatMessageData cmd = (ChatMessageData)data;
                     int senderIndex = message.getParam();
                     int senderId = getPlayerId(senderIndex);
@@ -308,6 +320,13 @@ public class Server {
     public static void stopGame(){
         addLastMessageToHandle(new ServerMessage(
             new SendableSignal(DataType.GameStoppedSignal), 
+            ServerMessage.ReceiverType.All
+        ));
+    }
+    
+    public static void skipTurn(){
+        addLastMessageToHandle(new ServerMessage(
+            new SendableSignal(DataType.TurnSkippedSignal), 
             ServerMessage.ReceiverType.All
         ));
     }
