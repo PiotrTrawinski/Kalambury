@@ -13,6 +13,7 @@ import kalambury.mainWindow.Player;
 import kalambury.mainWindow.TimeLabel;
 import kalambury.sendableData.DrawingEndSignal;
 import kalambury.sendableData.DrawingStartSignal;
+import kalambury.sendableData.GamePasswordData;
 import kalambury.server.Server;
 
 /**
@@ -71,10 +72,13 @@ public class Game {
         
         DrawingStartSignal dss = new DrawingStartSignal();
         Server.sendTo(p.getId(), dss);
-        
-        
-        
+
         currentPassword = randomGenerator.chooseRandom();
+        
+        GamePasswordData gpd = new GamePasswordData(currentPassword);
+        Server.sendTo(p.getId(),gpd);
+        
+        
         System.out.println("Current password is:"+currentPassword);
         
         System.out.println(p.getNickName() + " is now drawing.");

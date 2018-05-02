@@ -10,9 +10,10 @@ public enum DataType {
     Time(5),
     DrawingEndSignal(6),
     DrawingStartSignal(7),
-    TurnEndedSignal(8),
-    TurnEndedAcceptSignal(9),
-    TurnEndedData(10);
+    GamePassword(8);
+    TurnEndedSignal(9),
+    TurnEndedAcceptSignal(10),
+    TurnEndedData(11);
    
     private final int value;
     private DataType(int value) {
