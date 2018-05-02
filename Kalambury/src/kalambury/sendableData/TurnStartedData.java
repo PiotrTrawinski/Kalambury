@@ -8,12 +8,14 @@ public class TurnStartedData extends SendableData{
     public long startTime;
     public long turnTime;
     public boolean isDrawing;
+    public int drawingPlayerId;
     
-    public TurnStartedData(long startTime, long turnTime, boolean isDrawing){
+    public TurnStartedData(long startTime, long turnTime, boolean isDrawing, int drawingPlayerId){
         type = DataType.TurnStarted;
         this.startTime = startTime;
         this.turnTime = turnTime;
         this.isDrawing = isDrawing;
+        this.drawingPlayerId = drawingPlayerId;
     }
     
     public TurnStartedData(DataInputStream in){
@@ -22,6 +24,7 @@ public class TurnStartedData extends SendableData{
             startTime = in.readLong();
             turnTime = in.readLong();
             isDrawing = in.readBoolean();
+            drawingPlayerId = in.readInt();
         } catch (IOException ex) {
             System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
         }
@@ -34,6 +37,7 @@ public class TurnStartedData extends SendableData{
             out.writeLong(startTime);
             out.writeLong(turnTime);
             out.writeBoolean(isDrawing);
+            out.writeInt(drawingPlayerId);
             
             out.flush();
         } catch (IOException ex) {

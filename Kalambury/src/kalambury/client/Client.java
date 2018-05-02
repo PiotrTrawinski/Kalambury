@@ -174,6 +174,7 @@ public class Client {
                     case TurnStarted:
                         TurnStartedData tsd = (TurnStartedData)input;
                         timeLabel.setNew(tsd.startTime, tsd.turnTime);
+                        updateDrawingPlayer(tsd.drawingPlayerId);
                         if(tsd.isDrawing){
                             drawingBoard.setDisable(false);
                             chat.handleNewSystemMessage(new SystemMessage(
@@ -201,6 +202,7 @@ public class Client {
                         break;
                     case TurnEndedSignal:
                         drawingBoard.setDisable(true);
+                        updateDrawingPlayer(-1);
                         chat.handleNewSystemMessage(new SystemMessage(
                             "Koniec tury!",
                             Client.getTime(),
@@ -219,6 +221,39 @@ public class Client {
                             players.get(i).setScore(ted.updatedScores.get(i));
                         }
                         break;
+                    case GameStoppedSignal:
+                        drawingBoard.setDisable(true);
+                        updateDrawingPlayer(-1);
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            "Gra została zakończona przez hosta",
+                            Client.getTime(),
+                            SystemMessageType.Information
+                        ));
+                        timeLabel.setNew(0, 0);
+                        break;
+                    case GameStartedSignal:
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            "Gra została rozpoczęta",
+                            Client.getTime(),
+                            SystemMessageType.Information
+                        ));
+                        for(int i = 0; i < players.size(); ++i){
+                            players.get(i).setScore(0);
+                        }
+                        break;
+                    case TurnSkippedSignal:
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            "Tura została pominięta przez hosta",
+                            Client.getTime(),
+                            SystemMessageType.Information
+                        ));
+                        break;
+                    case SkipRequestSignal:
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            "Gracz poprosił o pominięcie tury",
+                            Client.getTime(),
+                            SystemMessageType.Information
+                        ));
                     default:
                         break;
                     }
@@ -226,6 +261,21 @@ public class Client {
             } catch(IOException ex) {
                 System.err.println(ex.getMessage());
             }
+        }
+    }
+    
+    public static void skipRequest(){
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Poprosiłeś o pominięcie tury",
+            Client.getTime(),
+            SystemMessageType.Information
+        ));
+        new SendableSignal(DataType.SkipRequestSignal).send(out);
+    }
+    
+    public static void updateDrawingPlayer(int drawingId){
+        for(int i = 0; i < players.size(); ++i){
+            players.get(i).setIsDrawing(players.get(i).getId() == drawingId);
         }
     }
     
