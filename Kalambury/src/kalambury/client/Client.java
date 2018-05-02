@@ -22,6 +22,7 @@ import kalambury.mainWindow.Player;
 import kalambury.mainWindow.TimeLabel;
 import kalambury.mainWindow.drawingBoard.DrawingBoard;
 import kalambury.sendableData.DataType;
+import static kalambury.sendableData.DataType.TurnEndedSignal;
 import kalambury.sendableData.FloodFillData;
 import kalambury.sendableData.GamePasswordData;
 import kalambury.sendableData.LineDrawData;
@@ -84,8 +85,8 @@ public class Client {
             if(Client.isSocketSet()){
                 executor.shutdown();
                 
-                
-                NewPlayerData newPlayerData = new NewPlayerData(Client.nick, -1); // id will be set by server, client has no idea of it
+                // id will be set by server, client has no idea of it
+                NewPlayerData newPlayerData = new NewPlayerData(Client.nick, -1, Client.getTime());
                 newPlayerData.send(out);
                 
                 final StartServerData startData = (StartServerData)SendableData.receive(in);
@@ -159,7 +160,7 @@ public class Client {
                         players.add(new Player(npd.nickName, 0, npd.id));
                         chat.handleNewSystemMessage(new SystemMessage(
                             npd.nickName + " dołączył do gry",
-                            Client.getTime(),
+                            npd.time,
                             SystemMessageType.Information
                         ));
                         System.out.printf("ID:%d", npd.id);
@@ -179,7 +180,7 @@ public class Client {
                             drawingBoard.setDisable(false);
                             chat.handleNewSystemMessage(new SystemMessage(
                                 "Rysuj hasło!",
-                                Client.getTime(),
+                                tsd.startTime,
                                 SystemMessageType.Information
                             ));
                         } else {
@@ -189,7 +190,7 @@ public class Client {
                             });
                             chat.handleNewSystemMessage(new SystemMessage(
                                 "Zgaduj hasło!",
-                                Client.getTime(),
+                                tsd.startTime,
                                 SystemMessageType.Information
                             ));
                         }
@@ -201,20 +202,21 @@ public class Client {
                         });
                         break;
                     case TurnEndedSignal:
+                        long tesTime = ((SendableSignal)input).time;
                         drawingBoard.setDisable(true);
                         updateDrawingPlayer(-1);
                         chat.handleNewSystemMessage(new SystemMessage(
                             "Koniec tury!",
-                            Client.getTime(),
+                            tesTime,
                             SystemMessageType.Information
                         ));
-                        new SendableSignal(DataType.TurnEndedAcceptSignal).send(out);
+                        new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()).send(out);
                         break;
                     case TurnEndedData:
                         TurnEndedData ted = (TurnEndedData)input;
                         chat.handleNewSystemMessage(new SystemMessage(
                             ted.winnerNickName + " wygrał!",
-                            Client.getTime(),
+                            ted.time,
                             SystemMessageType.Information
                         ));
                         for(int i = 0; i < players.size(); ++i){
@@ -226,7 +228,7 @@ public class Client {
                         updateDrawingPlayer(-1);
                         chat.handleNewSystemMessage(new SystemMessage(
                             "Gra została zakończona przez hosta",
-                            Client.getTime(),
+                            ((SendableSignal)input).time,
                             SystemMessageType.Information
                         ));
                         timeLabel.setNew(0, 0);
@@ -234,7 +236,7 @@ public class Client {
                     case GameStartedSignal:
                         chat.handleNewSystemMessage(new SystemMessage(
                             "Gra została rozpoczęta",
-                            Client.getTime(),
+                            ((SendableSignal)input).time,
                             SystemMessageType.Information
                         ));
                         for(int i = 0; i < players.size(); ++i){
@@ -244,14 +246,14 @@ public class Client {
                     case TurnSkippedSignal:
                         chat.handleNewSystemMessage(new SystemMessage(
                             "Tura została pominięta przez hosta",
-                            Client.getTime(),
+                            ((SendableSignal)input).time,
                             SystemMessageType.Information
                         ));
                         break;
                     case SkipRequestSignal:
                         chat.handleNewSystemMessage(new SystemMessage(
                             "Gracz poprosił o pominięcie tury",
-                            Client.getTime(),
+                            ((SendableSignal)input).time,
                             SystemMessageType.Information
                         ));
                     default:
@@ -270,7 +272,7 @@ public class Client {
             Client.getTime(),
             SystemMessageType.Information
         ));
-        new SendableSignal(DataType.SkipRequestSignal).send(out);
+        new SendableSignal(DataType.SkipRequestSignal, Client.getTime()).send(out);
     }
     
     public static void updateDrawingPlayer(int drawingId){
