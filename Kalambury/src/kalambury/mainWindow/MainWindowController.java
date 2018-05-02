@@ -377,6 +377,7 @@ public class MainWindowController implements Initializable {
         
         Client.setChat(chat);
         Client.setDrawingBoard(drawingBoard);
+        Client.setWordLabel(passwordLabel);
         
         drawingBoard.setDisable(true);
     }    

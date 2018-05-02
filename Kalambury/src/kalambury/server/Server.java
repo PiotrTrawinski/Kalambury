@@ -171,7 +171,7 @@ public class Server {
             } catch (InterruptedException ex) {
                 System.err.printf("error sleep: \"%s\"\n", ex.getMessage());
             }
-            timeData.time = System.currentTimeMillis() - startTime;
+                timeData.time = System.currentTimeMillis() - startTime;
             
             _mutex.lock();
             messagesToHandle.addFirst(new Pair(timeData, -1));

@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -20,6 +21,7 @@ import javafx.scene.control.Label;
 import kalambury.mainWindow.Player;
 import kalambury.mainWindow.drawingBoard.DrawingBoard;
 import kalambury.sendableData.FloodFillData;
+import kalambury.sendableData.GamePasswordData;
 import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.NewPlayerData;
 import kalambury.sendableData.StartServerData;
@@ -42,6 +44,7 @@ public class Client {
     
     private static boolean isHostFlag;
     
+    private static Label wordLabel;
     private static Chat chat;
     private static DrawingBoard drawingBoard;
     private static final ObservableList<Player> players = FXCollections.observableArrayList();
@@ -102,6 +105,9 @@ public class Client {
     public static void setChat(Chat chat){
         Client.chat = chat;
     }
+    public static void setWordLabel(Label wordLabel){
+        Client.wordLabel = wordLabel;
+    }
     public static void setDrawingBoard(DrawingBoard drawingBoard){
         Client.drawingBoard = drawingBoard;
     }
@@ -158,6 +164,9 @@ public class Client {
                         break;
                     case DrawingEndSignal:
                         drawingBoard.setDisable(true);
+                        Platform.runLater(()->{
+                            wordLabel.setText("???");
+                        });
                         chat.handleNewSystemMessage(new SystemMessage(
                             "Zgaduj hasło!",
                             Client.getTime(),
@@ -171,6 +180,12 @@ public class Client {
                             Client.getTime(),
                             SystemMessageType.Information
                         ));
+                        break;
+                    case GamePassword:
+                        GamePasswordData gpd = (GamePasswordData)input;
+                        Platform.runLater(()->{
+                            wordLabel.setText(gpd.password);
+                        });
                         break;
                     default:
                         break;

@@ -28,6 +28,7 @@ public abstract class SendableData {
         case Time:                  return new TimeData(in);
         case DrawingEndSignal:      return new DrawingEndSignal(in);
         case DrawingStartSignal:    return new DrawingStartSignal(in);
+        case GamePassword:          return new GamePasswordData(in);
         default:              return null;
         }
     }
