@@ -271,9 +271,12 @@ public class DrawingBoard extends ResizableCanvas{
         double yRatio = (double)data.drawRect.h / (double)maxHeight; 
         
         HashSet<Pixel> changed = updateVirtualTableGetCorespondingChanged(drawnPixels, xRatio, yRatio);
+        
+        double myXRatio = (double)drawArea.w / (double)maxWidth;
+        double myYRatio = (double)drawArea.h / (double)maxHeight;
         Platform.runLater(() -> {
             for (Pixel pixel : changed){
-                pixelWriter.setColor(pixel.x+drawArea.x, pixel.y+drawArea.y, pixel.color);
+                updatePixelInCanvas(pixel.x, pixel.y, myXRatio, myYRatio);
             }
         });
     }
