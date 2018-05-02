@@ -35,7 +35,7 @@ public class Server {
     
     private static int port;
     
-    private static volatile ArrayDeque< Pair<SendableData,Integer> >  messagesToHandle = new ArrayDeque<Pair<SendableData,Integer>>();
+    private static volatile ArrayDeque<ServerMessage>  messagesToHandle = new ArrayDeque<ServerMessage>();
     private static final Lock messagesToHandleMutex = new ReentrantLock(true);
     
     private static int acceptEndSignalCount = -1;
@@ -90,7 +90,7 @@ public class Server {
 
         clientsCount++;
 
-        addLastMessageToHandle(new Pair(newPlayerData, -1));
+        addLastMessageToHandle(new ServerMessage(newPlayerData, ServerMessage.ReceiverType.All));
     }
     
     private static void acceptNewClients(ServerSocket serverSocket) throws IOException{
@@ -105,14 +105,14 @@ public class Server {
     public static void forwardDataToClients(){
         while(true){
             if(messagesToHandle.size() > 0){
-                Pair DataAndSkipIndex = getFirstMessageToHandle();
-                int skip = (Integer)DataAndSkipIndex.getValue();
-                SendableData data = (SendableData)DataAndSkipIndex.getKey();
-                if(data.getType() == DataType.TurnEndedAcceptSignal){
+                ServerMessage message = getFirstMessageToHandle();
+                SendableData data = message.getData();
+                
+                switch(data.getType()){
+                case TurnEndedAcceptSignal:
                     acceptEndSignalCount++;
                     if(acceptEndSignalCount == clientsCount){
                         // everyone accepted that turn has ended
-                        
                         acceptEndSignalCount = -1;
                         String winnerNick = game.endTurn();
                         ArrayList<Integer> updatedScores = new ArrayList<>();
@@ -120,30 +120,44 @@ public class Server {
                             updatedScores.add(Client.getPlayers().get(i).getScore());
                         }
                         TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick);
-                        addLastMessageToHandle(new Pair(ted, -1));
+                        sendAll(ted);
                         game.chooseNextPlayer();
                     }
-                }
-                if(data.getType() == DataType.ChatMessage){
+                    break;
+                case ChatMessage:
                     ChatMessageData cmd = (ChatMessageData)data;
-                    if(game != null && game.verifyPassword(cmd.message,skip)){
-                        game.updateCurrentTurnWinner(cmd.time, skip);
+                    int sender = message.getParam();
+                    sendExcept(data, sender);
+                    if(game != null && game.verifyPassword(cmd.message, sender)){
+                        game.updateCurrentTurnWinner(cmd.time, sender);
                         // tell every client that the turn has ended
                         if(acceptEndSignalCount == -1){
                             acceptEndSignalCount = 0;
-                            addLastMessageToHandle(new Pair(new TurnEndedSignal(), -1));
+                            sendAll(new TurnEndedSignal());
                         }
                     }
+                    break;
+                default:
+                    switch(message.getReceiverType()){
+                    case All:
+                        sendAll(data);
+                        break;
+                    case AllExcept:
+                        sendExcept(data, message.getParam());
+                        break;
+                    case One:
+                        sendTo(data, message.getParam());
+                        break;
+                    }
                 }
-                sendExcept(data,skip);
             }
         }   
     }
     
     
-    public static Pair getFirstMessageToHandle(){
+    public static ServerMessage getFirstMessageToHandle(){
         messagesToHandleMutex.lock();
-        Pair<SendableData,Integer> message = null;
+        ServerMessage message = null;
         try {
             message = messagesToHandle.removeFirst();
         } finally {
@@ -151,7 +165,7 @@ public class Server {
         }
         return message;
     }
-    public static void addLastMessageToHandle(Pair<SendableData,Integer> messageToHandle){
+    public static void addLastMessageToHandle(ServerMessage messageToHandle){
         messagesToHandleMutex.lock();
         try {
             messagesToHandle.addLast(messageToHandle);
@@ -159,7 +173,7 @@ public class Server {
             messagesToHandleMutex.unlock();
         }
     }
-    public static void addFirstMessageToHandle(Pair<SendableData,Integer> messageToHandle){
+    public static void addFirstMessageToHandle(ServerMessage messageToHandle){
         messagesToHandleMutex.lock();
         try {
             messagesToHandle.addFirst(messageToHandle);
@@ -200,7 +214,9 @@ public class Server {
                     if(inputStreams[i].available() > 0){
                         //receive messsage and send it to all clients except the sender
                         final SendableData input = SendableData.receive(inputStreams[i]);
-                        addLastMessageToHandle(new Pair(input,i));
+                        addLastMessageToHandle(
+                           new ServerMessage(input, ServerMessage.ReceiverType.AllExcept, i)
+                        );
                     }
                 } catch(IOException ex) {
                     System.err.println(ex.getMessage());
@@ -221,7 +237,7 @@ public class Server {
             }
             timeData.time = System.currentTimeMillis() - startTime;
             
-            addFirstMessageToHandle(new Pair(timeData, -1));
+            addFirstMessageToHandle(new ServerMessage(timeData, ServerMessage.ReceiverType.All));
         }
     }
     
