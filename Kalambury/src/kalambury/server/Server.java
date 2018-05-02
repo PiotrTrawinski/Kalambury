@@ -42,8 +42,6 @@ public class Server {
     
     private static int acceptEndSignalCount = -1;
     
-    private static final TimeData timeData = new TimeData(0);
-    
     private static Game game = null;
     
     private static final TreeMap<Integer, Integer> playerIndexes = new TreeMap<>();
@@ -106,7 +104,7 @@ public class Server {
         NewPlayerData newPlayerData = (NewPlayerData)SendableData.receive(inputStreams[clientsCount]);
         newPlayerData.id = createNewId();
         playerIndexes.put(newPlayerData.id, clientsCount);
-        StartServerData startServerData = new StartServerData(Client.getPlayers(), timeData.time);
+        StartServerData startServerData = new StartServerData(Client.getPlayers(), Client.getTime());
         startServerData.send(outputStreams[clientsCount]);
 
         clientsCount++;
@@ -140,7 +138,7 @@ public class Server {
                     int drawingPlayerId = game.chooseNextPlayer();
                     int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
                     GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-                    TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true, drawingPlayerId);
+                    TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
                     sendTo(tsd, drawingPlayerIndex);
                     sendTo(passwordData, drawingPlayerIndex);
                     tsd.isDrawing = false;
@@ -156,13 +154,13 @@ public class Server {
                         for(int i = 0; i < Client.getPlayers().size(); ++i){
                             updatedScores.add(Client.getPlayers().get(i).getScore());
                         }
-                        TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick);
+                        TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick, Client.getTime());
                         sendAll(ted);
                         
                         int drawingPlayerId = game.chooseNextPlayer();
                         int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
                         GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-                        TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true, drawingPlayerId);
+                        TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
                         sendTo(tsd, drawingPlayerIndex);
                         sendTo(passwordData, drawingPlayerIndex);
                         tsd.isDrawing = false;
@@ -179,7 +177,7 @@ public class Server {
                         // tell every client that the turn has ended
                         if(acceptEndSignalCount == -1){
                             acceptEndSignalCount = 0;
-                            sendAll(new SendableSignal(DataType.TurnEndedSignal));
+                            sendAll(new SendableSignal(DataType.TurnEndedSignal, Client.getTime()));
                         }
                     }
                     break;
@@ -287,6 +285,7 @@ public class Server {
     public static void timeThread(){
         long startTime = System.currentTimeMillis();
         long sleepTime = 1000;
+        TimeData timeData = new TimeData(0);
         
         while(true){
             try {
@@ -304,13 +303,13 @@ public class Server {
         game = new Game(maxClients,600,90,Client.getPlayers());
         game.start();
         addLastMessageToHandle(new ServerMessage(
-            new SendableSignal(DataType.GameStartedSignal), 
+            new SendableSignal(DataType.GameStartedSignal, Client.getTime()), 
             ServerMessage.ReceiverType.All
         ));
         int drawingPlayerId = game.chooseNextPlayer();
         int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
         GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-        TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true, drawingPlayerId);
+        TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
         addLastMessageToHandle(new ServerMessage(tsd, ServerMessage.ReceiverType.One, drawingPlayerIndex));
         addLastMessageToHandle(new ServerMessage(passwordData, ServerMessage.ReceiverType.One, drawingPlayerIndex));
         TurnStartedData tsd2 = new TurnStartedData(tsd.startTime, tsd.turnTime, false, drawingPlayerId);
@@ -319,14 +318,14 @@ public class Server {
     
     public static void stopGame(){
         addLastMessageToHandle(new ServerMessage(
-            new SendableSignal(DataType.GameStoppedSignal), 
+            new SendableSignal(DataType.GameStoppedSignal, Client.getTime()), 
             ServerMessage.ReceiverType.All
         ));
     }
     
     public static void skipTurn(){
         addLastMessageToHandle(new ServerMessage(
-            new SendableSignal(DataType.TurnSkippedSignal), 
+            new SendableSignal(DataType.TurnSkippedSignal, Client.getTime()), 
             ServerMessage.ReceiverType.All
         ));
     }

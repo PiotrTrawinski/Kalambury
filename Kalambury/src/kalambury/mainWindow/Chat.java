@@ -36,28 +36,28 @@ public class Chat {
     }
     
     private void addPlayerTextNodes(int index, Text time, Text status, Text nick, Text message, Text exactTime){
-        Platform.runLater(()->{
-            log.getChildren().add(index, time);
-            log.getChildren().add(index+1, status);
-            log.getChildren().add(index+2, nick);
-            log.getChildren().add(index+3, message);
-            log.getChildren().add(index+4, exactTime);
-        });
+        log.getChildren().add(index, time);
+        log.getChildren().add(index+1, status);
+        log.getChildren().add(index+2, nick);
+        log.getChildren().add(index+3, message);
+        log.getChildren().add(index+4, exactTime);
     }
     private void addTextNodesToCorrectTimePlace(Text time, Text status, Text nick, Text message, Text exactTime){
-        double myMessageTime = Long.parseLong(exactTime.getText());
-        ObservableList<Node> nodes = log.getChildren();
-        for(int i = nodes.size()-1; i >= 0; --i){
-            if(i % 5 == 4){
-                double chatMessageTime = Long.parseLong(((Text)nodes.get(i)).getText());
-                if(chatMessageTime <= myMessageTime){
-                    addPlayerTextNodes(i+1, time, status, nick, message, exactTime);
-                    return;
+        Platform.runLater(()->{
+            double myMessageTime = Long.parseLong(exactTime.getText());
+            ObservableList<Node> nodes = log.getChildren();
+            for(int i = nodes.size()-1; i >= 0; --i){
+                if(i % 5 == 4){
+                    double chatMessageTime = Long.parseLong(((Text)nodes.get(i)).getText());
+                    if(chatMessageTime <= myMessageTime){
+                        addPlayerTextNodes(i+1, time, status, nick, message, exactTime);
+                        return;
+                    }
                 }
             }
-        }
-        // if no message was earlier then this one
-        addPlayerTextNodes(0, time, status, nick, message, exactTime);
+            // if no message was earlier then this one
+            addPlayerTextNodes(0, time, status, nick, message, exactTime);
+        });
     }
     
     private Text getTimeText(long time){
@@ -168,7 +168,6 @@ public class Chat {
             break;
         }
         Text exactTimeText = getExactTimeText(systemMessage.time);
-        
         addTextNodesToCorrectTimePlace(timeText, statusText, nickText, messageText, exactTimeText);
         
         // scroll down

@@ -139,6 +139,15 @@ public class DrawingBoard extends ResizableCanvas{
         }
     }
     
+    public void clear(){
+        Platform.runLater(() -> {
+            for(int i = 0; i < virtualPixelTable.size(); ++i){
+                virtualPixelTable.set(i, Color.rgb(255,255,255));
+            }
+            refresh();
+        });
+    }
+    
     @Override protected void onResize(){
         super.onResize();
         refresh();

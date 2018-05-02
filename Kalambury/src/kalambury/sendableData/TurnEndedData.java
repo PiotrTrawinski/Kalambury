@@ -8,11 +8,13 @@ import java.util.ArrayList;
 public class TurnEndedData extends SendableData{
     public ArrayList<Integer> updatedScores;
     public String winnerNickName;
+    public long time;
     
-    public TurnEndedData(ArrayList<Integer> updatedScores, String winnerNickName){
+    public TurnEndedData(ArrayList<Integer> updatedScores, String winnerNickName, long time){
         type = DataType.TurnEndedData;
         this.updatedScores = updatedScores;
         this.winnerNickName = winnerNickName;
+        this.time = time;
     }
     
     public TurnEndedData(DataInputStream in){
@@ -25,6 +27,7 @@ public class TurnEndedData extends SendableData{
             }
             
             winnerNickName = in.readUTF();
+            time = in.readLong();
         } catch (IOException ex) {
             System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
         }
@@ -39,6 +42,7 @@ public class TurnEndedData extends SendableData{
                 out.writeInt(updatedScores.get(i));
             }
             out.writeUTF(winnerNickName);
+            out.writeLong(time);
             
             out.flush();
         } catch (IOException ex) {
