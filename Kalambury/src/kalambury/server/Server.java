@@ -29,29 +29,31 @@ import kalambury.sendableData.TurnEndedSignal;
 public class Server {
     private static final int maxClients = 5;
     private static final Socket sockets[] = new Socket[maxClients];
-    private static final Socket timeSockets[] = new Socket[maxClients];
     private static final DataInputStream inputStreams[] = new DataInputStream[maxClients];
     private static final DataOutputStream outputStreams[] = new DataOutputStream[maxClients];
     private static volatile int clientsCount = 0;
+    
     private static int port;
+    
     private static volatile ArrayDeque< Pair<SendableData,Integer> >  messagesToHandle = new ArrayDeque<Pair<SendableData,Integer>>();
-    private static final Lock _mutex = new ReentrantLock(true);
+    private static final Lock messagesToHandleMutex = new ReentrantLock(true);
+    
     private static int acceptEndSignalCount = -1;
-    private static TimeData timeData = new TimeData(0);
+    
+    private static final TimeData timeData = new TimeData(0);
+    
     private static Game game = null;
+    
+    
     public static void initialize(int port){
         //set the port that server is working on, and start it on a new thread
         Server.port = port;
         Thread serverThread = new Thread(()->Server.start());
         serverThread.setDaemon(true);   // close with application
         serverThread.start();
-       
     }
     
     public static void start(){      
-        // will be chosen from gui
-
-        
         // incoming data thread
         Thread t = new Thread(()->Server.handleIncomingData());
         t.setDaemon(true);
@@ -69,47 +71,42 @@ public class Server {
         timeThreadObject.start();
         
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            while (true) {
-                if(clientsCount < maxClients){
-                    Socket socket = serverSocket.accept();
-                    try{
-                        sockets[clientsCount] = socket;
-                        inputStreams[clientsCount] = new DataInputStream(socket.getInputStream());
-                        outputStreams[clientsCount] = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                        
-                        NewPlayerData newPlayerData = (NewPlayerData)SendableData.receive(inputStreams[clientsCount]);
-                        newPlayerData.id = clientsCount;
-                        StartServerData startServerData = new StartServerData(Client.getPlayers(), Client.getTime());
-                        startServerData.send(outputStreams[clientsCount]);
-                        
-                        clientsCount++;
-                        
-                        _mutex.lock();
-                        messagesToHandle.addLast(new Pair(newPlayerData, -1));
-                        _mutex.unlock();
-                    }
-                    catch(IOException ex){
-                        System.err.println(ex.getMessage());
-                    }
-                }
-            }
+            acceptNewClients(serverSocket);
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
         }
     }
     
     
+    private static void acceptNewClient(Socket socket) throws IOException{
+        sockets[clientsCount] = socket;
+        inputStreams[clientsCount] = new DataInputStream(socket.getInputStream());
+        outputStreams[clientsCount] = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+
+        NewPlayerData newPlayerData = (NewPlayerData)SendableData.receive(inputStreams[clientsCount]);
+        newPlayerData.id = clientsCount;
+        StartServerData startServerData = new StartServerData(Client.getPlayers(), timeData.time);
+        startServerData.send(outputStreams[clientsCount]);
+
+        clientsCount++;
+
+        addLastMessageToHandle(new Pair(newPlayerData, -1));
+    }
     
+    private static void acceptNewClients(ServerSocket serverSocket) throws IOException{
+        while (true) {
+            if(clientsCount < maxClients){
+                Socket socket = serverSocket.accept();
+                acceptNewClient(socket);
+            }
+        }
+    }
     
     public static void forwardDataToClients(){
-        //System.out.println("Forward start");
         while(true){
-            
             if(messagesToHandle.size() > 0){
-                _mutex.lock();
-                Pair DataAndSkipIndex = messagesToHandle.removeFirst();
+                Pair DataAndSkipIndex = getFirstMessageToHandle();
                 int skip = (Integer)DataAndSkipIndex.getValue();
-                _mutex.unlock();
                 SendableData data = (SendableData)DataAndSkipIndex.getKey();
                 if(data.getType() == DataType.TurnEndedAcceptSignal){
                     acceptEndSignalCount++;
@@ -123,9 +120,7 @@ public class Server {
                             updatedScores.add(Client.getPlayers().get(i).getScore());
                         }
                         TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick);
-                        _mutex.lock();
-                        messagesToHandle.addLast(new Pair(ted, -1));
-                        _mutex.unlock();
+                        addLastMessageToHandle(new Pair(ted, -1));
                         game.chooseNextPlayer();
                     }
                 }
@@ -136,34 +131,65 @@ public class Server {
                         // tell every client that the turn has ended
                         if(acceptEndSignalCount == -1){
                             acceptEndSignalCount = 0;
-                            _mutex.lock();
-                            messagesToHandle.addLast(new Pair(new TurnEndedSignal(), -1));
-                            _mutex.unlock();
+                            addLastMessageToHandle(new Pair(new TurnEndedSignal(), -1));
                         }
                     }
                 }
-                
-                
-                //System.out.println("Sending except");
                 sendExcept(data,skip);
             }
         }   
     }
     
     
+    public static Pair getFirstMessageToHandle(){
+        messagesToHandleMutex.lock();
+        Pair<SendableData,Integer> message = null;
+        try {
+            message = messagesToHandle.removeFirst();
+        } finally {
+            messagesToHandleMutex.unlock();
+        }
+        return message;
+    }
+    public static void addLastMessageToHandle(Pair<SendableData,Integer> messageToHandle){
+        messagesToHandleMutex.lock();
+        try {
+            messagesToHandle.addLast(messageToHandle);
+        } finally {
+            messagesToHandleMutex.unlock();
+        }
+    }
+    public static void addFirstMessageToHandle(Pair<SendableData,Integer> messageToHandle){
+        messagesToHandleMutex.lock();
+        try {
+            messagesToHandle.addFirst(messageToHandle);
+        } finally {
+            messagesToHandleMutex.unlock();
+        }
+    }
+    
+    public static void sendTo(SendableData data, int clientId){
+        data.send(outputStreams[clientId]);
+        try{
+            outputStreams[clientId].flush();
+        }
+        catch(IOException ex){
+            System.err.println(ex.getMessage());
+        }
+    }
     public static void sendExcept(SendableData data, int exceptIndex){
         for(int i = 0; i < clientsCount; i++){
             if(i != exceptIndex){
-                data.send(outputStreams[i]);
-                try{
-                    outputStreams[i].flush();
-                }
-                catch(IOException ex){
-                    System.err.println(ex.getMessage());
-                }
+                sendTo(data, i);
             }
         }
     }
+    public static void sendAll(SendableData data){
+        for(int i = 0; i < clientsCount; i++){
+            sendTo(data, i);
+        }
+    }
+    
     public static Game getGame(){
         return game;
     }
@@ -172,13 +198,9 @@ public class Server {
             for(int i = 0; i < clientsCount; i++){ // for every client
                 try{
                     if(inputStreams[i].available() > 0){
+                        //receive messsage and send it to all clients except the sender
                         final SendableData input = SendableData.receive(inputStreams[i]);
-                        final int skip = i;
-                        //message received, send it to clients except the sender client
-                        _mutex.lock();
-                        messagesToHandle.addLast(new Pair(input,i));
-                        _mutex.unlock();
-                        //System.out.println("Adding message to queue");
+                        addLastMessageToHandle(new Pair(input,i));
                     }
                 } catch(IOException ex) {
                     System.err.println(ex.getMessage());
@@ -186,10 +208,7 @@ public class Server {
             }
         }
     }
-
-    public static void sendTo(int id,SendableData data){
-        data.send(outputStreams[id]);
-    }
+    
     public static void timeThread(){
         long startTime = System.currentTimeMillis();
         long sleepTime = 1000;
@@ -200,13 +219,12 @@ public class Server {
             } catch (InterruptedException ex) {
                 System.err.printf("error sleep: \"%s\"\n", ex.getMessage());
             }
-                timeData.time = System.currentTimeMillis() - startTime;
+            timeData.time = System.currentTimeMillis() - startTime;
             
-            _mutex.lock();
-            messagesToHandle.addFirst(new Pair(timeData, -1));
-            _mutex.unlock();
+            addFirstMessageToHandle(new Pair(timeData, -1));
         }
     }
+    
     public static void startGame(){
         game = new Game(maxClients,600,90,Client.getPlayers());
         game.start();
