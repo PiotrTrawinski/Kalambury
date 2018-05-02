@@ -29,6 +29,7 @@ import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TimeData;
 import kalambury.sendableData.TurnEndedData;
+import kalambury.sendableData.TurnStartedData;
 import kalambury.server.SystemMessage;
 import kalambury.server.SystemMessageType;
 
@@ -165,24 +166,26 @@ public class Client {
                         timeBeforeSleep = System.currentTimeMillis();
                         time = syncTime;
                         break;
-                    case DrawingEndSignal:
-                        drawingBoard.setDisable(true);
-                        Platform.runLater(()->{
-                            wordLabel.setText("???");
-                        });
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            "Zgaduj hasło!",
-                            Client.getTime(),
-                            SystemMessageType.Information
-                        ));
-                        break;
-                    case DrawingStartSignal:
-                        drawingBoard.setDisable(false);
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            "Rysuj hasło!",
-                            Client.getTime(),
-                            SystemMessageType.Information
-                        ));
+                    case TurnStarted:
+                        TurnStartedData tsd = (TurnStartedData)input;
+                        if(tsd.isDrawing){
+                            drawingBoard.setDisable(false);
+                            chat.handleNewSystemMessage(new SystemMessage(
+                                "Rysuj hasło!",
+                                Client.getTime(),
+                                SystemMessageType.Information
+                            ));
+                        } else {
+                            drawingBoard.setDisable(true);
+                            Platform.runLater(()->{
+                                wordLabel.setText("???");
+                            });
+                            chat.handleNewSystemMessage(new SystemMessage(
+                                "Zgaduj hasło!",
+                                Client.getTime(),
+                                SystemMessageType.Information
+                            ));
+                        }
                         break;
                     case GamePassword:
                         GamePasswordData gpd = (GamePasswordData)input;

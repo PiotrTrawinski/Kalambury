@@ -6,9 +6,6 @@ import java.util.List;
 import javafx.collections.ObservableList;
 import kalambury.mainWindow.Player;
 import kalambury.mainWindow.TimeLabel;
-import kalambury.sendableData.DataType;
-import kalambury.sendableData.GamePasswordData;
-import kalambury.sendableData.SendableSignal;
 import kalambury.server.Server;
 
 
@@ -16,7 +13,7 @@ public class Game {
     private final int pointsForDrawing = 10;
     private final int pointsForGuess = 8;
     private final ObservableList<Player> players;
-    private final List<Player> playersSequence = new ArrayList<>();
+    private final List<Integer> playersIdSequence = new ArrayList<>();
     private final int round;
     private final int maxPoints;
     private final int maxTimeSeconds;
@@ -43,40 +40,28 @@ public class Game {
     public void start(){
         System.out.println(players.size());
         for(int i = 0 ; i < players.size(); i++){
-            playersSequence.add(players.get(i));
+            playersIdSequence.add(players.get(i).getId());
         }
-        Collections.shuffle(playersSequence);
-
-        chooseNextPlayer();
+        Collections.shuffle(playersIdSequence);
     }
-    public void chooseNextPlayer(){
-        
-        // send stop drawing signal to last drawing player
-        SendableSignal des = new SendableSignal(DataType.DrawingEndSignal);
-        System.out.println(playersSequence.get(players.size()-1).getId());
-        Server.sendToById(des, playersSequence.get(players.size()-1).getId());
-        
-        Player p = playersSequence.remove(0);
-        playersSequence.add(p);
-        currentlyDrawingUserID = p.getId();
-        
-        SendableSignal dss = new SendableSignal(DataType.DrawingStartSignal);
-        Server.sendToById(dss, p.getId());
-
-        currentPassword = randomGenerator.chooseRandom();
-        
-        GamePasswordData gpd = new GamePasswordData(currentPassword);
-        Server.sendToById(gpd, p.getId());
-        
-        
-        System.out.println("Current password is:"+currentPassword);
-        
-        System.out.println(p.getNickName() + " is now drawing.");
-        
+    public int chooseNextPlayer(){
+        Integer pId = playersIdSequence.remove(0);
+        playersIdSequence.add(pId);
+        currentlyDrawingUserID = pId;
+        return pId;
     }
     
     public boolean verifyPassword(String password, int guesserID){
         return password.equals(currentPassword) && guesserID != currentlyDrawingUserID;
+    }
+    
+    public int getTurnTime(){
+        return maxTimeSeconds;
+    }
+    
+    public String chooseNextPassword(){
+        currentPassword = randomGenerator.chooseRandom();
+        return currentPassword;
     }
     
     public String endTurn(){
@@ -88,7 +73,6 @@ public class Game {
         );
         int tempWinnerId = winnerId;
         clearTurnWinner();
-        //chooseNextPlayer();
         return players.get(Server.getPlayerIndex(tempWinnerId)).getNickName();
     }
     

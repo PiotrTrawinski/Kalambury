@@ -22,9 +22,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import kalambury.sendableData.ChatMessageData;
 import kalambury.sendableData.DataType;
+import kalambury.sendableData.GamePasswordData;
 import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.TimeData;
 import kalambury.sendableData.TurnEndedData;
+import kalambury.sendableData.TurnStartedData;
 
 public class Server {
     private static final int maxClients = 5;
@@ -140,7 +142,14 @@ public class Server {
                         }
                         TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick);
                         sendAll(ted);
-                        game.chooseNextPlayer();
+                        
+                        int drawingPlayerIndex = getPlayerIndex(game.chooseNextPlayer());
+                        GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+                        TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true);
+                        sendTo(tsd, drawingPlayerIndex);
+                        sendTo(passwordData, drawingPlayerIndex);
+                        tsd.isDrawing = false;
+                        sendExcept(tsd, drawingPlayerIndex);
                     }
                     break;
                 case ChatMessage:
@@ -223,9 +232,7 @@ public class Server {
             System.err.println(ex.getMessage());
         }
     }
-    public static void sendToById(SendableData data, int clientId){
-        sendTo(data, playerIndexes.get(clientId));
-    }
+    
     public static void sendExcept(SendableData data, int exceptIndex){
         for(int i = 0; i < clientsCount; i++){
             if(i != exceptIndex){
@@ -279,6 +286,13 @@ public class Server {
     public static void startGame(){
         game = new Game(maxClients,600,90,Client.getPlayers());
         game.start();
+        int drawingPlayerIndex = getPlayerIndex(game.chooseNextPlayer());
+        GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+        TurnStartedData tsd = new TurnStartedData(timeData.time, game.getTurnTime(), true);
+        sendTo(tsd, drawingPlayerIndex);
+        sendTo(passwordData, drawingPlayerIndex);
+        tsd.isDrawing = false;
+        sendExcept(tsd, drawingPlayerIndex);
     }
 }
 

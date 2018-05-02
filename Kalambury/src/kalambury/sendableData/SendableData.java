@@ -29,6 +29,7 @@ public abstract class SendableData {
         case Time:                  return new TimeData(in);
         case GamePassword:          return new GamePasswordData(in);
         case TurnEndedData:         return new TurnEndedData(in);
+        case TurnStarted:           return new TurnStartedData(in);
         default:                    return new SendableSignal(type);
         }
     }
