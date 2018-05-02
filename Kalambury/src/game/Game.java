@@ -64,19 +64,19 @@ public class Game {
         // send stop drawing signal to last drawing player
         DrawingEndSignal des = new DrawingEndSignal();
         System.out.println(playersSequence.get(playersCount-1).getId());
-        Server.sendTo(playersSequence.get(playersCount-1).getId(),des);
+        Server.sendTo(des, playersSequence.get(playersCount-1).getId());
         
         Player p = playersSequence.remove(0);
         playersSequence.add(p);
         currentlyDrawingUserID = p.getId();
         
         DrawingStartSignal dss = new DrawingStartSignal();
-        Server.sendTo(p.getId(), dss);
+        Server.sendTo(dss, p.getId());
 
         currentPassword = randomGenerator.chooseRandom();
         
         GamePasswordData gpd = new GamePasswordData(currentPassword);
-        Server.sendTo(p.getId(),gpd);
+        Server.sendTo(gpd, p.getId());
         
         
         System.out.println("Current password is:"+currentPassword);

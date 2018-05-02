@@ -188,6 +188,7 @@ public class Client {
                         Platform.runLater(()->{
                             wordLabel.setText(gpd.password);
                         });
+                        break;
                     case TurnEndedSignal:
                         drawingBoard.setDisable(true);
                         chat.handleNewSystemMessage(new SystemMessage(

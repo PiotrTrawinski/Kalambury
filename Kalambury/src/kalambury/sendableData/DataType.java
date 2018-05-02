@@ -10,7 +10,7 @@ public enum DataType {
     Time(5),
     DrawingEndSignal(6),
     DrawingStartSignal(7),
-    GamePassword(8);
+    GamePassword(8),
     TurnEndedSignal(9),
     TurnEndedAcceptSignal(10),
     TurnEndedData(11);
