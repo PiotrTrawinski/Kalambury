@@ -17,36 +17,29 @@ public class TurnEndedData extends SendableData{
         this.time = time;
     }
     
-    public TurnEndedData(DataInputStream in){
+    public TurnEndedData(DataInputStream in) throws IOException{
         type = DataType.TurnEndedData;
-        try {
-            int numberOfPlayers = in.readInt();
-            updatedScores = new ArrayList<>();
-            for(int i = 0; i < numberOfPlayers; ++i){
-                updatedScores.add(in.readInt());
-            }
-            
-            winnerNickName = in.readUTF();
-            time = in.readLong();
-        } catch (IOException ex) {
-            System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
+        
+        int numberOfPlayers = in.readInt();
+        updatedScores = new ArrayList<>();
+        for(int i = 0; i < numberOfPlayers; ++i){
+            updatedScores.add(in.readInt());
         }
+
+        winnerNickName = in.readUTF();
+        time = in.readLong();
     }
 
-    @Override public void send(DataOutputStream out) {
-        try {
-            out.writeInt(type.toInt());
-            
-            out.writeInt(updatedScores.size());
-            for(int i = 0; i < updatedScores.size(); ++i){
-                out.writeInt(updatedScores.get(i));
-            }
-            out.writeUTF(winnerNickName);
-            out.writeLong(time);
-            
-            out.flush();
-        } catch (IOException ex) {
-            System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());
+    @Override public void send(DataOutputStream out) throws IOException {
+        out.writeInt(type.toInt());
+
+        out.writeInt(updatedScores.size());
+        for(int i = 0; i < updatedScores.size(); ++i){
+            out.writeInt(updatedScores.get(i));
         }
+        out.writeUTF(winnerNickName);
+        out.writeLong(time);
+
+        out.flush();
     }
 }

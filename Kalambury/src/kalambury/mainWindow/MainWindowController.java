@@ -372,13 +372,10 @@ public class MainWindowController implements Initializable {
                     @Override public void updateItem(Boolean isDrawing, boolean empty) {
                         super.updateItem(isDrawing, empty);
                         setText("");
-                        if(!isEmpty()){
-                            TableRow<Player> currentRow = getTableRow();
-                            if(isDrawing){
-                                currentRow.setStyle("-fx-background-color:lightgreen");
-                            } else {
-                                currentRow.setStyle("");
-                            }
+                        TableRow<Player> currentRow = getTableRow();
+                        currentRow.setStyle("");
+                        if(!isEmpty() && isDrawing){
+                            currentRow.setStyle("-fx-background-color:lightgreen");
                         }
                     }
                 };

@@ -19,29 +19,20 @@ public class ChatMessageData extends SendableData{
         this.isHost   = isHost;
     }
     
-    public ChatMessageData(DataInputStream in){
+    public ChatMessageData(DataInputStream in) throws IOException{
         type = DataType.ChatMessage;
-        
-        try {
-            nickName = in.readUTF();
-            message  = in.readUTF();
-            time     = in.readLong();
-            isHost   = in.readBoolean();
-        } catch (IOException ex) {
-            System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
-        }
+        nickName = in.readUTF();
+        message  = in.readUTF();
+        time     = in.readLong();
+        isHost   = in.readBoolean();
     }
 
-    @Override public void send(DataOutputStream out) {
-        try {
-            out.writeInt(type.toInt());
-            out.writeUTF(nickName);
-            out.writeUTF(message);
-            out.writeLong(time);
-            out.writeBoolean(isHost);
-            out.flush();
-        } catch (IOException ex) {
-            System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());
-        }
+    @Override public void send(DataOutputStream out) throws IOException{
+        out.writeInt(type.toInt());
+        out.writeUTF(nickName);
+        out.writeUTF(message);
+        out.writeLong(time);
+        out.writeBoolean(isHost);
+        out.flush();
     }
 }

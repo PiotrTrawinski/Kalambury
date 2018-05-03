@@ -11,13 +11,8 @@ public abstract class SendableData {
         return type;
     }
     
-    public static SendableData receive(DataInputStream in){
-        DataType type = DataType.Unknown;
-        try {
-            type = DataType.fromInt(in.readInt());
-        } catch (IOException ex) {
-            System.err.printf("error reading data type from stream, system error: \"%s\"\n", ex.getMessage());
-        }
+    public static SendableData receive(DataInputStream in) throws IOException{
+        DataType type = DataType.fromInt(in.readInt());
         
         switch(type){
         case Unknown:               return null;
@@ -30,9 +25,10 @@ public abstract class SendableData {
         case GamePassword:          return new GamePasswordData(in);
         case TurnEndedData:         return new TurnEndedData(in);
         case TurnStarted:           return new TurnStartedData(in);
+        case PlayerQuit:            return new PlayerQuitData(in);
         default:                    return new SendableSignal(type, in);
         }
     }
 
-    public abstract void send(DataOutputStream out);
+    public abstract void send(DataOutputStream out) throws IOException;
 }

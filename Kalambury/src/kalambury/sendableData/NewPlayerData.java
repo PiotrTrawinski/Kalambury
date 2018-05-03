@@ -16,27 +16,19 @@ public class NewPlayerData extends SendableData{
         this.time = time;
     }
     
-    public NewPlayerData(DataInputStream in){
+    public NewPlayerData(DataInputStream in) throws IOException{
         type = DataType.NewPlayerData;
         
-        try {
-            nickName = in.readUTF();
-            id = in.readInt();
-            time = in.readLong();
-        } catch (IOException ex) {
-            System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
-        }
+        nickName = in.readUTF();
+        id = in.readInt();
+        time = in.readLong();
     }
 
-    @Override public void send(DataOutputStream out) {
-        try {
-            out.writeInt(type.toInt());
-            out.writeUTF(nickName);
-            out.writeInt(id);
-            out.writeLong(time);
-            out.flush();
-        } catch (IOException ex) {
-            System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());
-        }
+    @Override public void send(DataOutputStream out) throws IOException {
+        out.writeInt(type.toInt());
+        out.writeUTF(nickName);
+        out.writeInt(id);
+        out.writeLong(time);
+        out.flush();
     }
 }
