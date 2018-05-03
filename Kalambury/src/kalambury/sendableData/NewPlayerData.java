@@ -29,6 +29,5 @@ public class NewPlayerData extends SendableData{
         out.writeUTF(nickName);
         out.writeInt(id);
         out.writeLong(time);
-        out.flush();
     }
 }

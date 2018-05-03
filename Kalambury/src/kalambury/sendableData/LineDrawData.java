@@ -67,7 +67,5 @@ public class LineDrawData extends SendableData{
         out.writeDouble(color.getRed());
         out.writeDouble(color.getGreen());
         out.writeDouble(color.getBlue());
-
-        out.flush();
     }
 }

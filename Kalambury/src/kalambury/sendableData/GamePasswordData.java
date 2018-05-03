@@ -23,6 +23,5 @@ public class GamePasswordData extends SendableData{
     @Override public void send(DataOutputStream out) throws IOException {
         out.writeInt(type.toInt());
         out.writeUTF(password);
-        out.flush();
     }
 }

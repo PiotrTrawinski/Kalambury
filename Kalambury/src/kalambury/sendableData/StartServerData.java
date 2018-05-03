@@ -41,6 +41,5 @@ public class StartServerData extends SendableData{
             out.writeInt(players.get(i).getId());
         }
         out.writeLong(time);
-        out.flush();
     }
 }

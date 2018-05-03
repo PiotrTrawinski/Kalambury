@@ -39,7 +39,5 @@ public class TurnEndedData extends SendableData{
         }
         out.writeUTF(winnerNickName);
         out.writeLong(time);
-
-        out.flush();
     }
 }

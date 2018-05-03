@@ -20,6 +20,5 @@ public class SendableSignal extends SendableData{
     @Override public void send(DataOutputStream out) throws IOException {
         out.writeInt(type.toInt());
         out.writeLong(time);
-        out.flush();
     }
 }

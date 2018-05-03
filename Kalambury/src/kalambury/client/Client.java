@@ -13,11 +13,14 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.Label;
+import kalambury.Kalambury;
 import kalambury.mainWindow.Player;
 import kalambury.mainWindow.TimeLabel;
 import kalambury.mainWindow.drawingBoard.DrawingBoard;
@@ -33,21 +36,26 @@ import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TimeData;
 import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
+import kalambury.server.Server;
 import kalambury.server.SystemMessage;
 import kalambury.server.SystemMessageType;
 
 
 public class Client {
+    private static Kalambury kalambury;
+    
     private static String ip;
     private static String nick;
     private static int port;
     
-    private static Socket socket;
-    private static DataOutputStream out;
-    private static DataInputStream in;
+    private static Socket socket = null;
+    private static DataOutputStream out = null;
+    private static DataInputStream in = null;
     
     private static long time;
     private static Thread timeThreadObject;
+    
+    private static Thread listenThread;
     
     private static boolean isHostFlag;
     
@@ -55,9 +63,9 @@ public class Client {
     private static Chat chat;
     private static DrawingBoard drawingBoard;
     private static TimeLabel timeLabel;
-    private static final ObservableList<Player> players = FXCollections.observableArrayList();
+    private static ObservableList<Player> players = FXCollections.observableArrayList();
     
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static ExecutorService executor;
     
     private static long syncTime;
     private static long timeAfterSync;
@@ -75,12 +83,13 @@ public class Client {
         label_info.setText("Connecting...");
         Task<ConnectResult> serverConnectTask = new ServerConnectTask(ip, port);
         
+        executor = Executors.newSingleThreadExecutor();
         executor.submit(serverConnectTask);
         
-        Client.timeThreadObject = new Thread(() -> Client.timeThread());
-        Client.timeThreadObject.setDaemon(true);
-        Client.timeThreadObject.setPriority(MAX_PRIORITY);
-        Client.timeThreadObject.start();
+        timeThreadObject = new Thread(() -> Client.timeThread());
+        timeThreadObject.setDaemon(true);
+        timeThreadObject.setPriority(MAX_PRIORITY);
+        timeThreadObject.start();
         
         serverConnectTask.setOnSucceeded(event->{
             if(Client.isSocketSet()){
@@ -89,17 +98,20 @@ public class Client {
                 // id will be set by server, client has no idea of it
                 NewPlayerData newPlayerData = new NewPlayerData(Client.nick, -1, Client.getTime());
                 sendMessage(newPlayerData);
+                
+                listenThread = new Thread(() -> Client.listen());
+                listenThread.setDaemon(true);
+                listenThread.start();
 
                 label_info.setText("Connection established");
                 switchToMainStage.run();
-                
-                Thread listenThread = new Thread(() -> Client.listen());
-                listenThread.setDaemon(true);
-                listenThread.start();
             }
         });
     }
     
+    public static void setKalambury(Kalambury kalambury){
+        Client.kalambury = kalambury;
+    }
     public static boolean isHost(){
         return isHostFlag;
     }
@@ -131,16 +143,45 @@ public class Client {
     public static boolean isSocketSet(){
         return (socket != null);
     }
+    
+    public static void quit(){
+        timeThreadObject.interrupt();
+        listenThread.interrupt();
+        try {
+            timeThreadObject.join();
+            listenThread.join();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        Server.quit();
+        chat.clear();
+        drawingBoard.clear();
+        drawingBoard.setDisable(true);
+        timeLabel.setNew(0, 0);
+        players.clear();
+        try {
+            in.close();
+            out.close();
+            socket.close();
+        } catch (IOException ex) {
+            
+        }
+        socket = null;
+        Platform.runLater(() -> {
+            wordLabel.setText("???");
+        });
+        kalambury.showWelcomeWindow();
+    }
     public static void sendMessage(SendableData data){
         try{
             data.send(out);
             out.flush();
         } catch(IOException ex){
-            
+            quit();
         }
     }
     public static void listen(){
-        while(true){
+        while(!Thread.interrupted()){
             try {
                 if(in.available() > 0){
                     final SendableData input = SendableData.receive(in);
@@ -279,7 +320,7 @@ public class Client {
                     }
                 }
             } catch(IOException ex) {
-                System.err.println(ex.getMessage());
+                quit();
             }
         }
     }
@@ -312,11 +353,12 @@ public class Client {
     public static void timeThread(){
         time = 0;
         long sleepTime = 20;
+        int sleepCounter = 0;
         syncTime = 0;
         timeAfterSync = 0;
         timeBeforeSleep = System.currentTimeMillis();
         boolean firstTime = true;
-        while(true){
+        while(!Thread.interrupted()){
             long deltaTimeAfterSync = System.currentTimeMillis() - timeBeforeSleep;
             if(!firstTime && deltaTimeAfterSync < sleepTime/2){
                 // player changed his system clock
@@ -329,8 +371,13 @@ public class Client {
             try {
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
             } catch (InterruptedException ex) {
-                System.err.printf("error sleep: \"%s\"\n", ex.getMessage());
+                Thread.currentThread().interrupt();
+                return;
             }
+            /*sleepCounter++;
+            if(sleepCounter % (1000/sleepTime) == 0){
+                sendMessage(new SendableSignal(DataType.TimeAcceptSignal, Client.getTime()));
+            }*/
             
             firstTime = false;
         }

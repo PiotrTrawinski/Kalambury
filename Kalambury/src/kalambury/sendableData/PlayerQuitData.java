@@ -24,6 +24,5 @@ public class PlayerQuitData extends SendableData{
         out.writeInt(type.toInt());
         out.writeInt(index);
         out.writeLong(time);
-        out.flush();
     }
 }

@@ -22,7 +22,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -136,8 +135,6 @@ public class MainWindowController implements Initializable {
     }
     
     @FXML public void onPlayButtonPressed(){
-        //DrawingStartSignal end = new DrawingStartSignal();
-        //Server.sendExcept(end, -1);
         Server.startGame();
         Server.getGame().setTimeLabel(timeLabel);
         playButton.setDisable(true);
@@ -165,7 +162,7 @@ public class MainWindowController implements Initializable {
         Client.skipRequest();
     }
     @FXML public void onQuitGameButtonPressed(){
-        
+        Client.quit();
     }
     
     @FXML private void enteredChatMessage(){
@@ -179,11 +176,6 @@ public class MainWindowController implements Initializable {
         Thread timeLabelThread = new Thread(()->timeLabel.startUpdating());
         timeLabelThread.setDaemon(true);
         timeLabelThread.start();
-    }
-    
-    
-    public void updateTime(){
-
     }
     
     private void scaleGridPane(GridPane gridPane, double scalingFactor){
@@ -232,14 +224,29 @@ public class MainWindowController implements Initializable {
     }
     
     public void setupHost(){
+        playButton.setDisable(false);
+        pauseButton.setDisable(true);
+        stopButton.setDisable(true);
+        skipButton.setDisable(true);
+        actionsGridPane.getChildren().remove(playButton);
+        actionsGridPane.getChildren().remove(pauseButton);
+        actionsGridPane.getChildren().remove(stopButton);
+        actionsGridPane.getChildren().remove(skipButton);
         actionsGridPane.getChildren().remove(skipRequestButton);
+        actionsGridPane.getChildren().add(playButton);
+        actionsGridPane.getChildren().add(pauseButton);
+        actionsGridPane.getChildren().add(stopButton);
+        actionsGridPane.getChildren().add(skipButton);
     }
     public void setupClient(){
         actionsGridPane.getChildren().remove(playButton);
         actionsGridPane.getChildren().remove(pauseButton);
         actionsGridPane.getChildren().remove(stopButton);
         actionsGridPane.getChildren().remove(skipButton);
+        actionsGridPane.getChildren().remove(skipRequestButton);
+        actionsGridPane.getChildren().add(skipRequestButton);
     }
+    
     
     @Override public void initialize(URL url, ResourceBundle rb) { 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
