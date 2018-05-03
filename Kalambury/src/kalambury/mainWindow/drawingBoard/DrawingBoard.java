@@ -21,7 +21,7 @@ public class DrawingBoard extends ResizableCanvas{
     Point mouseLastPos = new Point(0, 0);
     int lineThickness = 2;
     private DrawingTool drawingTool = DrawingTool.PENCIL;
-    
+     
     public DrawingBoard() {
         super();
         for(int i = 0; i < maxWidth*maxHeight; ++i){

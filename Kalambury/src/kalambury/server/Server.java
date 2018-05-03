@@ -2,9 +2,6 @@ package kalambury.server;
 
 import game.Game;
 import kalambury.sendableData.SendableData;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import static java.lang.Thread.MAX_PRIORITY;
 import java.net.ServerSocket;
@@ -30,9 +27,9 @@ import kalambury.sendableData.TurnStartedData;
 
 public class Server {
     private static final int maxClients = 5;
-    private static final Socket sockets[] = new Socket[maxClients];
-    private static final DataInputStream inputStreams[] = new DataInputStream[maxClients];
-    private static final DataOutputStream outputStreams[] = new DataOutputStream[maxClients];
+    private static final Lock clientsInMutex = new ReentrantLock(true);
+    private static final Lock clientsOutMutex = new ReentrantLock(true);
+    private static final ArrayList<ClientSocket> clients = new ArrayList<>();
     private static volatile int clientsCount = 0;
     
     private static int port;
@@ -97,15 +94,13 @@ public class Server {
     }
     
     private static void acceptNewClient(Socket socket) throws IOException{
-        sockets[clientsCount] = socket;
-        inputStreams[clientsCount] = new DataInputStream(socket.getInputStream());
-        outputStreams[clientsCount] = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+        clients.add(new ClientSocket(socket));
 
-        NewPlayerData newPlayerData = (NewPlayerData)SendableData.receive(inputStreams[clientsCount]);
+        NewPlayerData newPlayerData = (NewPlayerData)clients.get(clientsCount).receive();
         newPlayerData.id = createNewId();
         playerIndexes.put(newPlayerData.id, clientsCount);
         StartServerData startServerData = new StartServerData(Client.getPlayers(), Client.getTime());
-        startServerData.send(outputStreams[clientsCount]);
+        addLastMessageToHandle(new ServerMessage(startServerData, ServerMessage.ReceiverType.One, clientsCount));
 
         clientsCount++;
 
@@ -121,7 +116,7 @@ public class Server {
         }
     }
     
-    public static void forwardDataToClients(){
+    private static void forwardDataToClients(){
         while(true){
             if(messagesToHandle.size() > 0){
                 ServerMessage message = getFirstMessageToHandle();
@@ -199,7 +194,7 @@ public class Server {
     }
     
     
-    public static ServerMessage getFirstMessageToHandle(){
+    private static ServerMessage getFirstMessageToHandle(){
         messagesToHandleMutex.lock();
         ServerMessage message = null;
         try {
@@ -209,7 +204,7 @@ public class Server {
         }
         return message;
     }
-    public static void addLastMessageToHandle(ServerMessage messageToHandle){
+    private static void addLastMessageToHandle(ServerMessage messageToHandle){
         messagesToHandleMutex.lock();
         try {
             messagesToHandle.addLast(messageToHandle);
@@ -217,7 +212,7 @@ public class Server {
             messagesToHandleMutex.unlock();
         }
     }
-    public static void addFirstMessageToHandle(ServerMessage messageToHandle){
+    private static void addFirstMessageToHandle(ServerMessage messageToHandle){
         messagesToHandleMutex.lock();
         try {
             messagesToHandle.addFirst(messageToHandle);
@@ -238,24 +233,44 @@ public class Server {
         return null;
     }
     
-    public static void sendTo(SendableData data, int clientIndex){
-        data.send(outputStreams[clientIndex]);
+    private static void removeClient(int clientIndex){
+        clientsInMutex.lock();
+        clientsOutMutex.lock();
         try{
-            outputStreams[clientIndex].flush();
-        }
-        catch(IOException ex){
-            System.err.println(ex.getMessage());
+            for(int i = clientIndex; i < clients.size()-1; ++i){
+                clients.set(i, clients.get(i+1));
+                playerIndexes.put(getPlayerId(i+1), i);
+            }
+            clients.remove(clients.size()-1);
+            clientsCount--;
+        } finally{
+            clientsInMutex.unlock();
+            clientsOutMutex.unlock();
         }
     }
     
-    public static void sendExcept(SendableData data, int exceptIndex){
+    private static void sendTo(SendableData data, int clientIndex){
+        try{
+            clientsOutMutex.lock();
+            if(clientIndex < clientsCount){
+                clients.get(clientIndex).send(data);
+            }
+        }
+        catch(IOException ex){
+            removeClient(clientIndex);
+        } finally{
+            clientsOutMutex.unlock();
+        }
+    }
+    
+    private static void sendExcept(SendableData data, int exceptIndex){
         for(int i = 0; i < clientsCount; i++){
             if(i != exceptIndex){
                 sendTo(data, i);
             }
         }
     }
-    public static void sendAll(SendableData data){
+    private static void sendAll(SendableData data){
         for(int i = 0; i < clientsCount; i++){
             sendTo(data, i);
         }
@@ -268,15 +283,18 @@ public class Server {
         while(true){
             for(int i = 0; i < clientsCount; i++){ // for every client
                 try{
-                    if(inputStreams[i].available() > 0){
+                    clientsInMutex.lock();
+                    if(i < clientsCount && clients.get(i).hasDataToReceive()){
                         //receive messsage and send it to all clients except the sender
-                        final SendableData input = SendableData.receive(inputStreams[i]);
+                        final SendableData input = clients.get(i).receive();
                         addLastMessageToHandle(
                             new ServerMessage(input, ServerMessage.ReceiverType.AllExcept, i)
                         );
                     }
                 } catch(IOException ex) {
                     System.err.println(ex.getMessage());
+                } finally{
+                    clientsInMutex.unlock();
                 }
             }
         }

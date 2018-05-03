@@ -17,40 +17,32 @@ public class FloodFillData extends SendableData{
         this.replacementColor = replacementColor;
     }
     
-    public FloodFillData(DataInputStream in){
+    public FloodFillData(DataInputStream in) throws IOException{
         type = DataType.FloodFill;
         
-        try {
-            int x = in.readInt();
-            int y = in.readInt();
-            double targetColorR = in.readDouble();
-            double targetColorG = in.readDouble();
-            double targetColorB = in.readDouble();
-            double replacementColorR = in.readDouble();
-            double replacementColorG = in.readDouble();
-            double replacementColorB = in.readDouble();
-            
-            pixel = new Pixel(x, y, Color.color(targetColorR, targetColorG, targetColorB));
-            replacementColor = Color.color(replacementColorR, replacementColorG, replacementColorB);
-        } catch (IOException ex) {
-            System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
-        }
+        int x = in.readInt();
+        int y = in.readInt();
+        double targetColorR = in.readDouble();
+        double targetColorG = in.readDouble();
+        double targetColorB = in.readDouble();
+        double replacementColorR = in.readDouble();
+        double replacementColorG = in.readDouble();
+        double replacementColorB = in.readDouble();
+
+        pixel = new Pixel(x, y, Color.color(targetColorR, targetColorG, targetColorB));
+        replacementColor = Color.color(replacementColorR, replacementColorG, replacementColorB);
     }
 
-    @Override public void send(DataOutputStream out) {
-        try {
-            out.writeInt(type.toInt());
-            out.writeInt(pixel.x);
-            out.writeInt(pixel.y);
-            out.writeDouble(pixel.color.getRed());
-            out.writeDouble(pixel.color.getGreen());
-            out.writeDouble(pixel.color.getBlue());
-            out.writeDouble(replacementColor.getRed());
-            out.writeDouble(replacementColor.getGreen());
-            out.writeDouble(replacementColor.getBlue());
-            out.flush();
-        } catch (IOException ex) {
-            System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());
-        }
+    @Override public void send(DataOutputStream out) throws IOException {
+        out.writeInt(type.toInt());
+        out.writeInt(pixel.x);
+        out.writeInt(pixel.y);
+        out.writeDouble(pixel.color.getRed());
+        out.writeDouble(pixel.color.getGreen());
+        out.writeDouble(pixel.color.getBlue());
+        out.writeDouble(replacementColor.getRed());
+        out.writeDouble(replacementColor.getGreen());
+        out.writeDouble(replacementColor.getBlue());
+        out.flush();
     }
 }

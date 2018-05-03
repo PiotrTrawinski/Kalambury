@@ -87,11 +87,7 @@ public class Client {
                 
                 // id will be set by server, client has no idea of it
                 NewPlayerData newPlayerData = new NewPlayerData(Client.nick, -1, Client.getTime());
-                newPlayerData.send(out);
-                
-                final StartServerData startData = (StartServerData)SendableData.receive(in);
-                players.addAll(startData.players);
-                time = startData.time;
+                sendMessage(newPlayerData);
 
                 label_info.setText("Connection established");
                 switchToMainStage.run();
@@ -135,7 +131,12 @@ public class Client {
         return (socket != null);
     }
     public static void sendMessage(SendableData data){
-        data.send(out);
+        try{
+            data.send(out);
+            out.flush();
+        } catch(IOException ex){
+            
+        }
     }
     public static void listen(){
         while(true){
@@ -143,6 +144,11 @@ public class Client {
                 if(in.available() > 0){
                     final SendableData input = SendableData.receive(in);
                     switch(input.getType()){
+                    case StartServerData:
+                        StartServerData ssd = (StartServerData)input;
+                        players.addAll(ssd.players);
+                        time = ssd.time;
+                        break;
                     case ChatMessage:
                         ChatMessageData cmd = (ChatMessageData)input;
                         chat.handleNewServerMessage(cmd);
@@ -211,7 +217,7 @@ public class Client {
                             tesTime,
                             SystemMessageType.Information
                         ));
-                        new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()).send(out);
+                        sendMessage(new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()));
                         break;
                     case TurnEndedData:
                         TurnEndedData ted = (TurnEndedData)input;
@@ -273,7 +279,7 @@ public class Client {
             Client.getTime(),
             SystemMessageType.Information
         ));
-        new SendableSignal(DataType.SkipRequestSignal, Client.getTime()).send(out);
+        sendMessage(new SendableSignal(DataType.SkipRequestSignal, Client.getTime()));
     }
     
     public static void updateDrawingPlayer(int drawingId){

@@ -14,24 +14,15 @@ public class GamePasswordData extends SendableData{
 
     }
     
-    public GamePasswordData(DataInputStream in){
+    public GamePasswordData(DataInputStream in) throws IOException{
         type = DataType.GamePassword;
-        
-        try {
-            password = in.readUTF();
 
-        } catch (IOException ex) {
-            System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
-        }
+        password = in.readUTF();
     }
 
-    @Override public void send(DataOutputStream out) {
-        try {
-            out.writeInt(type.toInt());
-            out.writeUTF(password);
-            out.flush();
-        } catch (IOException ex) {
-            System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());
-        }
+    @Override public void send(DataOutputStream out) throws IOException {
+        out.writeInt(type.toInt());
+        out.writeUTF(password);
+        out.flush();
     }
 }

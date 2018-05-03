@@ -18,30 +18,23 @@ public class TurnStartedData extends SendableData{
         this.drawingPlayerId = drawingPlayerId;
     }
     
-    public TurnStartedData(DataInputStream in){
+    public TurnStartedData(DataInputStream in) throws IOException{
         type = DataType.TurnStarted;
-        try {
-            startTime = in.readLong();
-            turnTime = in.readLong();
-            isDrawing = in.readBoolean();
-            drawingPlayerId = in.readInt();
-        } catch (IOException ex) {
-            System.err.printf("error reading data from stream, system error: \"%s\"\n", ex.getMessage());
-        }
+        
+        startTime = in.readLong();
+        turnTime = in.readLong();
+        isDrawing = in.readBoolean();
+        drawingPlayerId = in.readInt();
     }
 
-    @Override public void send(DataOutputStream out) {
-        try {
-            out.writeInt(type.toInt());
-            
-            out.writeLong(startTime);
-            out.writeLong(turnTime);
-            out.writeBoolean(isDrawing);
-            out.writeInt(drawingPlayerId);
-            
-            out.flush();
-        } catch (IOException ex) {
-            System.err.printf("error writing data to stream, system error: \"%s\"\n", ex.getMessage());
-        }
+    @Override public void send(DataOutputStream out) throws IOException {
+        out.writeInt(type.toInt());
+
+        out.writeLong(startTime);
+        out.writeLong(turnTime);
+        out.writeBoolean(isDrawing);
+        out.writeInt(drawingPlayerId);
+
+        out.flush();
     }
 }
