@@ -38,7 +38,6 @@ public class Game {
     }
     
     public void start(){
-        System.out.println(players.size());
         for(int i = 0 ; i < players.size(); i++){
             playersIdSequence.add(players.get(i).getId());
         }
@@ -49,6 +48,14 @@ public class Game {
         playersIdSequence.add(pId);
         currentlyDrawingUserID = pId;
         return pId;
+    }
+    public void removePlayerFromSequence(int id){
+        for(int i = 0; i < playersIdSequence.size(); ++i){
+            if(playersIdSequence.get(i) == id){
+                playersIdSequence.remove(i);
+                return;
+            }
+        }
     }
     
     public boolean verifyPassword(String password, int guesserID){
@@ -66,14 +73,18 @@ public class Game {
     
     public String endTurn(){
         players.get(Server.getPlayerIndex(currentlyDrawingUserID)).setScore(
-                players.get(Server.getPlayerIndex(currentlyDrawingUserID)).getScore() + pointsForDrawing
+            players.get(Server.getPlayerIndex(currentlyDrawingUserID)).getScore() + pointsForDrawing
         );
         players.get(Server.getPlayerIndex(winnerId)).setScore(
-                players.get(Server.getPlayerIndex(winnerId)).getScore() + pointsForGuess
+            players.get(Server.getPlayerIndex(winnerId)).getScore() + pointsForGuess
         );
         int tempWinnerId = winnerId;
         clearTurnWinner();
         return players.get(Server.getPlayerIndex(tempWinnerId)).getNickName();
+    }
+    
+    public int getDrawingPlayerId(){
+        return currentlyDrawingUserID;
     }
     
     public void updateCurrentTurnWinner(long correctAnswerTime, int playerId){

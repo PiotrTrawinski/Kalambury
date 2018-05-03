@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import kalambury.sendableData.ChatMessageData;
 import kalambury.sendableData.DataType;
 import kalambury.sendableData.GamePasswordData;
+import kalambury.sendableData.PlayerQuitData;
 import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.TimeData;
 import kalambury.sendableData.TurnEndedData;
@@ -98,6 +99,7 @@ public class Server {
 
         NewPlayerData newPlayerData = (NewPlayerData)clients.get(clientsCount).receive();
         newPlayerData.id = createNewId();
+        newPlayerData.time = Client.getTime();
         playerIndexes.put(newPlayerData.id, clientsCount);
         StartServerData startServerData = new StartServerData(Client.getPlayers(), Client.getTime());
         addLastMessageToHandle(new ServerMessage(startServerData, ServerMessage.ReceiverType.One, clientsCount));
@@ -234,6 +236,10 @@ public class Server {
     }
     
     private static void removeClient(int clientIndex){
+        int playerId = getPlayerId(clientIndex);
+        if(game != null){
+            game.removePlayerFromSequence(playerId);  
+        }
         clientsInMutex.lock();
         clientsOutMutex.lock();
         try{
@@ -246,6 +252,12 @@ public class Server {
         } finally{
             clientsInMutex.unlock();
             clientsOutMutex.unlock();
+        }
+        addLastMessageToHandle(
+            new ServerMessage(new PlayerQuitData(clientIndex, Client.getTime()), ServerMessage.ReceiverType.All)
+        );
+        if(game != null && playerId == game.getDrawingPlayerId()){
+            skipTurn();
         }
     }
     

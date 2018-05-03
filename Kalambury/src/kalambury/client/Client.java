@@ -27,6 +27,7 @@ import kalambury.sendableData.FloodFillData;
 import kalambury.sendableData.GamePasswordData;
 import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.NewPlayerData;
+import kalambury.sendableData.PlayerQuitData;
 import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TimeData;
@@ -169,7 +170,6 @@ public class Client {
                             npd.time,
                             SystemMessageType.Information
                         ));
-                        System.out.printf("ID:%d", npd.id);
                         break;
                     case Time:
                         TimeData td = (TimeData)input;
@@ -252,7 +252,7 @@ public class Client {
                         break;
                     case TurnSkippedSignal:
                         chat.handleNewSystemMessage(new SystemMessage(
-                            "Tura została pominięta przez hosta",
+                            "Tura została pominięta",
                             ((SendableSignal)input).time,
                             SystemMessageType.Information
                         ));
@@ -263,6 +263,17 @@ public class Client {
                             ((SendableSignal)input).time,
                             SystemMessageType.Information
                         ));
+                        break;
+                    case PlayerQuit:
+                        PlayerQuitData pqd = (PlayerQuitData)input;
+                        Player player = players.get(pqd.index);
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            "Gracz " + player.getNickName() + " wyszedł z gry",
+                            pqd.time,
+                            SystemMessageType.Information
+                        ));
+                        players.remove(player);
+                        break;
                     default:
                         break;
                     }
