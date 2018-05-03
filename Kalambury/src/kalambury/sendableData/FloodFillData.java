@@ -43,6 +43,5 @@ public class FloodFillData extends SendableData{
         out.writeDouble(replacementColor.getRed());
         out.writeDouble(replacementColor.getGreen());
         out.writeDouble(replacementColor.getBlue());
-        out.flush();
     }
 }

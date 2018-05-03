@@ -33,6 +33,5 @@ public class ChatMessageData extends SendableData{
         out.writeUTF(message);
         out.writeLong(time);
         out.writeBoolean(isHost);
-        out.flush();
     }
 }

@@ -13,7 +13,7 @@ public class Game {
     private final int pointsForDrawing = 10;
     private final int pointsForGuess = 8;
     private final ObservableList<Player> players;
-    private final List<Integer> playersIdSequence = new ArrayList<>();
+    private final List<Integer> playersIdSequence;
     private final int round;
     private final int maxPoints;
     private final int maxTimeSeconds;
@@ -23,7 +23,7 @@ public class Game {
     private final RandomFileReader randomGenerator = new RandomFileReader("slowa.txt",'\n');
     TimeLabel gameTimeLabel;
     
-    long winnerTime = 0;
+    long winnerTime;
     int winnerId = NO_ID;
     
     public Game(int maxPlayers, int maxPoints, int maxTimeSeconds, ObservableList<Player> players){
@@ -32,6 +32,8 @@ public class Game {
         this.round = 0;
         this.players = players;
         this.currentlyDrawingUserID = NO_ID;
+        playersIdSequence = new ArrayList<>();
+        winnerTime = 0;
     }
     public void setTimeLabel(TimeLabel timeLabel){
         this.gameTimeLabel = timeLabel;

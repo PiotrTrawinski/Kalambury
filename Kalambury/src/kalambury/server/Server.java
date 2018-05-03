@@ -6,6 +6,7 @@ import java.io.IOException;
 import static java.lang.Thread.MAX_PRIORITY;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Map;
@@ -17,6 +18,8 @@ import kalambury.sendableData.NewPlayerData;
 import kalambury.sendableData.StartServerData;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import kalambury.sendableData.ChatMessageData;
 import kalambury.sendableData.DataType;
 import kalambury.sendableData.GamePasswordData;
@@ -27,15 +30,20 @@ import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
 
 public class Server {
+    private static Thread mainThread;
+    private static Thread handleIncomingDataThread;
+    private static Thread sendOutDataThread;
+    private static Thread timeThreadObject;
+    
     private static final int maxClients = 5;
     private static final Lock clientsInMutex = new ReentrantLock(true);
     private static final Lock clientsOutMutex = new ReentrantLock(true);
-    private static final ArrayList<ClientSocket> clients = new ArrayList<>();
-    private static volatile int clientsCount = 0;
+    private static ArrayList<ClientSocket> clients;
+    private static volatile int clientsCount;
     
-    private static int port;
+    private static Integer port = null;
     
-    private static volatile ArrayDeque<ServerMessage>  messagesToHandle = new ArrayDeque<>();
+    private static volatile ArrayDeque<ServerMessage>  messagesToHandle;
     private static final Lock messagesToHandleMutex = new ReentrantLock(true);
     
     private static int acceptEndSignalCount = -1;
@@ -48,24 +56,51 @@ public class Server {
     public static void initialize(int port){
         //set the port that server is working on, and start it on a new thread
         Server.port = port;
-        Thread serverThread = new Thread(()->Server.start());
-        serverThread.setDaemon(true);   // close with application
-        serverThread.start();
+        acceptEndSignalCount = -1;
+        clientsCount = 0;
+        messagesToHandle = new ArrayDeque<>();
+        clients = new ArrayList<>();
+        game = null;
+        mainThread = new Thread(()->Server.start());
+        mainThread.setDaemon(true);   // close with application
+        mainThread.start();
+    }
+    
+    public static void quit(){
+        if(port != null){
+            mainThread.interrupt();
+            handleIncomingDataThread.interrupt();
+            sendOutDataThread.interrupt();
+            timeThreadObject.interrupt();
+            
+            try {
+                mainThread.join();
+                handleIncomingDataThread.join();
+                sendOutDataThread.join();
+                timeThreadObject.join();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            game = null;
+            for(int i = 0; i < clients.size(); ++i){
+                clients.get(i).close();
+            }
+        }
     }
     
     public static void start(){      
         // incoming data thread
-        Thread t = new Thread(()->Server.handleIncomingData());
-        t.setDaemon(true);
-        t.start();
+        handleIncomingDataThread = new Thread(()->Server.handleIncomingData());
+        handleIncomingDataThread.setDaemon(true);
+        handleIncomingDataThread.start();
         
         // send incoming data to clients
-        Thread sendOutDataThread = new Thread( () -> Server.forwardDataToClients());
+        sendOutDataThread = new Thread( () -> Server.forwardDataToClients());
         sendOutDataThread.setDaemon(true);
         sendOutDataThread.start();
         
         // time thread
-        Thread timeThreadObject = new Thread(() -> timeThread());
+        timeThreadObject = new Thread(() -> timeThread());
         timeThreadObject.setDaemon(true);
         timeThreadObject.setPriority(MAX_PRIORITY);
         timeThreadObject.start();
@@ -110,16 +145,22 @@ public class Server {
     }
     
     private static void acceptNewClients(ServerSocket serverSocket) throws IOException{
-        while (true) {
+        serverSocket.setSoTimeout(1000);
+        while (!Thread.interrupted()) {
             if(clientsCount < maxClients){
-                Socket socket = serverSocket.accept();
-                acceptNewClient(socket);
+                try{
+                    Socket socket = serverSocket.accept();
+                    acceptNewClient(socket);
+                } catch(SocketTimeoutException ex){
+                    
+                }
             }
         }
+        serverSocket.close();
     }
     
     private static void forwardDataToClients(){
-        while(true){
+        while(!Thread.interrupted()){
             if(messagesToHandle.size() > 0){
                 ServerMessage message = getFirstMessageToHandle();
                 SendableData data = message.getData();
@@ -292,7 +333,7 @@ public class Server {
         return game;
     }
     public static void handleIncomingData(){
-        while(true){
+        while(!Thread.interrupted()){
             for(int i = 0; i < clientsCount; i++){ // for every client
                 try{
                     clientsInMutex.lock();
@@ -317,11 +358,11 @@ public class Server {
         long sleepTime = 1000;
         TimeData timeData = new TimeData(0);
         
-        while(true){
+        while(!Thread.interrupted()){
             try {
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
             } catch (InterruptedException ex) {
-                System.err.printf("error sleep: \"%s\"\n", ex.getMessage());
+                Thread.currentThread().interrupt();
             }
             timeData.time = System.currentTimeMillis() - startTime;
             

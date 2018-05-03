@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import kalambury.client.Client;
 import kalambury.mainWindow.MainWindowController;
 
 
@@ -20,10 +21,11 @@ public class Kalambury extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("mainWindow/MainFXML.fxml"));
         Parent root = (Parent)loader.load();
         mainWindowController = loader.getController();
-        Scene scene =  new Scene(root);
+        Client.setKalambury(this);
+        Scene sceneMain =  new Scene(root);
         Stage s = new Stage();
         s.setTitle("Kalambury");
-        s.setScene(scene);
+        s.setScene(sceneMain);
         mainStage = s;
         //s.show();
         
@@ -34,9 +36,9 @@ public class Kalambury extends Application {
         WelcomeWindowController controller = fxmlLoader.getController();
         controller.setKalambury(this);
         
-        scene = new Scene(welcomeRoot);
-        scene.getRoot().requestFocus();
-        stage.setScene(scene);
+        Scene sceneWelcome = new Scene(welcomeRoot);
+        sceneWelcome.getRoot().requestFocus();
+        stage.setScene(sceneWelcome);
         stage.setTitle("Kalambury");
         stage.show();
         this.welcomeStage = stage;
@@ -47,11 +49,18 @@ public class Kalambury extends Application {
     }
     
     
-    public void showMainWindow() throws Exception{
+    public void showMainWindow(){
         welcomeStage.close();
         mainStage.show();
         mainStage.setMinHeight(mainStage.getHeight());
         mainStage.setMinWidth(mainStage.getWidth());
+    }
+    
+    public void showWelcomeWindow(){
+        mainStage.close();
+        welcomeStage.show();
+        welcomeStage.setMinHeight(welcomeStage.getHeight());
+        welcomeStage.setMinWidth(welcomeStage.getWidth());
     }
     
     public MainWindowController getMainWindowController(){

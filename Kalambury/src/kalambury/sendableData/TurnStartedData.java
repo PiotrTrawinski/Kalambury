@@ -34,7 +34,5 @@ public class TurnStartedData extends SendableData{
         out.writeLong(turnTime);
         out.writeBoolean(isDrawing);
         out.writeInt(drawingPlayerId);
-
-        out.flush();
     }
 }

@@ -35,6 +35,11 @@ public class Chat {
         this.log.prefWidthProperty().bind(this.logPane.widthProperty());
     }
     
+    public void clear(){
+        log.getChildren().clear();
+        userInput.setText("");
+    }
+    
     private void addPlayerTextNodes(int index, Text time, Text status, Text nick, Text message, Text exactTime){
         log.getChildren().add(index, time);
         log.getChildren().add(index+1, status);
@@ -57,6 +62,12 @@ public class Chat {
             }
             // if no message was earlier then this one
             addPlayerTextNodes(0, time, status, nick, message, exactTime);
+        });
+        
+        // scroll down
+        Platform.runLater(() -> {
+            logPane.layout();
+            logPane.setVvalue(1.0);
         });
     }
     
@@ -128,9 +139,6 @@ public class Chat {
         Text exactTimeText = getExactTimeText(time);
         
         addTextNodesToCorrectTimePlace(timeText, statusText, nickText, messageText, exactTimeText);
-        
-        // scroll down
-        logPane.setVvalue(1.0);
     }
     
     public void handleNewClientMessage(){
@@ -169,8 +177,5 @@ public class Chat {
         }
         Text exactTimeText = getExactTimeText(systemMessage.time);
         addTextNodesToCorrectTimePlace(timeText, statusText, nickText, messageText, exactTimeText);
-        
-        // scroll down
-        logPane.setVvalue(1.0);
     }
 }
