@@ -160,30 +160,33 @@ public class Client {
     public static void quit(){
         timeThreadObject.interrupt();
         listenThread.interrupt();
+        sendThread.interrupt();
         try {
             timeThreadObject.join();
             listenThread.join();
+            sendThread.join();
         } catch (InterruptedException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
         Server.quit();
-        chat.clear();
-        drawingBoard.clear();
-        drawingBoard.setDisable(true);
-        timeLabel.setNew(0, 0);
-        players.clear();
-        try {
-            in.close();
-            out.close();
-            socket.close();
-        } catch (IOException ex) {
-            
-        }
-        socket = null;
         Platform.runLater(() -> {
-            wordLabel.setText("???");
+            chat.clear();
+            drawingBoard.clear();
+            drawingBoard.setDisable(true);
+            timeLabel.setNew(0, 0);
+            players.clear();
+            try {
+                in.close();
+                out.close();
+                socket.close();
+            } catch (IOException ex) {
+
+            }
+            socket = null;
+            Platform.runLater(() -> {
+                wordLabel.setText("???");
+            });
+            kalambury.showWelcomeWindow();
         });
-        kalambury.showWelcomeWindow();
     }
     public static void sendMessage(SendableData data){
         dataToSendMutex.lock();
@@ -193,13 +196,15 @@ public class Client {
             dataToSendMutex.unlock();
         }
     }
-    private static void sendData(SendableData data){
+    private static boolean sendData(SendableData data){
         try{
             data.send(out);
             out.flush();
         } catch(IOException ex){
             quit();
+            return false;
         }
+        return true;
     }
     private static void sending(){
         while(!Thread.interrupted()){
@@ -212,7 +217,9 @@ public class Client {
                     dataToSendMutex.unlock();
                 }
                 if(data != null){
-                    sendData(data);
+                    if(!sendData(data)){
+                        break;
+                    }
                 }
             }
         }
@@ -359,6 +366,7 @@ public class Client {
                 }
             } catch(IOException ex) {
                 quit();
+                break;
             }
         }
     }
@@ -412,10 +420,10 @@ public class Client {
                 Thread.currentThread().interrupt();
                 return;
             }
-            /*sleepCounter++;
+            sleepCounter++;
             if(sleepCounter % (1000/sleepTime) == 0){
                 sendMessage(new SendableSignal(DataType.TimeAcceptSignal, Client.getTime()));
-            }*/
+            }
             
             firstTime = false;
         }
