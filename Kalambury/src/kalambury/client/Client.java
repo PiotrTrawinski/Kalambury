@@ -15,9 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.scene.control.Label;
 import kalambury.Kalambury;
 import kalambury.mainWindow.MainWindowController;
 import kalambury.sendableData.DataType;
@@ -73,7 +71,7 @@ public class Client {
     
     
     public static void initialize(
-            String ip, int port, String nick, Label label_info, 
+            String ip, int port, String nick, 
             Runnable switchToMainStage, boolean isHost
     ){
         // save parameters
@@ -83,10 +81,7 @@ public class Client {
         Client.isHostFlag = isHost;
         
         // try to connect to the server
-        Platform.runLater(() -> {
-            label_info.setText("Connecting...");
-        });
-        Task<ConnectResult> serverConnectTask = new ServerConnectTask(ip, port);
+        Task<Void> serverConnectTask = new ServerConnectTask(ip, port);
         executor = Executors.newSingleThreadExecutor();
         executor.submit(serverConnectTask);
         
@@ -119,9 +114,6 @@ public class Client {
                 appendToSend(newPlayerData);
                 
                 // fully connected - switch to the main window
-                Platform.runLater(() -> {
-                    label_info.setText("Connection established");
-                });
                 switchToMainStage.run();
             }
         });
@@ -186,6 +178,7 @@ public class Client {
     }
     
     
+    
     /*
         Sending data to the server
     */
@@ -237,9 +230,12 @@ public class Client {
         }
     }
     
+    
+    
     /*
         listening - get data from server when avaliable
     */
+    
     private static void menageReceivedData(SendableData data){
         switch(data.getType()){
         case StartServerData:
@@ -258,13 +254,16 @@ public class Client {
             controller.gameEnded((SendableSignal)data);
             appendToSend(new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()));
             break;
+        case TurnEndedSignal:   
+            controller.turnEndedSignal((SendableSignal)data); 
+            appendToSend(new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()));
+            break;
         case ChatMessage:       controller.chatMessage((ChatMessageData)data);    break;
         case LineDraw:          controller.lineDraw((LineDrawData)data);          break;
         case FloodFill:         controller.floodFill((FloodFillData)data);        break;
         case NewPlayerData:     controller.newPlayer((NewPlayerData)data);        break;
         case TurnStarted:       controller.turnStarted((TurnStartedData)data);    break;
         case GamePassword:      controller.setPassword((GamePasswordData)data);   break;
-        case TurnEndedSignal:   controller.turnEndedSignal((SendableSignal)data); break;
         case TurnEndedData:     controller.turnEnded((TurnEndedData)data);        break;
         case GameStoppedSignal: controller.gameStopped((SendableSignal)data);     break;
         case GameStarted:       controller.gameStarted((GameStartedData)data);    break;
@@ -294,12 +293,16 @@ public class Client {
         appendToSend(new SendableSignal(DataType.SkipRequestSignal, Client.getTime()));
     }
     
+    
+    
     /*
         time synchronization
     */
+    
     public static long getTime(){
         return time;
     }
+    
     public static void timeThread(){
         time = 0;
         long sleepTime = 20;
