@@ -36,8 +36,10 @@ public class Chat {
     }
     
     public void clear(){
-        log.getChildren().clear();
-        userInput.setText("");
+        Platform.runLater(() -> {
+            log.getChildren().clear();
+            userInput.setText("");
+        });
     }
     
     private void addPlayerTextNodes(int index, Text time, Text status, Text nick, Text message, Text exactTime){
