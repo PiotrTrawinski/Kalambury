@@ -10,9 +10,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import static java.lang.Thread.MAX_PRIORITY;
 import java.net.Socket;
+import java.util.ArrayDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -56,6 +59,10 @@ public class Client {
     private static Thread timeThreadObject;
     
     private static Thread listenThread;
+    private static Thread sendThread;
+    
+    private static volatile ArrayDeque<SendableData> dataToSend;
+    private static final Lock dataToSendMutex = new ReentrantLock(true);
     
     private static boolean isHostFlag;
     
@@ -83,6 +90,8 @@ public class Client {
         label_info.setText("Connecting...");
         Task<ConnectResult> serverConnectTask = new ServerConnectTask(ip, port);
         
+        dataToSend = new ArrayDeque<>();
+        
         executor = Executors.newSingleThreadExecutor();
         executor.submit(serverConnectTask);
         
@@ -102,6 +111,10 @@ public class Client {
                 listenThread = new Thread(() -> Client.listen());
                 listenThread.setDaemon(true);
                 listenThread.start();
+                
+                sendThread = new Thread(() -> Client.sending());
+                sendThread.setDaemon(true);
+                sendThread.start();
 
                 label_info.setText("Connection established");
                 switchToMainStage.run();
@@ -173,6 +186,14 @@ public class Client {
         kalambury.showWelcomeWindow();
     }
     public static void sendMessage(SendableData data){
+        dataToSendMutex.lock();
+        try {
+            dataToSend.addLast(data);
+        } finally {
+            dataToSendMutex.unlock();
+        }
+    }
+    private static void sendData(SendableData data){
         try{
             data.send(out);
             out.flush();
@@ -180,7 +201,24 @@ public class Client {
             quit();
         }
     }
-    public static void listen(){
+    private static void sending(){
+        while(!Thread.interrupted()){
+            if(dataToSend.size() > 0){
+                SendableData data = null;
+                dataToSendMutex.lock();
+                try {
+                    data = dataToSend.removeFirst();
+                } finally {
+                    dataToSendMutex.unlock();
+                }
+                if(data != null){
+                    sendData(data);
+                }
+            }
+        }
+    }
+    
+    private static void listen(){
         while(!Thread.interrupted()){
             try {
                 if(in.available() > 0){
@@ -324,7 +362,7 @@ public class Client {
             }
         }
     }
-    
+ 
     public static void skipRequest(){
         chat.handleNewSystemMessage(new SystemMessage(
             "Poprosiłeś o pominięcie tury",

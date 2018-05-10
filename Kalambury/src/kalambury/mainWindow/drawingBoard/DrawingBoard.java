@@ -270,7 +270,7 @@ public class DrawingBoard extends ResizableCanvas{
             }
         });
         
-        return new LineDrawData(start, end, drawArea, lineThickness, colorWidget.getColor());
+        return new LineDrawData(new Point(start.x, start.y), new Point(end.x, end.y), drawArea, lineThickness, colorWidget.getColor());
     }
     
     public void drawLineRemote(LineDrawData data){
