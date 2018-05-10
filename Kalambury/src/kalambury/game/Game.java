@@ -1,4 +1,4 @@
-package game;
+package kalambury.game;
 
 import java.util.ArrayList;
 import java.util.Collections;

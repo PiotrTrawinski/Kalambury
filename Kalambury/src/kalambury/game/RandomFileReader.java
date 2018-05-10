@@ -1,4 +1,4 @@
-package game;
+package kalambury.game;
 
 import java.io.File;
 import java.io.RandomAccessFile;

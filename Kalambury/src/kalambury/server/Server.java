@@ -1,6 +1,6 @@
 package kalambury.server;
 
-import game.Game;
+import kalambury.game.Game;
 import kalambury.sendableData.SendableData;
 import java.io.IOException;
 import static java.lang.Thread.MAX_PRIORITY;
