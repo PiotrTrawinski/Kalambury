@@ -18,43 +18,42 @@ public class Kalambury extends Application {
     
     @Override public void start(Stage stage) throws Exception {
 
-        // Create main window but don't show it
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("mainWindow/MainFXML.fxml"));
-        Parent root = (Parent)loader.load();
-        mainWindowController = loader.getController();
+        // Create main window
+        FXMLLoader loaderMain = new FXMLLoader(getClass().getResource("mainWindow/MainFXML.fxml"));
+        Parent rootMain = (Parent)loaderMain.load();
+        mainWindowController = loaderMain.getController();
         Client.setKalambury(this);
-        Scene sceneMain =  new Scene(root);
-        Stage s = new Stage();
-        s.setTitle("Kalambury");
-        s.setScene(sceneMain);
-        mainStage = s;
-        //s.show();
+        Scene sceneMain =  new Scene(rootMain);
+        mainStage = new Stage();
+        mainStage.setTitle("Kalambury");
+        mainStage.setScene(sceneMain);
         
-        
-        // init welcome window
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("welcomeWindow/WelcomeWindowFXML.fxml"));
-        Parent welcomeRoot = fxmlLoader.load();
-        WelcomeWindowController controller = fxmlLoader.getController();
-        controller.setKalambury(this);
+        // create welcome window
+        FXMLLoader loaderWelcome = new FXMLLoader(getClass().getResource("welcomeWindow/WelcomeWindowFXML.fxml"));
+        Parent welcomeRoot = loaderWelcome.load();
+        WelcomeWindowController welcomeController = loaderWelcome.getController();
+        welcomeController.setKalambury(this);
         
         Scene sceneWelcome = new Scene(welcomeRoot);
         sceneWelcome.getRoot().requestFocus();
-        stage.setScene(sceneWelcome);
-        stage.setTitle("Kalambury");
-        stage.show();
-        this.welcomeStage = stage;
+        welcomeStage = stage;
+        welcomeStage.setScene(sceneWelcome);
+        welcomeStage.setTitle("Kalambury");
         
-        
-        stage.setMinHeight(stage.getHeight());
-        stage.setMinWidth(stage.getWidth());
+        // show welcome window
+        welcomeStage.show();
+        welcomeStage.setMinHeight(stage.getHeight());
+        welcomeStage.setMinWidth(stage.getWidth());
     }
     
     
     public void showMainWindow(){
-        welcomeStage.close();
-        mainStage.show();
-        mainStage.setMinHeight(mainStage.getHeight());
-        mainStage.setMinWidth(mainStage.getWidth());
+        Platform.runLater(() -> {
+            welcomeStage.close();
+            mainStage.show();
+            mainStage.setMinHeight(mainStage.getHeight());
+            mainStage.setMinWidth(mainStage.getWidth());
+        });
     }
     
     public void showWelcomeWindow(){
