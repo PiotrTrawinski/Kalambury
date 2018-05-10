@@ -16,15 +16,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.Label;
 import kalambury.Kalambury;
 import kalambury.mainWindow.MainWindowController;
-import kalambury.mainWindow.Player;
 import kalambury.sendableData.DataType;
-import static kalambury.sendableData.DataType.TurnEndedSignal;
 import kalambury.sendableData.FloodFillData;
 import kalambury.sendableData.GamePasswordData;
 import kalambury.sendableData.LineDrawData;
@@ -40,90 +36,98 @@ import kalambury.server.Server;
 
 
 public class Client {
-    private static Kalambury kalambury;
-    private static MainWindowController controller;
-    
+    // socket connection
     private static String ip;
-    private static String nick;
     private static int port;
-    
     private static Socket socket = null;
     private static DataOutputStream out = null;
     private static DataInputStream in = null;
     
+    // this client's player
+    private static String nick;
+    
+    // synchronized time between all clients
     private static long time;
-    private static Thread timeThreadObject;
-    
-    private static Thread listenThread;
-    private static Thread sendThread;
-    
-    private static volatile ArrayDeque<SendableData> dataToSend;
-    private static final Lock dataToSendMutex = new ReentrantLock(true);
-    
-    private static boolean isHostFlag;
-    
-    private static ExecutorService executor;
-    
     private static long syncTime;
     private static long timeAfterSync;
     private static long timeBeforeSleep;
-
+    private static Thread timeThreadObject;
+    
+    // receiveing and sending data threads
+    private static Thread listenThread;
+    private static Thread sendThread;
+    
+    // array for the data that should be send by sendThread
+    private static volatile ArrayDeque<SendableData> dataToSend;
+    private static final Lock dataToSendMutex = new ReentrantLock(true);
+    
+    // reference to objects for communication
+    private static Kalambury kalambury;
+    private static MainWindowController controller;
+    
+    // informs if client is also the host (has initialized Server object)
+    private static boolean isHostFlag;
+    
+    // for connection task
+    private static ExecutorService executor;
+    
+    
     public static void initialize(
             String ip, int port, String nick, Label label_info, 
             Runnable switchToMainStage, boolean isHost
     ){
+        // save parameters
         Client.ip = ip;
         Client.port = port;
         Client.nick = (!nick.equals("") ? nick : "???");
         Client.isHostFlag = isHost;
         
-        label_info.setText("Connecting...");
+        // try to connect to the server
+        Platform.runLater(() -> {
+            label_info.setText("Connecting...");
+        });
         Task<ConnectResult> serverConnectTask = new ServerConnectTask(ip, port);
-        
-        dataToSend = new ArrayDeque<>();
-        
         executor = Executors.newSingleThreadExecutor();
         executor.submit(serverConnectTask);
         
-        timeThreadObject = new Thread(() -> Client.timeThread());
-        timeThreadObject.setDaemon(true);
-        timeThreadObject.setPriority(MAX_PRIORITY);
-        timeThreadObject.start();
-        
+        // when succesfully connect - complete initialization
         serverConnectTask.setOnSucceeded(event->{
             if(Client.isSocketSet()){
                 executor.shutdown();
                 
-                // id will be set by server, client has no idea of it
-                NewPlayerData newPlayerData = new NewPlayerData(Client.nick, -1, Client.getTime());
-                sendMessage(newPlayerData);
+                // initialize queue for data transfer
+                dataToSend = new ArrayDeque<>();
+
+                // initialize thread for time synchronization
+                timeThreadObject = new Thread(() -> Client.timeThread());
+                timeThreadObject.setDaemon(true);
+                timeThreadObject.setPriority(MAX_PRIORITY);
+                timeThreadObject.start();
                 
-                listenThread = new Thread(() -> Client.listen());
+                // initialize thread for listening the server
+                listenThread = new Thread(() -> Client.listening());
                 listenThread.setDaemon(true);
                 listenThread.start();
                 
+                // initialize thread for sending the data to the server
                 sendThread = new Thread(() -> Client.sending());
                 sendThread.setDaemon(true);
                 sendThread.start();
-
-                label_info.setText("Connection established");
+                
+                // send your info to the server; id will be set by server, client has no idea of it
+                NewPlayerData newPlayerData = new NewPlayerData(Client.nick, -1, Client.getTime());
+                appendToSend(newPlayerData);
+                
+                // fully connected - switch to the main window
+                Platform.runLater(() -> {
+                    label_info.setText("Connection established");
+                });
                 switchToMainStage.run();
             }
         });
     }
     
-    public static void setKalambury(Kalambury kalambury){
-        Client.kalambury = kalambury;
-    }
-    public static boolean isHost(){
-        return isHostFlag;
-    }
-    public static String getNick(){
-        return nick;
-    }
-    public static void setController(MainWindowController controller){
-        Client.controller = controller;
-    }
+    // socket initialization
     public static void setSocket(Socket s){
         Client.socket = s;
         try {
@@ -133,12 +137,29 @@ public class Client {
             System.err.println(e.getMessage());
         }
     }
-    
     public static boolean isSocketSet(){
         return (socket != null);
     }
     
+    // object reference setters
+    public static void setKalambury(Kalambury kalambury){
+        Client.kalambury = kalambury;
+    }
+    public static void setController(MainWindowController controller){
+        Client.controller = controller;
+    }
+    
+    // utility getters
+    public static boolean isHost(){
+        return isHostFlag;
+    }
+    public static String getNick(){
+        return nick;
+    }
+    
+    
     public static void quit(){
+        // stop all the threads
         timeThreadObject.interrupt();
         listenThread.interrupt();
         sendThread.interrupt();
@@ -146,23 +167,31 @@ public class Client {
             timeThreadObject.join();
             listenThread.join();
             sendThread.join();
-        } catch (InterruptedException ex) {
-        }
+        } catch (InterruptedException ex) {}
+        
+        // close connection
+        try {
+            in.close();
+            out.close();
+            socket.close();
+        } catch (IOException ex) {}
+        socket = null;
+        
         Server.quit();
-        Platform.runLater(() -> {
-            controller.quit();
-            try {
-                in.close();
-                out.close();
-                socket.close();
-            } catch (IOException ex) {
-
-            }
-            socket = null;
-            kalambury.showWelcomeWindow();
-        });
+ 
+        // close controller before switching back to welcome window
+        controller.quit();
+        
+        kalambury.showWelcomeWindow();
     }
-    public static void sendMessage(SendableData data){
+    
+    
+    /*
+        Sending data to the server
+    */
+    
+    // adds data to the queue
+    public static void appendToSend(SendableData data){
         dataToSendMutex.lock();
         try {
             dataToSend.addLast(data);
@@ -170,6 +199,8 @@ public class Client {
             dataToSendMutex.unlock();
         }
     }
+    
+    // sends data to server. if fails (disconnected) then go back to welcome window
     private static boolean sendData(SendableData data){
         try{
             data.send(out);
@@ -180,17 +211,24 @@ public class Client {
         }
         return true;
     }
+    
+    // thread responsible for sending all the data from the queue to the server
     private static void sending(){
         while(!Thread.interrupted()){
             if(dataToSend.size() > 0){
                 SendableData data = null;
+                
                 dataToSendMutex.lock();
                 try {
                     data = dataToSend.removeFirst();
                 } finally {
                     dataToSendMutex.unlock();
                 }
+                
+                // check if actually got the data
                 if(data != null){
+                    
+                    // if data sending fails then stop the thread
                     if(!sendData(data)){
                         break;
                     }
@@ -199,71 +237,51 @@ public class Client {
         }
     }
     
-    private static void listen(){
+    /*
+        listening - get data from server when avaliable
+    */
+    private static void menageReceivedData(SendableData data){
+        switch(data.getType()){
+        case StartServerData:
+            StartServerData ssd = (StartServerData)data;
+            controller.startInfoFromServer(ssd);
+            time = ssd.time;
+            break;
+        case Time:
+            TimeData td = (TimeData)data;
+            syncTime = td.time;
+            timeAfterSync = 0;
+            timeBeforeSleep = System.currentTimeMillis();
+            time = syncTime;
+            break;
+        case GameEndedSignal:
+            controller.gameEnded((SendableSignal)data);
+            appendToSend(new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()));
+            break;
+        case ChatMessage:       controller.chatMessage((ChatMessageData)data);    break;
+        case LineDraw:          controller.lineDraw((LineDrawData)data);          break;
+        case FloodFill:         controller.floodFill((FloodFillData)data);        break;
+        case NewPlayerData:     controller.newPlayer((NewPlayerData)data);        break;
+        case TurnStarted:       controller.turnStarted((TurnStartedData)data);    break;
+        case GamePassword:      controller.setPassword((GamePasswordData)data);   break;
+        case TurnEndedSignal:   controller.turnEndedSignal((SendableSignal)data); break;
+        case TurnEndedData:     controller.turnEnded((TurnEndedData)data);        break;
+        case GameStoppedSignal: controller.gameStopped((SendableSignal)data);     break;
+        case GameStarted:       controller.gameStarted((GameStartedData)data);    break;
+        case TurnSkippedSignal: controller.turnSkipped((SendableSignal)data);     break;
+        case SkipRequestSignal: controller.skipRequest((SendableSignal)data);     break;
+        case PlayerQuit:        controller.playerQuit((PlayerQuitData)data);      break;
+        default: break;
+        }
+    }
+    
+    // thread function
+    private static void listening(){
         while(!Thread.interrupted()){
             try {
                 if(in.available() > 0){
-                    final SendableData input = SendableData.receive(in);
-                    switch(input.getType()){
-                    case StartServerData:
-                        StartServerData ssd = (StartServerData)input;
-                        controller.startInfoFromServer((StartServerData)input);
-                        time = ssd.time;
-                        break;
-                    case ChatMessage:
-                        controller.chatMessage((ChatMessageData)input);
-                        break;
-                    case LineDraw:
-                        controller.lineDraw((LineDrawData)input);
-                        break;
-                    case FloodFill:
-                        controller.floodFill((FloodFillData)input);
-                        break;
-                    case NewPlayerData:
-                        NewPlayerData npd = (NewPlayerData)input;
-                        controller.newPlayer(npd);
-                        break;
-                    case Time:
-                        TimeData td = (TimeData)input;
-                        syncTime = td.time;
-                        timeAfterSync = 0;
-                        timeBeforeSleep = System.currentTimeMillis();
-                        time = syncTime;
-                        break;
-                    case TurnStarted:
-                        controller.turnStarted((TurnStartedData)input);
-                        break;
-                    case GamePassword:
-                        controller.setPassword((GamePasswordData)input);
-                        break;
-                    case TurnEndedSignal:
-                        controller.turnEndedSignal((SendableSignal)input);
-                        break;
-                    case TurnEndedData:
-                        controller.turnEnded((TurnEndedData)input);
-                        break;
-                    case GameStoppedSignal:
-                        controller.gameStopped((SendableSignal)input);
-                        break;
-                    case GameStarted:
-                        controller.gameStarted((GameStartedData)input);
-                        break;
-                    case GameEndedSignal:
-                        controller.gameEnded((SendableSignal)input);
-                        sendMessage(new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()));
-                        break;
-                    case TurnSkippedSignal:
-                        controller.turnSkipped((SendableSignal)input);
-                        break;
-                    case SkipRequestSignal:
-                        controller.skipRequest((SendableSignal)input);
-                        break;
-                    case PlayerQuit:
-                        controller.playerQuit((PlayerQuitData)input);
-                        break;
-                    default:
-                        break;
-                    }
+                    SendableData data = SendableData.receive(in);
+                    menageReceivedData(data);
                 }
             } catch(IOException ex) {
                 quit();
@@ -273,9 +291,12 @@ public class Client {
     }
  
     public static void skipRequest(){
-        sendMessage(new SendableSignal(DataType.SkipRequestSignal, Client.getTime()));
+        appendToSend(new SendableSignal(DataType.SkipRequestSignal, Client.getTime()));
     }
     
+    /*
+        time synchronization
+    */
     public static long getTime(){
         return time;
     }
@@ -287,6 +308,7 @@ public class Client {
         timeAfterSync = 0;
         timeBeforeSleep = System.currentTimeMillis();
         boolean firstTime = true;
+        
         while(!Thread.interrupted()){
             long deltaTimeAfterSync = System.currentTimeMillis() - timeBeforeSleep;
             if(!firstTime && deltaTimeAfterSync < sleepTime/2){
@@ -303,9 +325,11 @@ public class Client {
                 Thread.currentThread().interrupt();
                 return;
             }
+            
+            // ping the server every ~1sec to make sure the connection is working
             sleepCounter++;
             if(sleepCounter % (1000/sleepTime) == 0){
-                sendMessage(new SendableSignal(DataType.TimeAcceptSignal, Client.getTime()));
+                appendToSend(new SendableSignal(DataType.TimeAcceptSignal, Client.getTime()));
             }
             
             firstTime = false;

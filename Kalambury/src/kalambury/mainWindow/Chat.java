@@ -150,7 +150,7 @@ public class Chat {
             long time = Client.getTime();
             SendableData mess = new ChatMessageData(nickName, chatMessage, time, Client.isHost());
             
-            Client.sendMessage(mess);
+            Client.appendToSend(mess);
             addPlayerChatMessage(nickName, chatMessage, time, Client.isHost(), true);
             
             Platform.runLater(()->{userInput.setText("");}); 
