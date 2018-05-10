@@ -7,6 +7,7 @@ import kalambury.mainWindow.drawingBoard.DrawingBoard;
 import kalambury.mainWindow.drawingBoard.DrawingTool;
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -34,7 +35,20 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
 import kalambury.client.Client;
+import kalambury.sendableData.ChatMessageData;
+import kalambury.sendableData.DataType;
+import kalambury.sendableData.FloodFillData;
+import kalambury.sendableData.GamePasswordData;
+import kalambury.sendableData.GameStartedData;
+import kalambury.sendableData.LineDrawData;
+import kalambury.sendableData.NewPlayerData;
+import kalambury.sendableData.PlayerQuitData;
+import kalambury.sendableData.SendableSignal;
+import kalambury.sendableData.TurnEndedData;
+import kalambury.sendableData.TurnStartedData;
 import kalambury.server.Server;
+import kalambury.server.SystemMessage;
+import kalambury.server.SystemMessageType;
 
 
 public class MainWindowController implements Initializable {
@@ -67,7 +81,7 @@ public class MainWindowController implements Initializable {
     @FXML private Canvas colorBrightnessCanvas;
     @FXML private Pane colorBrightnessPane;
     
-    @FXML private TurnLabel TurnLabel;
+    @FXML private TurnLabel turnLabel;
     @FXML private Label passwordLabelLabel;
     @FXML private Label passwordLabel;
     
@@ -158,6 +172,11 @@ public class MainWindowController implements Initializable {
         Server.skipTurn();
     }
     @FXML public void onSkipRequestButtonPressed(){
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Poprosiłeś o pominięcie tury",
+            Client.getTime(),
+            SystemMessageType.Information
+        ));
         Client.skipRequest();
     }
     @FXML public void onQuitGameButtonPressed(){
@@ -169,6 +188,145 @@ public class MainWindowController implements Initializable {
     }
     public TextField getChatInputField(){
         return chatInput;
+    }
+    
+    public void setPassword(GamePasswordData gpd){
+        Platform.runLater(() -> {
+            passwordLabel.setText(gpd != null ? gpd.password : "???");
+        });
+    }
+    public void playerQuit(PlayerQuitData pqd){
+        Platform.runLater(() -> {
+            turnLabel.setNumberOfSubTurns(Client.getPlayers().size());
+        });
+        Player player = Client.getPlayers().get(pqd.index);
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Gracz " + player.getNickName() + " wyszedł z gry",
+            pqd.time,
+            SystemMessageType.Information
+        ));
+        Client.getPlayers().remove(player);
+    }
+    public void skipRequest(SendableSignal signal){
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Gracz poprosił o pominięcie tury", signal.time, SystemMessageType.Information
+        ));
+    }
+    public void turnSkipped(SendableSignal signal){
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Tura została pominięta",
+            signal.time,
+            SystemMessageType.Information
+        ));
+    }
+    public void gameEnded(SendableSignal signal){
+        Platform.runLater(() -> {
+            drawingBoard.setDisable(true);
+            updateDrawingPlayer(-1);
+            timeLabel.setNew(0, 0);
+        });
+        String results = new String();
+        for(int j = 0; j < Client.getPlayers().size(); ++j){
+            for(int i = 0; i < 19; ++i){
+                results += " ";
+            }
+            results += Client.getPlayers().get(j).getNickName() + ": " + Integer.toString(Client.getPlayers().get(j).getScore());
+            if(j != Client.getPlayers().size() - 1){
+                results += "\n";
+            }
+        }
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Gra została zakończona. Wyniki:\n"+results, signal.time, SystemMessageType.Information
+        ));
+    }
+    public void gameStarted(GameStartedData gsd){
+        Platform.runLater(() -> {
+            turnLabel.start(Client.getPlayers().size(), gsd.numberOfTurns);
+        });
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Gra została rozpoczęta", gsd.time, SystemMessageType.Information
+        ));
+        for(int i = 0; i < Client.getPlayers().size(); ++i){
+            Client.getPlayers().get(i).setScore(0);
+        }
+    }
+    public void gameStopped(SendableSignal signal){
+        drawingBoard.setDisable(true);
+        updateDrawingPlayer(-1);
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Gra została zakończona przez hosta", signal.time, SystemMessageType.Information
+        ));
+        timeLabel.setNew(0, 0);
+    }
+    public void turnEndedSignal(SendableSignal signal){
+        drawingBoard.setDisable(true);
+        updateDrawingPlayer(-1);
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Koniec tury!", signal.time, SystemMessageType.Information
+        ));
+    }
+    public void turnEnded(TurnEndedData ted){
+        chat.handleNewSystemMessage(new SystemMessage(
+            ted.winnerNickName + " wygrał!",
+            ted.time,
+            SystemMessageType.Information
+        ));
+        for(int i = 0; i < Client.getPlayers().size(); ++i){
+            Client.getPlayers().get(i).setScore(ted.updatedScores.get(i));
+        }
+    }
+    public void turnStarted(TurnStartedData tsd){
+        Platform.runLater(() -> {
+            turnLabel.nextTurn();
+        });
+        drawingBoard.clear();
+        timeLabel.setNew(tsd.startTime, tsd.turnTime);
+        updateDrawingPlayer(tsd.drawingPlayerId);
+        if(tsd.isDrawing){
+            drawingBoard.setDisable(false);
+            chat.handleNewSystemMessage(new SystemMessage(
+                "Rysuj hasło!",
+                tsd.startTime,
+                SystemMessageType.Information
+            ));
+        } else {
+            drawingBoard.setDisable(true);
+            setPassword(null);
+            chat.handleNewSystemMessage(new SystemMessage(
+                "Zgaduj hasło!",
+                tsd.startTime,
+                SystemMessageType.Information
+            ));
+        }
+    }
+    public void newPlayer(NewPlayerData npd){
+        chat.handleNewSystemMessage(new SystemMessage(
+            npd.nickName + " dołączył do gry",
+            npd.time,
+            SystemMessageType.Information
+        ));
+    }
+    public void floodFill(FloodFillData ffd){
+        drawingBoard.floodFillRemote(ffd);
+    }
+    public void lineDraw(LineDrawData ldd){
+        drawingBoard.drawLineRemote(ldd);
+    }
+    public void chatMessage(ChatMessageData cmd){
+        chat.handleNewServerMessage(cmd);
+    }
+    
+    private void updateDrawingPlayer(int drawingId){
+        for(int i = 0; i < Client.getPlayers().size(); ++i){
+            Client.getPlayers().get(i).setIsDrawing(Client.getPlayers().get(i).getId() == drawingId);
+        }
+    }
+    public void quit(){
+        chat.clear();
+        drawingBoard.clear();
+        drawingBoard.setDisable(true);
+        timeLabel.setNew(0, 0);
+        setPassword(null);
     }
     
     public void startTimeLabelThread(){
@@ -255,7 +413,7 @@ public class MainWindowController implements Initializable {
         scaleGridPane(gridPane, scalingFactor);
         scaleGridPane(actionsGridPane, scalingFactor);
         scaleLabel(timeLabel, "System Bold", scalingFactor);
-        scaleLabel(TurnLabel, "System Bold", scalingFactor);
+        scaleLabel(turnLabel, "System Bold", scalingFactor);
         scaleLabel(passwordLabel, "System Regular", scalingFactor);
         scaleLabel(passwordLabelLabel, "System Bold", scalingFactor);
         scaleLabel(thicknessLabel, "System Bold", scalingFactor);
@@ -394,11 +552,7 @@ public class MainWindowController implements Initializable {
         stopButton.setDisable(true);
         skipButton.setDisable(true);
         
-        Client.setChat(chat);
-        Client.setDrawingBoard(drawingBoard);
-        Client.setWordLabel(passwordLabel);
-        Client.setTimeLabel(timeLabel);
-        Client.setTurnLabel(TurnLabel);
+        Client.setController(this);
         
         drawingBoard.setDisable(true);
     }    
