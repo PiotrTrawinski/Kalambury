@@ -254,13 +254,16 @@ public class Client {
             controller.gameEnded((SendableSignal)data);
             appendToSend(new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()));
             break;
+        case TurnEndedSignal:   
+            controller.turnEndedSignal((SendableSignal)data); 
+            appendToSend(new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()));
+            break;
         case ChatMessage:       controller.chatMessage((ChatMessageData)data);    break;
         case LineDraw:          controller.lineDraw((LineDrawData)data);          break;
         case FloodFill:         controller.floodFill((FloodFillData)data);        break;
         case NewPlayerData:     controller.newPlayer((NewPlayerData)data);        break;
         case TurnStarted:       controller.turnStarted((TurnStartedData)data);    break;
         case GamePassword:      controller.setPassword((GamePasswordData)data);   break;
-        case TurnEndedSignal:   controller.turnEndedSignal((SendableSignal)data); break;
         case TurnEndedData:     controller.turnEnded((TurnEndedData)data);        break;
         case GameStoppedSignal: controller.gameStopped((SendableSignal)data);     break;
         case GameStarted:       controller.gameStarted((GameStartedData)data);    break;
