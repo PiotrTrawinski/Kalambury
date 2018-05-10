@@ -330,11 +330,13 @@ public class MainWindowController implements Initializable {
         }
     }
     public void quit(){
-        chat.clear();
-        drawingBoard.clear();
-        drawingBoard.setDisable(true);
-        timeLabel.setNew(0, 0);
-        players.clear();
+        Platform.runLater(() -> {
+            chat.clear();
+            drawingBoard.clear();
+            drawingBoard.setDisable(true);
+            timeLabel.setNew(0, 0);
+            players.clear();
+        });
         setPassword(null);
     }
     

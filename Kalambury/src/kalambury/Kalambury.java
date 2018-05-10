@@ -2,6 +2,7 @@ package kalambury;
 
 import kalambury.welcomeWindow.WelcomeWindowController;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -57,10 +58,12 @@ public class Kalambury extends Application {
     }
     
     public void showWelcomeWindow(){
-        mainStage.close();
-        welcomeStage.show();
-        welcomeStage.setMinHeight(welcomeStage.getHeight());
-        welcomeStage.setMinWidth(welcomeStage.getWidth());
+        Platform.runLater(() -> {
+            mainStage.close();
+            welcomeStage.show();
+            welcomeStage.setMinHeight(welcomeStage.getHeight());
+            welcomeStage.setMinWidth(welcomeStage.getWidth());
+        });
     }
     
     public MainWindowController getMainWindowController(){

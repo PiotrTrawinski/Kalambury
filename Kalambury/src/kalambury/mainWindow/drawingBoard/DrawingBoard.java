@@ -31,7 +31,7 @@ public class DrawingBoard extends ResizableCanvas{
     }
     
     private void sendToServer(SendableData sendableData){
-        Client.sendMessage(sendableData);
+        Client.appendToSend(sendableData);
     }
     
     public void mousePressed(int x, int y){
