@@ -38,8 +38,6 @@ import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
 import kalambury.client.Client;
 import kalambury.sendableData.ChatMessageData;
-import kalambury.sendableData.DataType;
-import static kalambury.sendableData.DataType.StartServerData;
 import kalambury.sendableData.FloodFillData;
 import kalambury.sendableData.GamePasswordData;
 import kalambury.sendableData.GameStartedData;
@@ -108,7 +106,8 @@ public class MainWindowController implements Initializable {
     
     private ColorWidget colorWidget;
     private Chat chat;
-    private static ObservableList<Player> players = FXCollections.observableArrayList();
+    private static final ObservableList<Player> players = FXCollections.observableArrayList();
+    
     
     /*
         Mouse events
@@ -133,6 +132,9 @@ public class MainWindowController implements Initializable {
     }
     
     
+    /*
+        drawing toolbox buttons clicked
+    */
     @FXML private void onPencilButtonClicked(){
         drawingBoard.setDrawingTool(DrawingTool.PENCIL);
         pencilButton.setStyle("-fx-background-color: #AAAAAA;");
@@ -152,6 +154,10 @@ public class MainWindowController implements Initializable {
         bucketButton.setStyle("-fx-background-color: #AAAAAA;");
     }
     
+    
+    /*
+        host buttons clicked
+    */
     @FXML public void onPlayButtonPressed(){
         Server.startGame();
         playButton.setDisable(true);
@@ -175,6 +181,10 @@ public class MainWindowController implements Initializable {
     @FXML public void onSkipButtonPressed(){
         Server.skipTurn();
     }
+    
+    /*
+        client specific buttons clicked 
+    */
     @FXML public void onSkipRequestButtonPressed(){
         chat.handleNewSystemMessage(new SystemMessage(
             "Poprosiłeś o pominięcie tury",
@@ -183,17 +193,27 @@ public class MainWindowController implements Initializable {
         ));
         Client.skipRequest();
     }
+    
+    
+    /*
+        buttons clicked
+    */
     @FXML public void onQuitGameButtonPressed(){
         Client.quit();
     }
     
+    
+    /*
+        chat events
+    */
     @FXML private void enteredChatMessage(){
         chat.handleNewClientMessage();
     }
-    public TextField getChatInputField(){
-        return chatInput;
-    }
+
     
+    /*
+        update depending on data received from server
+    */
     public void setPassword(GamePasswordData gpd){
         Platform.runLater(() -> {
             passwordLabel.setText(gpd != null ? gpd.password : "???");
@@ -324,12 +344,17 @@ public class MainWindowController implements Initializable {
     public void startInfoFromServer(StartServerData ssd){
         players.addAll(ssd.players);
     }
-    
     private void updateDrawingPlayer(int drawingId){
         for(int i = 0; i < players.size(); ++i){
             players.get(i).setIsDrawing(players.get(i).getId() == drawingId);
         }
     }
+    
+    
+    /*
+        quit - clear all resources so when user enters different game
+        there is nothing left over from the previous one
+    */
     public void quit(){
         chat.clear();
         drawingBoard.clear();
@@ -341,16 +366,26 @@ public class MainWindowController implements Initializable {
         setPassword(null);
     }
     
-    public ObservableList<Player> getPlayers(){
-        return players;
-    }
     
+    /*
+        seperate thread for time-showing label to update
+    */
     public void startTimeLabelThread(){
         Thread timeLabelThread = new Thread(()->timeLabel.startUpdating());
         timeLabelThread.setDaemon(true);
         timeLabelThread.start();
     }
     
+    
+    public ObservableList<Player> getPlayers(){
+        return players;
+    }
+    
+    
+    /*
+        ui scaling so all elements are of the same size (screen procentage wise)
+        no matter what resolution user has.
+    */
     private void scaleGridPane(GridPane gridPane, double scalingFactor){
         for(int i = 0; i < gridPane.getColumnConstraints().size(); ++i){
             ColumnConstraints colCon = gridPane.getColumnConstraints().get(i);
@@ -396,37 +431,7 @@ public class MainWindowController implements Initializable {
         canvas.setHeight((int)(canvas.getHeight()*scalingFactor));
     }
     
-    public void setupHost(){
-        Server.setController(this);
-        playButton.setDisable(false);
-        pauseButton.setDisable(true);
-        stopButton.setDisable(true);
-        skipButton.setDisable(true);
-        actionsGridPane.getChildren().remove(playButton);
-        actionsGridPane.getChildren().remove(pauseButton);
-        actionsGridPane.getChildren().remove(stopButton);
-        actionsGridPane.getChildren().remove(skipButton);
-        actionsGridPane.getChildren().remove(skipRequestButton);
-        actionsGridPane.getChildren().add(playButton);
-        actionsGridPane.getChildren().add(pauseButton);
-        actionsGridPane.getChildren().add(stopButton);
-        actionsGridPane.getChildren().add(skipButton);
-    }
-    public void setupClient(){
-        actionsGridPane.getChildren().remove(playButton);
-        actionsGridPane.getChildren().remove(pauseButton);
-        actionsGridPane.getChildren().remove(stopButton);
-        actionsGridPane.getChildren().remove(skipButton);
-        actionsGridPane.getChildren().remove(skipRequestButton);
-        actionsGridPane.getChildren().add(skipRequestButton);
-    }
-    
-    
-    @Override public void initialize(URL url, ResourceBundle rb) { 
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        double width = screenSize.getWidth();
-        double height = screenSize.getHeight();
-        double scalingFactor = width/1366.0;
+    private void scaleWidgetsToScreen(double scalingFactor){
         scaleGridPane(gridPane, scalingFactor);
         scaleGridPane(actionsGridPane, scalingFactor);
         scaleLabel(timeLabel, "System Bold", scalingFactor);
@@ -456,8 +461,50 @@ public class MainWindowController implements Initializable {
         chosenColorView.setHeight(gridPane.getRowConstraints().get(1).getMaxHeight()-4);
         colorChooser.setWidth(gridPane.getColumnConstraints().get(4).getMaxWidth()-4);
         colorChooser.setHeight(gridPane.getRowConstraints().get(0).getMaxHeight()+gridPane.getRowConstraints().get(1).getMaxHeight()-4);
+    }
+    
+    
+    /*
+        host and client special views
+    */
+    public void setupHost(){
+        Server.setController(this);
         
-         
+        playButton.setDisable(false);
+        pauseButton.setDisable(true);
+        stopButton.setDisable(true);
+        skipButton.setDisable(true);
+        
+        // host has play/pause/stop/skip buttons
+        actionsGridPane.getChildren().remove(playButton);
+        actionsGridPane.getChildren().remove(pauseButton);
+        actionsGridPane.getChildren().remove(stopButton);
+        actionsGridPane.getChildren().remove(skipButton);
+        actionsGridPane.getChildren().remove(skipRequestButton);
+        actionsGridPane.getChildren().add(playButton);
+        actionsGridPane.getChildren().add(pauseButton);
+        actionsGridPane.getChildren().add(stopButton);
+        actionsGridPane.getChildren().add(skipButton);
+    }
+    public void setupClient(){
+        // client has skip request button
+        actionsGridPane.getChildren().remove(playButton);
+        actionsGridPane.getChildren().remove(pauseButton);
+        actionsGridPane.getChildren().remove(stopButton);
+        actionsGridPane.getChildren().remove(skipButton);
+        actionsGridPane.getChildren().remove(skipRequestButton);
+        actionsGridPane.getChildren().add(skipRequestButton);
+    }
+    
+    
+    
+    @Override public void initialize(URL url, ResourceBundle rb) { 
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        double width = screenSize.getWidth();
+        double height = screenSize.getHeight();
+        double scalingFactor = width/1366.0;
+        scaleWidgetsToScreen(scalingFactor);
+  
         startTimeLabelThread();
         
         // colorChooser
@@ -497,6 +544,7 @@ public class MainWindowController implements Initializable {
         drawingBoard.bindSize(pane.widthProperty(), pane.heightProperty());
         drawingBoard.setAspectRatio(16.0/9.0);
         drawingBoard.setColorWidget(colorWidget);
+        drawingBoard.setDisable(true);
         
         // chat
         Font font = chatInput.getFont();
@@ -564,13 +612,6 @@ public class MainWindowController implements Initializable {
         });
         scoreTableView.setItems(players);
         
-        playButton.setDisable(false);
-        pauseButton.setDisable(true);
-        stopButton.setDisable(true);
-        skipButton.setDisable(true);
-        
         Client.setController(this);
-        
-        drawingBoard.setDisable(true);
     }    
 }
