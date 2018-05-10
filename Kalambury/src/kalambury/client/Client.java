@@ -61,8 +61,6 @@ public class Client {
     private static final Lock dataToSendMutex = new ReentrantLock(true);
     
     private static boolean isHostFlag;
-
-    private static ObservableList<Player> players = FXCollections.observableArrayList();
     
     private static ExecutorService executor;
     
@@ -153,7 +151,6 @@ public class Client {
         Server.quit();
         Platform.runLater(() -> {
             controller.quit();
-            players.clear();
             try {
                 in.close();
                 out.close();
@@ -210,7 +207,7 @@ public class Client {
                     switch(input.getType()){
                     case StartServerData:
                         StartServerData ssd = (StartServerData)input;
-                        players.addAll(ssd.players);
+                        controller.startInfoFromServer((StartServerData)input);
                         time = ssd.time;
                         break;
                     case ChatMessage:
@@ -224,7 +221,6 @@ public class Client {
                         break;
                     case NewPlayerData:
                         NewPlayerData npd = (NewPlayerData)input;
-                        players.add(new Player(npd.nickName, 0, npd.id));
                         controller.newPlayer(npd);
                         break;
                     case Time:
@@ -278,10 +274,6 @@ public class Client {
  
     public static void skipRequest(){
         sendMessage(new SendableSignal(DataType.SkipRequestSignal, Client.getTime()));
-    }
-    
-    public static ObservableList<Player> getPlayers(){
-        return players;
     }
     
     public static long getTime(){

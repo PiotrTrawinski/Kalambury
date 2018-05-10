@@ -10,6 +10,8 @@ import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Point2D;
@@ -37,6 +39,7 @@ import javafx.util.Callback;
 import kalambury.client.Client;
 import kalambury.sendableData.ChatMessageData;
 import kalambury.sendableData.DataType;
+import static kalambury.sendableData.DataType.StartServerData;
 import kalambury.sendableData.FloodFillData;
 import kalambury.sendableData.GamePasswordData;
 import kalambury.sendableData.GameStartedData;
@@ -44,6 +47,7 @@ import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.NewPlayerData;
 import kalambury.sendableData.PlayerQuitData;
 import kalambury.sendableData.SendableSignal;
+import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
 import kalambury.server.Server;
@@ -104,7 +108,7 @@ public class MainWindowController implements Initializable {
     
     private ColorWidget colorWidget;
     private Chat chat;
-    
+    private static ObservableList<Player> players = FXCollections.observableArrayList();
     
     /*
         Mouse events
@@ -197,15 +201,15 @@ public class MainWindowController implements Initializable {
     }
     public void playerQuit(PlayerQuitData pqd){
         Platform.runLater(() -> {
-            turnLabel.setNumberOfSubTurns(Client.getPlayers().size());
+            turnLabel.setNumberOfSubTurns(players.size());
         });
-        Player player = Client.getPlayers().get(pqd.index);
+        Player player = players.get(pqd.index);
         chat.handleNewSystemMessage(new SystemMessage(
             "Gracz " + player.getNickName() + " wyszedł z gry",
             pqd.time,
             SystemMessageType.Information
         ));
-        Client.getPlayers().remove(player);
+        players.remove(player);
     }
     public void skipRequest(SendableSignal signal){
         chat.handleNewSystemMessage(new SystemMessage(
@@ -226,12 +230,12 @@ public class MainWindowController implements Initializable {
             timeLabel.setNew(0, 0);
         });
         String results = new String();
-        for(int j = 0; j < Client.getPlayers().size(); ++j){
+        for(int j = 0; j < players.size(); ++j){
             for(int i = 0; i < 19; ++i){
                 results += " ";
             }
-            results += Client.getPlayers().get(j).getNickName() + ": " + Integer.toString(Client.getPlayers().get(j).getScore());
-            if(j != Client.getPlayers().size() - 1){
+            results += players.get(j).getNickName() + ": " + Integer.toString(players.get(j).getScore());
+            if(j != players.size() - 1){
                 results += "\n";
             }
         }
@@ -241,13 +245,13 @@ public class MainWindowController implements Initializable {
     }
     public void gameStarted(GameStartedData gsd){
         Platform.runLater(() -> {
-            turnLabel.start(Client.getPlayers().size(), gsd.numberOfTurns);
+            turnLabel.start(players.size(), gsd.numberOfTurns);
         });
         chat.handleNewSystemMessage(new SystemMessage(
             "Gra została rozpoczęta", gsd.time, SystemMessageType.Information
         ));
-        for(int i = 0; i < Client.getPlayers().size(); ++i){
-            Client.getPlayers().get(i).setScore(0);
+        for(int i = 0; i < players.size(); ++i){
+            players.get(i).setScore(0);
         }
     }
     public void gameStopped(SendableSignal signal){
@@ -271,8 +275,8 @@ public class MainWindowController implements Initializable {
             ted.time,
             SystemMessageType.Information
         ));
-        for(int i = 0; i < Client.getPlayers().size(); ++i){
-            Client.getPlayers().get(i).setScore(ted.updatedScores.get(i));
+        for(int i = 0; i < players.size(); ++i){
+            players.get(i).setScore(ted.updatedScores.get(i));
         }
     }
     public void turnStarted(TurnStartedData tsd){
@@ -300,6 +304,7 @@ public class MainWindowController implements Initializable {
         }
     }
     public void newPlayer(NewPlayerData npd){
+        players.add(new Player(npd.nickName, 0, npd.id));
         chat.handleNewSystemMessage(new SystemMessage(
             npd.nickName + " dołączył do gry",
             npd.time,
@@ -315,10 +320,13 @@ public class MainWindowController implements Initializable {
     public void chatMessage(ChatMessageData cmd){
         chat.handleNewServerMessage(cmd);
     }
+    public void startInfoFromServer(StartServerData ssd){
+        players.addAll(ssd.players);
+    }
     
     private void updateDrawingPlayer(int drawingId){
-        for(int i = 0; i < Client.getPlayers().size(); ++i){
-            Client.getPlayers().get(i).setIsDrawing(Client.getPlayers().get(i).getId() == drawingId);
+        for(int i = 0; i < players.size(); ++i){
+            players.get(i).setIsDrawing(players.get(i).getId() == drawingId);
         }
     }
     public void quit(){
@@ -326,7 +334,12 @@ public class MainWindowController implements Initializable {
         drawingBoard.clear();
         drawingBoard.setDisable(true);
         timeLabel.setNew(0, 0);
+        players.clear();
         setPassword(null);
+    }
+    
+    public ObservableList<Player> getPlayers(){
+        return players;
     }
     
     public void startTimeLabelThread(){
@@ -381,6 +394,7 @@ public class MainWindowController implements Initializable {
     }
     
     public void setupHost(){
+        Server.setController(this);
         playButton.setDisable(false);
         pauseButton.setDisable(true);
         stopButton.setDisable(true);
@@ -545,7 +559,7 @@ public class MainWindowController implements Initializable {
                 };
             }
         });
-        scoreTableView.setItems(Client.getPlayers());
+        scoreTableView.setItems(players);
         
         playButton.setDisable(false);
         pauseButton.setDisable(true);
