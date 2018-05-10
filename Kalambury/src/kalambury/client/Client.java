@@ -1,6 +1,5 @@
 package kalambury.client;
 
-import kalambury.mainWindow.Chat;
 import kalambury.sendableData.SendableData;
 import kalambury.sendableData.ChatMessageData;
 import java.io.BufferedInputStream;
@@ -22,10 +21,8 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.Label;
 import kalambury.Kalambury;
+import kalambury.mainWindow.MainWindowController;
 import kalambury.mainWindow.Player;
-import kalambury.mainWindow.TimeLabel;
-import kalambury.mainWindow.TurnLabel;
-import kalambury.mainWindow.drawingBoard.DrawingBoard;
 import kalambury.sendableData.DataType;
 import static kalambury.sendableData.DataType.TurnEndedSignal;
 import kalambury.sendableData.FloodFillData;
@@ -40,12 +37,11 @@ import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
 import kalambury.sendableData.GameStartedData;
 import kalambury.server.Server;
-import kalambury.server.SystemMessage;
-import kalambury.server.SystemMessageType;
 
 
 public class Client {
     private static Kalambury kalambury;
+    private static MainWindowController controller;
     
     private static String ip;
     private static String nick;
@@ -65,13 +61,6 @@ public class Client {
     private static final Lock dataToSendMutex = new ReentrantLock(true);
     
     private static boolean isHostFlag;
-    
-    private static Label wordLabel;
-    private static TurnLabel turnLabel;
-    private static Chat chat;
-    private static DrawingBoard drawingBoard;
-    private static TimeLabel timeLabel;
-    private static ObservableList<Player> players = FXCollections.observableArrayList();
     
     private static ExecutorService executor;
     
@@ -132,20 +121,8 @@ public class Client {
     public static String getNick(){
         return nick;
     }
-    public static void setChat(Chat chat){
-        Client.chat = chat;
-    }
-    public static void setWordLabel(Label wordLabel){
-        Client.wordLabel = wordLabel;
-    }
-    public static void setDrawingBoard(DrawingBoard drawingBoard){
-        Client.drawingBoard = drawingBoard;
-    }
-    public static void setTimeLabel(TimeLabel timeLabel){
-        Client.timeLabel = timeLabel;
-    }
-    public static void setTurnLabel(TurnLabel turnLabel){
-        Client.turnLabel = turnLabel;
+    public static void setController(MainWindowController controller){
+        Client.controller = controller;
     }
     public static void setSocket(Socket s){
         Client.socket = s;
@@ -173,11 +150,7 @@ public class Client {
         }
         Server.quit();
         Platform.runLater(() -> {
-            chat.clear();
-            drawingBoard.clear();
-            drawingBoard.setDisable(true);
-            timeLabel.setNew(0, 0);
-            players.clear();
+            controller.quit();
             try {
                 in.close();
                 out.close();
@@ -186,9 +159,6 @@ public class Client {
 
             }
             socket = null;
-            Platform.runLater(() -> {
-                wordLabel.setText("???");
-            });
             kalambury.showWelcomeWindow();
         });
     }
@@ -237,29 +207,21 @@ public class Client {
                     switch(input.getType()){
                     case StartServerData:
                         StartServerData ssd = (StartServerData)input;
-                        players.addAll(ssd.players);
+                        controller.startInfoFromServer((StartServerData)input);
                         time = ssd.time;
                         break;
                     case ChatMessage:
-                        ChatMessageData cmd = (ChatMessageData)input;
-                        chat.handleNewServerMessage(cmd);
+                        controller.chatMessage((ChatMessageData)input);
                         break;
                     case LineDraw:
-                        LineDrawData ldd = (LineDrawData)input;
-                        drawingBoard.drawLineRemote(ldd);
+                        controller.lineDraw((LineDrawData)input);
                         break;
                     case FloodFill:
-                        FloodFillData ffd = (FloodFillData)input;
-                        drawingBoard.floodFillRemote(ffd);
+                        controller.floodFill((FloodFillData)input);
                         break;
                     case NewPlayerData:
                         NewPlayerData npd = (NewPlayerData)input;
-                        players.add(new Player(npd.nickName, 0, npd.id));
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            npd.nickName + " dołączył do gry",
-                            npd.time,
-                            SystemMessageType.Information
-                        ));
+                        controller.newPlayer(npd);
                         break;
                     case Time:
                         TimeData td = (TimeData)input;
@@ -269,132 +231,35 @@ public class Client {
                         time = syncTime;
                         break;
                     case TurnStarted:
-                        Platform.runLater(() -> {
-                            turnLabel.nextTurn();
-                        });
-                        TurnStartedData tsd = (TurnStartedData)input;
-                        drawingBoard.clear();
-                        timeLabel.setNew(tsd.startTime, tsd.turnTime);
-                        updateDrawingPlayer(tsd.drawingPlayerId);
-                        if(tsd.isDrawing){
-                            drawingBoard.setDisable(false);
-                            chat.handleNewSystemMessage(new SystemMessage(
-                                "Rysuj hasło!",
-                                tsd.startTime,
-                                SystemMessageType.Information
-                            ));
-                        } else {
-                            drawingBoard.setDisable(true);
-                            Platform.runLater(()->{
-                                wordLabel.setText("???");
-                            });
-                            chat.handleNewSystemMessage(new SystemMessage(
-                                "Zgaduj hasło!",
-                                tsd.startTime,
-                                SystemMessageType.Information
-                            ));
-                        }
+                        controller.turnStarted((TurnStartedData)input);
                         break;
                     case GamePassword:
-                        GamePasswordData gpd = (GamePasswordData)input;
-                        Platform.runLater(()->{
-                            wordLabel.setText(gpd.password);
-                        });
+                        controller.setPassword((GamePasswordData)input);
                         break;
                     case TurnEndedSignal:
-                        long tesTime = ((SendableSignal)input).time;
-                        drawingBoard.setDisable(true);
-                        updateDrawingPlayer(-1);
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            "Koniec tury!",
-                            tesTime,
-                            SystemMessageType.Information
-                        ));
-                        sendMessage(new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()));
+                        controller.turnEndedSignal((SendableSignal)input);
                         break;
                     case TurnEndedData:
-                        TurnEndedData ted = (TurnEndedData)input;
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            ted.winnerNickName + " wygrał!",
-                            ted.time,
-                            SystemMessageType.Information
-                        ));
-                        for(int i = 0; i < players.size(); ++i){
-                            players.get(i).setScore(ted.updatedScores.get(i));
-                        }
+                        controller.turnEnded((TurnEndedData)input);
                         break;
                     case GameStoppedSignal:
-                        drawingBoard.setDisable(true);
-                        updateDrawingPlayer(-1);
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            "Gra została zakończona przez hosta",
-                            ((SendableSignal)input).time,
-                            SystemMessageType.Information
-                        ));
-                        timeLabel.setNew(0, 0);
+                        controller.gameStopped((SendableSignal)input);
                         break;
                     case GameStarted:
-                        GameStartedData gsd = (GameStartedData)input;
-                        Platform.runLater(() -> {
-                            turnLabel.start(players.size(), gsd.numberOfTurns);
-                        });
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            "Gra została rozpoczęta",
-                            gsd.time,
-                            SystemMessageType.Information
-                        ));
-                        for(int i = 0; i < players.size(); ++i){
-                            players.get(i).setScore(0);
-                        }
+                        controller.gameStarted((GameStartedData)input);
                         break;
                     case GameEndedSignal:
-                        Platform.runLater(() -> {
-                            drawingBoard.setDisable(true);
-                            updateDrawingPlayer(-1);
-                            timeLabel.setNew(0, 0);
-                        });
-                        String results = new String();
-                        for(int j = 0; j < players.size(); ++j){
-                            for(int i = 0; i < 19; ++i){
-                                results += " ";
-                            }
-                            results += players.get(j).getNickName() + ": " + Integer.toString(players.get(j).getScore());
-                            if(j != players.size() - 1){
-                                results += "\n";
-                            }
-                        }
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            "Gra została zakończona. Wyniki:\n"+results,
-                            ((SendableSignal)input).time,
-                            SystemMessageType.Information
-                        ));
+                        controller.gameEnded((SendableSignal)input);
+                        sendMessage(new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()));
                         break;
                     case TurnSkippedSignal:
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            "Tura została pominięta",
-                            ((SendableSignal)input).time,
-                            SystemMessageType.Information
-                        ));
+                        controller.turnSkipped((SendableSignal)input);
                         break;
                     case SkipRequestSignal:
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            "Gracz poprosił o pominięcie tury",
-                            ((SendableSignal)input).time,
-                            SystemMessageType.Information
-                        ));
+                        controller.skipRequest((SendableSignal)input);
                         break;
                     case PlayerQuit:
-                        Platform.runLater(() -> {
-                            turnLabel.setNumberOfSubTurns(players.size());
-                        });
-                        PlayerQuitData pqd = (PlayerQuitData)input;
-                        Player player = players.get(pqd.index);
-                        chat.handleNewSystemMessage(new SystemMessage(
-                            "Gracz " + player.getNickName() + " wyszedł z gry",
-                            pqd.time,
-                            SystemMessageType.Information
-                        ));
-                        players.remove(player);
+                        controller.playerQuit((PlayerQuitData)input);
                         break;
                     default:
                         break;
@@ -408,25 +273,7 @@ public class Client {
     }
  
     public static void skipRequest(){
-        chat.handleNewSystemMessage(new SystemMessage(
-            "Poprosiłeś o pominięcie tury",
-            Client.getTime(),
-            SystemMessageType.Information
-        ));
         sendMessage(new SendableSignal(DataType.SkipRequestSignal, Client.getTime()));
-    }
-    
-    public static void updateDrawingPlayer(int drawingId){
-        for(int i = 0; i < players.size(); ++i){
-            players.get(i).setIsDrawing(players.get(i).getId() == drawingId);
-        }
-    }
-    
-    public static ObservableList<Player> getPlayers(){
-        return players;
-    }
-    public static void addPlayer(Player player){
-        players.add(player);
     }
     
     public static long getTime(){

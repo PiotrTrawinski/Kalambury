@@ -20,6 +20,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import kalambury.mainWindow.MainWindowController;
 import kalambury.sendableData.ChatMessageData;
 import kalambury.sendableData.DataType;
 import kalambury.sendableData.GamePasswordData;
@@ -31,6 +32,8 @@ import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
 
 public class Server {
+    private static MainWindowController controller;
+    
     private static Thread mainThread;
     private static Thread handleIncomingDataThread;
     private static Thread sendOutDataThread;
@@ -113,6 +116,10 @@ public class Server {
         }
     }
     
+    public static void setController(MainWindowController controller){
+        Server.controller = controller;
+    }
+    
     private static int createNewId(){
         Random random = new Random();
         boolean uniqueId = true;
@@ -137,7 +144,7 @@ public class Server {
         newPlayerData.id = createNewId();
         newPlayerData.time = Client.getTime();
         playerIndexes.put(newPlayerData.id, clientsCount);
-        StartServerData startServerData = new StartServerData(Client.getPlayers(), Client.getTime());
+        StartServerData startServerData = new StartServerData(controller.getPlayers(), Client.getTime());
         addLastMessageToHandle(new ServerMessage(startServerData, ServerMessage.ReceiverType.One, clientsCount));
 
         clientsCount++;
@@ -198,8 +205,8 @@ public class Server {
                         acceptEndSignalCount = -1;
                         String winnerNick = game.endTurn();
                         ArrayList<Integer> updatedScores = new ArrayList<>();
-                        for(int i = 0; i < Client.getPlayers().size(); ++i){
-                            updatedScores.add(Client.getPlayers().get(i).getScore());
+                        for(int i = 0; i < controller.getPlayers().size(); ++i){
+                            updatedScores.add(controller.getPlayers().get(i).getScore());
                         }
                         TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick, Client.getTime());
                         sendAll(ted);
@@ -385,7 +392,7 @@ public class Server {
     }
     
     public static void startGame(){
-        game = new Game(maxClients,600,90,3,Client.getPlayers());
+        game = new Game(maxClients,600,90,3,controller.getPlayers());
         game.start();
         addLastMessageToHandle(new ServerMessage(
             new GameStartedData(3, Client.getTime()),
