@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import kalambury.sendableData.ChatMessageData;
 import kalambury.sendableData.DataType;
 import kalambury.sendableData.GamePasswordData;
+import kalambury.sendableData.GameStartedData;
 import kalambury.sendableData.PlayerQuitData;
 import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.TimeData;
@@ -174,13 +175,21 @@ public class Server {
                     acceptEndSignalCount = -1;
                     sendAll(data);
                     int drawingPlayerId = game.chooseNextPlayer();
-                    int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
-                    GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-                    TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
-                    sendTo(tsd, drawingPlayerIndex);
-                    sendTo(passwordData, drawingPlayerIndex);
-                    tsd.isDrawing = false;
-                    sendExcept(tsd, drawingPlayerIndex);
+                    if(drawingPlayerId != -1){
+                        int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
+                        GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+                        TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
+                        sendTo(tsd, drawingPlayerIndex);
+                        sendTo(passwordData, drawingPlayerIndex);
+                        tsd.isDrawing = false;
+                        sendExcept(tsd, drawingPlayerIndex);
+                    } else {
+                        game = null;
+                        addLastMessageToHandle(new ServerMessage(
+                            new SendableSignal(DataType.GameEndedSignal, Client.getTime()),
+                            ServerMessage.ReceiverType.All
+                        ));
+                    }
                     break;
                 }case TurnEndedAcceptSignal:{
                     acceptEndSignalCount++;
@@ -196,13 +205,21 @@ public class Server {
                         sendAll(ted);
                         
                         int drawingPlayerId = game.chooseNextPlayer();
-                        int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
-                        GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-                        TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
-                        sendTo(tsd, drawingPlayerIndex);
-                        sendTo(passwordData, drawingPlayerIndex);
-                        tsd.isDrawing = false;
-                        sendExcept(tsd, drawingPlayerIndex);
+                        if(drawingPlayerId != -1){
+                            int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
+                            GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+                            TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
+                            sendTo(tsd, drawingPlayerIndex);
+                            sendTo(passwordData, drawingPlayerIndex);
+                            tsd.isDrawing = false;
+                            sendExcept(tsd, drawingPlayerIndex);
+                        } else {
+                            game = null;
+                            addLastMessageToHandle(new ServerMessage(
+                                new SendableSignal(DataType.GameEndedSignal, Client.getTime()),
+                                ServerMessage.ReceiverType.All
+                            ));
+                        }
                     }
                     break;
                 }case ChatMessage:
@@ -328,10 +345,7 @@ public class Server {
             sendTo(data, i);
         }
     }
-    
-    public static Game getGame(){
-        return game;
-    }
+
     public static void handleIncomingData(){
         while(!Thread.interrupted()){
             for(int i = 0; i < clientsCount; i++){ // for every client
@@ -371,10 +385,10 @@ public class Server {
     }
     
     public static void startGame(){
-        game = new Game(maxClients,600,90,Client.getPlayers());
+        game = new Game(maxClients,600,90,3,Client.getPlayers());
         game.start();
         addLastMessageToHandle(new ServerMessage(
-            new SendableSignal(DataType.GameStartedSignal, Client.getTime()), 
+            new GameStartedData(3, Client.getTime()),
             ServerMessage.ReceiverType.All
         ));
         int drawingPlayerId = game.chooseNextPlayer();

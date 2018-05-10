@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import javafx.collections.ObservableList;
 import kalambury.mainWindow.Player;
-import kalambury.mainWindow.TimeLabel;
 import kalambury.server.Server;
 
 
@@ -16,27 +15,29 @@ public class Game {
     private final List<Integer> playersIdSequence;
     private final int round;
     private final int maxPoints;
+    private final int numberOfFullTurns;
+    private int currentSubTurn;
+    private int currentTurn;
     private final int maxTimeSeconds;
     private String currentPassword;
     private int currentlyDrawingUserID;
     private final int NO_ID = -1;
     private final RandomFileReader randomGenerator = new RandomFileReader("slowa.txt",'\n');
-    TimeLabel gameTimeLabel;
     
     long winnerTime;
     int winnerId = NO_ID;
     
-    public Game(int maxPlayers, int maxPoints, int maxTimeSeconds, ObservableList<Player> players){
+    public Game(int maxPlayers, int maxPoints, int maxTimeSeconds, int numberOfFullTurns, ObservableList<Player> players){
         this.maxTimeSeconds = maxTimeSeconds;
         this.maxPoints = maxPoints;
         this.round = 0;
+        this.numberOfFullTurns = numberOfFullTurns;
         this.players = players;
-        this.currentlyDrawingUserID = NO_ID;
+        currentlyDrawingUserID = NO_ID;
         playersIdSequence = new ArrayList<>();
         winnerTime = 0;
-    }
-    public void setTimeLabel(TimeLabel timeLabel){
-        this.gameTimeLabel = timeLabel;
+        currentSubTurn = 0;
+        currentTurn = 0;
     }
     
     public void start(){
@@ -44,8 +45,20 @@ public class Game {
             playersIdSequence.add(players.get(i).getId());
         }
         Collections.shuffle(playersIdSequence);
+        currentTurn = 1;
+        currentSubTurn = 0;
     }
     public int chooseNextPlayer(){
+        currentSubTurn++;
+        if (currentSubTurn > players.size()){
+            currentSubTurn = 1;
+            currentTurn++;
+        }
+        if (currentTurn > numberOfFullTurns){
+            // signal the end of game
+            return -1;
+        }
+        
         Integer pId = playersIdSequence.remove(0);
         playersIdSequence.add(pId);
         currentlyDrawingUserID = pId;
@@ -82,6 +95,7 @@ public class Game {
         );
         int tempWinnerId = winnerId;
         clearTurnWinner();
+        
         return players.get(Server.getPlayerIndex(tempWinnerId)).getNickName();
     }
     
