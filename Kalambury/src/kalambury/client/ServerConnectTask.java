@@ -5,7 +5,7 @@ import java.net.Socket;
 import javafx.concurrent.Task;
 
 
-public class ServerConnectTask extends Task<ConnectResult> {
+public class ServerConnectTask extends Task<Void> {
     String ip;
     int port;
     
@@ -14,7 +14,7 @@ public class ServerConnectTask extends Task<ConnectResult> {
         this.port = port;
     }
     
-    @Override protected ConnectResult call(){
+    @Override protected Void call(){
          try{
             Socket socket = new Socket(ip, port);
             Client.setSocket(socket);

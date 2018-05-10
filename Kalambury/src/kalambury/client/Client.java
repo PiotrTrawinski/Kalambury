@@ -81,7 +81,7 @@ public class Client {
         Client.isHostFlag = isHost;
         
         // try to connect to the server
-        Task<ConnectResult> serverConnectTask = new ServerConnectTask(ip, port);
+        Task<Void> serverConnectTask = new ServerConnectTask(ip, port);
         executor = Executors.newSingleThreadExecutor();
         executor.submit(serverConnectTask);
         
