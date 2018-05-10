@@ -226,9 +226,10 @@ public class MainWindowController implements Initializable {
     public void gameEnded(SendableSignal signal){
         Platform.runLater(() -> {
             drawingBoard.setDisable(true);
-            updateDrawingPlayer(-1);
             timeLabel.setNew(0, 0);
         });
+        updateDrawingPlayer(-1);
+        
         String results = new String();
         for(int j = 0; j < players.size(); ++j){
             for(int i = 0; i < 19; ++i){
@@ -330,12 +331,12 @@ public class MainWindowController implements Initializable {
         }
     }
     public void quit(){
+        chat.clear();
+        drawingBoard.clear();
+        players.clear();
         Platform.runLater(() -> {
-            chat.clear();
-            drawingBoard.clear();
             drawingBoard.setDisable(true);
             timeLabel.setNew(0, 0);
-            players.clear();
         });
         setPassword(null);
     }
