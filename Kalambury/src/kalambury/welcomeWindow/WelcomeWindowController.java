@@ -30,11 +30,11 @@ public class WelcomeWindowController implements Initializable {
     public void onCreateGameClicked(){
         kalambury.getMainWindowController().setupHost();
         Server.initialize(Integer.parseInt(textfield_port.getText()));
+        label_info.setText("Connecting...");
         Client.initialize(
             textfield_ip.getText(), 
             Integer.parseInt(textfield_port.getText()), 
             textfield_nick.getText(),
-            label_info,
             this::switchToMainStage,
             true
         );
@@ -43,17 +43,19 @@ public class WelcomeWindowController implements Initializable {
     
     public void onJoinGameClicked(){
         kalambury.getMainWindowController().setupClient();
+        label_info.setText("Connecting...");
         Client.initialize(
             textfield_ip.getText(), 
             Integer.parseInt(textfield_port.getText()), 
             textfield_nick.getText(),
-            label_info,
             this::switchToMainStage,
             false
         );
     }
     
     private void switchToMainStage(){
+        label_info.setText("Connection established");
+        
         // open main window
         try{
             kalambury.showMainWindow();
