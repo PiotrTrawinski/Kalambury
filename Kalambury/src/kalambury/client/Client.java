@@ -16,8 +16,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -26,6 +24,7 @@ import javafx.scene.control.Label;
 import kalambury.Kalambury;
 import kalambury.mainWindow.Player;
 import kalambury.mainWindow.TimeLabel;
+import kalambury.mainWindow.TurnLabel;
 import kalambury.mainWindow.drawingBoard.DrawingBoard;
 import kalambury.sendableData.DataType;
 import static kalambury.sendableData.DataType.TurnEndedSignal;
@@ -39,6 +38,7 @@ import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TimeData;
 import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
+import kalambury.sendableData.GameStartedData;
 import kalambury.server.Server;
 import kalambury.server.SystemMessage;
 import kalambury.server.SystemMessageType;
@@ -67,6 +67,7 @@ public class Client {
     private static boolean isHostFlag;
     
     private static Label wordLabel;
+    private static TurnLabel turnLabel;
     private static Chat chat;
     private static DrawingBoard drawingBoard;
     private static TimeLabel timeLabel;
@@ -142,6 +143,9 @@ public class Client {
     }
     public static void setTimeLabel(TimeLabel timeLabel){
         Client.timeLabel = timeLabel;
+    }
+    public static void setTurnLabel(TurnLabel turnLabel){
+        Client.turnLabel = turnLabel;
     }
     public static void setSocket(Socket s){
         Client.socket = s;
@@ -265,6 +269,9 @@ public class Client {
                         time = syncTime;
                         break;
                     case TurnStarted:
+                        Platform.runLater(() -> {
+                            turnLabel.nextTurn();
+                        });
                         TurnStartedData tsd = (TurnStartedData)input;
                         drawingBoard.clear();
                         timeLabel.setNew(tsd.startTime, tsd.turnTime);
@@ -326,15 +333,41 @@ public class Client {
                         ));
                         timeLabel.setNew(0, 0);
                         break;
-                    case GameStartedSignal:
+                    case GameStarted:
+                        GameStartedData gsd = (GameStartedData)input;
+                        Platform.runLater(() -> {
+                            turnLabel.start(players.size(), gsd.numberOfTurns);
+                        });
                         chat.handleNewSystemMessage(new SystemMessage(
                             "Gra została rozpoczęta",
-                            ((SendableSignal)input).time,
+                            gsd.time,
                             SystemMessageType.Information
                         ));
                         for(int i = 0; i < players.size(); ++i){
                             players.get(i).setScore(0);
                         }
+                        break;
+                    case GameEndedSignal:
+                        Platform.runLater(() -> {
+                            drawingBoard.setDisable(true);
+                            updateDrawingPlayer(-1);
+                            timeLabel.setNew(0, 0);
+                        });
+                        String results = new String();
+                        for(int j = 0; j < players.size(); ++j){
+                            for(int i = 0; i < 19; ++i){
+                                results += " ";
+                            }
+                            results += players.get(j).getNickName() + ": " + Integer.toString(players.get(j).getScore());
+                            if(j != players.size() - 1){
+                                results += "\n";
+                            }
+                        }
+                        chat.handleNewSystemMessage(new SystemMessage(
+                            "Gra została zakończona. Wyniki:\n"+results,
+                            ((SendableSignal)input).time,
+                            SystemMessageType.Information
+                        ));
                         break;
                     case TurnSkippedSignal:
                         chat.handleNewSystemMessage(new SystemMessage(
@@ -351,6 +384,9 @@ public class Client {
                         ));
                         break;
                     case PlayerQuit:
+                        Platform.runLater(() -> {
+                            turnLabel.setNumberOfSubTurns(players.size());
+                        });
                         PlayerQuitData pqd = (PlayerQuitData)input;
                         Player player = players.get(pqd.index);
                         chat.handleNewSystemMessage(new SystemMessage(

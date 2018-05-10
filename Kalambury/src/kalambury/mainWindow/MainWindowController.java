@@ -67,7 +67,7 @@ public class MainWindowController implements Initializable {
     @FXML private Canvas colorBrightnessCanvas;
     @FXML private Pane colorBrightnessPane;
     
-    @FXML private Label TurnLabel;
+    @FXML private TurnLabel TurnLabel;
     @FXML private Label passwordLabelLabel;
     @FXML private Label passwordLabel;
     
@@ -136,7 +136,6 @@ public class MainWindowController implements Initializable {
     
     @FXML public void onPlayButtonPressed(){
         Server.startGame();
-        Server.getGame().setTimeLabel(timeLabel);
         playButton.setDisable(true);
         pauseButton.setDisable(false);
         stopButton.setDisable(false);
@@ -399,6 +398,7 @@ public class MainWindowController implements Initializable {
         Client.setDrawingBoard(drawingBoard);
         Client.setWordLabel(passwordLabel);
         Client.setTimeLabel(timeLabel);
+        Client.setTurnLabel(TurnLabel);
         
         drawingBoard.setDisable(true);
     }    
