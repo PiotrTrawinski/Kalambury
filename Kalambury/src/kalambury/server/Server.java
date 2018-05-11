@@ -18,8 +18,6 @@ import kalambury.sendableData.NewPlayerData;
 import kalambury.sendableData.StartServerData;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import kalambury.mainWindow.MainWindowController;
 import kalambury.sendableData.ChatMessageData;
 import kalambury.sendableData.DataType;
@@ -32,28 +30,37 @@ import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
 
 public class Server {
+    // reference to controller for communication
     private static MainWindowController controller;
     
-    private static Thread mainThread;
+    // initialization and accepting clients
+    private static Thread acceptClientsThread;
+    
+    // receiveing and sending data threads
     private static Thread handleIncomingDataThread;
     private static Thread sendOutDataThread;
+    
+    // synchronized time between all clients
     private static Thread timeThreadObject;
     
-    private static final Lock clientsInMutex = new ReentrantLock(true);
-    private static final Lock clientsOutMutex = new ReentrantLock(true);
-    private static ArrayList<ClientSocket> clients;
-    private static volatile int clientsCount;
-    
-    private static Integer port = null;
-    
-    private static volatile ArrayDeque<ServerMessage>  messagesToHandle;
+    // array for the data that should be send by sendOutDataThread
+     private static volatile ArrayDeque<ServerMessage>  messagesToHandle;
     private static final Lock messagesToHandleMutex = new ReentrantLock(true);
     
-    private static int acceptEndSignalCount = -1;
+    // array with connected clients
+    private static ArrayList<ClientSocket> clients;
+    private static volatile int clientsCount;
+    private static final Lock clientsInMutex = new ReentrantLock(true);
+    private static final Lock clientsOutMutex = new ReentrantLock(true);
+    private static Integer port = null;
     
+    // every player's unique id is mapped to his index in client array
+    private static final TreeMap<Integer, Integer> playerIndexes = new TreeMap<>();
+    
+    // game logic
     private static Game game = null;
     
-    private static final TreeMap<Integer, Integer> playerIndexes = new TreeMap<>();
+    private static int acceptEndSignalCount;
     
     
     public static void initialize(int port){
@@ -64,30 +71,34 @@ public class Server {
         messagesToHandle = new ArrayDeque<>();
         clients = new ArrayList<>();
         game = null;
-        mainThread = new Thread(()->Server.start());
-        mainThread.setDaemon(true);   // close with application
-        mainThread.start();
+        acceptClientsThread = new Thread(()->Server.start());
+        acceptClientsThread.setDaemon(true);   // close with application
+        acceptClientsThread.start();
     }
     
     public static void quit(){
+        // if port == null it means player is not a host - is not a server
         if(port != null){
-            mainThread.interrupt();
+            
+            // stop all the threads
+            acceptClientsThread.interrupt();
             handleIncomingDataThread.interrupt();
             sendOutDataThread.interrupt();
             timeThreadObject.interrupt();
-            
             try {
-                mainThread.join();
+                acceptClientsThread.join();
                 handleIncomingDataThread.join();
                 sendOutDataThread.join();
                 timeThreadObject.join();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            game = null;
+            } catch (InterruptedException ex) {}
+            
+            // close all client connections
             for(int i = 0; i < clients.size(); ++i){
                 clients.get(i).close();
             }
+            
+            // destroy game object
+            game = null;
         }
     }
     
@@ -98,16 +109,17 @@ public class Server {
         handleIncomingDataThread.start();
         
         // send incoming data to clients
-        sendOutDataThread = new Thread( () -> Server.forwardDataToClients());
+        sendOutDataThread = new Thread( () -> Server.sendDataToClients());
         sendOutDataThread.setDaemon(true);
         sendOutDataThread.start();
         
-        // time thread
+        // time synchronization thread
         timeThreadObject = new Thread(() -> timeThread());
         timeThreadObject.setDaemon(true);
         timeThreadObject.setPriority(MAX_PRIORITY);
         timeThreadObject.start();
         
+        // start accepting clients
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             acceptNewClients(serverSocket);
         } catch (IOException ex) {
@@ -115,10 +127,14 @@ public class Server {
         }
     }
     
+    
+    // object reference setters
     public static void setController(MainWindowController controller){
         Server.controller = controller;
     }
     
+    
+    // create id to assign to new clients (players)
     private static int createNewId(){
         Random random = new Random();
         boolean uniqueId = true;
@@ -136,6 +152,23 @@ public class Server {
         return newId;
     }
     
+    // getters for the players (unique_id -> array_index) map object
+    public static Integer getPlayerIndex(int id){
+        return playerIndexes.get(id);
+    }
+    public static Integer getPlayerId(int index){
+        for(Map.Entry<Integer, Integer> entry : playerIndexes.entrySet()){
+            if(entry.getValue() == index){
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+    
+    
+    /*
+        Accepting the new clients
+    */
     private static void acceptNewClient(Socket socket) throws IOException{
         clients.add(new ClientSocket(socket));
 
@@ -150,7 +183,7 @@ public class Server {
 
         addLastMessageToHandle(new ServerMessage(newPlayerData, ServerMessage.ReceiverType.All));
     }
-    
+
     private static void acceptNewClients(ServerSocket serverSocket) throws IOException{
         serverSocket.setSoTimeout(1000);
         while (!Thread.interrupted()) {
@@ -164,138 +197,6 @@ public class Server {
         serverSocket.close();
     }
     
-    private static void forwardDataToClients(){
-        while(!Thread.interrupted()){
-            if(messagesToHandle.size() > 0){
-                ServerMessage message = getFirstMessageToHandle();
-                SendableData data = message.getData();
-                
-                switch(data.getType()){
-                case GameStoppedSignal:
-                    game = null;
-                    sendAll(data);
-                    break;
-                case TurnSkippedSignal:{
-                    acceptEndSignalCount = -1;
-                    sendAll(data);
-                    int drawingPlayerId = game.chooseNextPlayer();
-                    if(drawingPlayerId != -1){
-                        int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
-                        GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-                        TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
-                        sendTo(tsd, drawingPlayerIndex);
-                        sendTo(passwordData, drawingPlayerIndex);
-                        tsd.isDrawing = false;
-                        sendExcept(tsd, drawingPlayerIndex);
-                    } else {
-                        game = null;
-                        addLastMessageToHandle(new ServerMessage(
-                            new SendableSignal(DataType.GameEndedSignal, Client.getTime()),
-                            ServerMessage.ReceiverType.All
-                        ));
-                    }
-                    break;
-                }case TurnEndedAcceptSignal:{
-                    acceptEndSignalCount++;
-                    if(acceptEndSignalCount == clientsCount){
-                        // everyone accepted that turn has ended
-                        acceptEndSignalCount = -1;
-                        String winnerNick = game.endTurn();
-                        ArrayList<Integer> updatedScores = new ArrayList<>();
-                        for(int i = 0; i < controller.getPlayers().size(); ++i){
-                            updatedScores.add(controller.getPlayers().get(i).getScore());
-                        }
-                        TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick, Client.getTime());
-                        sendAll(ted);
-                        
-                        int drawingPlayerId = game.chooseNextPlayer();
-                        if(drawingPlayerId != -1){
-                            int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
-                            GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-                            TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
-                            sendTo(tsd, drawingPlayerIndex);
-                            sendTo(passwordData, drawingPlayerIndex);
-                            tsd.isDrawing = false;
-                            sendExcept(tsd, drawingPlayerIndex);
-                        } else {
-                            game = null;
-                            addLastMessageToHandle(new ServerMessage(
-                                new SendableSignal(DataType.GameEndedSignal, Client.getTime()),
-                                ServerMessage.ReceiverType.All
-                            ));
-                        }
-                    }
-                    break;
-                }case ChatMessage:
-                    ChatMessageData cmd = (ChatMessageData)data;
-                    int senderIndex = message.getParam();
-                    int senderId = getPlayerId(senderIndex);
-                    sendExcept(data, senderIndex);
-                    if(game != null && game.verifyPassword(cmd.message, senderId)){
-                        game.updateCurrentTurnWinner(cmd.time, senderId);
-                        // tell every client that the turn has ended
-                        if(acceptEndSignalCount == -1){
-                            acceptEndSignalCount = 0;
-                            sendAll(new SendableSignal(DataType.TurnEndedSignal, Client.getTime()));
-                        }
-                    }
-                    break;
-                default:
-                    switch(message.getReceiverType()){
-                    case All:
-                        sendAll(data);
-                        break;
-                    case AllExcept:
-                        sendExcept(data, message.getParam());
-                        break;
-                    case One:
-                        sendTo(data, message.getParam());
-                        break;
-                    }
-                }
-            }
-        }   
-    }
-    
-    
-    private static ServerMessage getFirstMessageToHandle(){
-        messagesToHandleMutex.lock();
-        ServerMessage message = null;
-        try {
-            message = messagesToHandle.removeFirst();
-        } finally {
-            messagesToHandleMutex.unlock();
-        }
-        return message;
-    }
-    private static void addLastMessageToHandle(ServerMessage messageToHandle){
-        messagesToHandleMutex.lock();
-        try {
-            messagesToHandle.addLast(messageToHandle);
-        } finally {
-            messagesToHandleMutex.unlock();
-        }
-    }
-    private static void addFirstMessageToHandle(ServerMessage messageToHandle){
-        messagesToHandleMutex.lock();
-        try {
-            messagesToHandle.addFirst(messageToHandle);
-        } finally {
-            messagesToHandleMutex.unlock();
-        }
-    }
-    
-    public static Integer getPlayerIndex(int id){
-        return playerIndexes.get(id);
-    }
-    public static Integer getPlayerId(int index){
-        for(Map.Entry<Integer, Integer> entry : playerIndexes.entrySet()){
-            if(entry.getValue() == index){
-                return entry.getKey();
-            }
-        }
-        return null;
-    }
     
     private static void removeClient(int clientIndex){
         int playerId = getPlayerId(clientIndex);
@@ -323,6 +224,41 @@ public class Server {
         }
     }
     
+    
+    /*
+        methods accesing messages queue shared by sending and receiving threads
+    */
+    private static ServerMessage getFirstMessageToHandle(){
+        messagesToHandleMutex.lock();
+        ServerMessage message = null;
+        try {
+            message = messagesToHandle.removeFirst();
+        } finally {
+            messagesToHandleMutex.unlock();
+        }
+        return message;
+    }
+    private static void addLastMessageToHandle(ServerMessage messageToHandle){
+        messagesToHandleMutex.lock();
+        try {
+            messagesToHandle.addLast(messageToHandle);
+        } finally {
+            messagesToHandleMutex.unlock();
+        }
+    }
+    private static void addFirstMessageToHandle(ServerMessage messageToHandle){
+        messagesToHandleMutex.lock();
+        try {
+            messagesToHandle.addFirst(messageToHandle);
+        } finally {
+            messagesToHandleMutex.unlock();
+        }
+    }
+    
+    
+    /*
+        Sending data to the clients
+    */
     private static void sendTo(SendableData data, int clientIndex){
         try{
             clientsOutMutex.lock();
@@ -336,7 +272,6 @@ public class Server {
             clientsOutMutex.unlock();
         }
     }
-    
     private static void sendExcept(SendableData data, int exceptIndex){
         for(int i = 0; i < clientsCount; i++){
             if(i != exceptIndex){
@@ -349,13 +284,123 @@ public class Server {
             sendTo(data, i);
         }
     }
+    private static void send(ServerMessage message){
+        SendableData data = message.getData();
+        
+        // some messages require specific handling 
+        switch(data.getType()){
+        case GameStoppedSignal:
+            game = null;
+            sendAll(data);
+            break;
+        case TurnSkippedSignal:{
+            acceptEndSignalCount = -1;
+            sendAll(data);
+            int drawingPlayerId = game.chooseNextPlayer();
+            if(drawingPlayerId != -1){
+                int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
+                GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+                TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
+                sendTo(tsd, drawingPlayerIndex);
+                sendTo(passwordData, drawingPlayerIndex);
+                tsd.isDrawing = false;
+                sendExcept(tsd, drawingPlayerIndex);
+            } else {
+                game = null;
+                addLastMessageToHandle(new ServerMessage(
+                    new SendableSignal(DataType.GameEndedSignal, Client.getTime()),
+                    ServerMessage.ReceiverType.All
+                ));
+            }
+            break;
+        }case TurnEndedAcceptSignal:{
+            acceptEndSignalCount++;
+            if(acceptEndSignalCount == clientsCount){
+                // everyone accepted that turn has ended
+                acceptEndSignalCount = -1;
+                String winnerNick = game.endTurn();
+                ArrayList<Integer> updatedScores = new ArrayList<>();
+                for(int i = 0; i < controller.getPlayers().size(); ++i){
+                    updatedScores.add(controller.getPlayers().get(i).getScore());
+                }
+                TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick, Client.getTime());
+                sendAll(ted);
 
+                int drawingPlayerId = game.chooseNextPlayer();
+                if(drawingPlayerId != -1){
+                    int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
+                    GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+                    TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
+                    sendTo(tsd, drawingPlayerIndex);
+                    sendTo(passwordData, drawingPlayerIndex);
+                    tsd.isDrawing = false;
+                    sendExcept(tsd, drawingPlayerIndex);
+                } else {
+                    game = null;
+                    addLastMessageToHandle(new ServerMessage(
+                        new SendableSignal(DataType.GameEndedSignal, Client.getTime()),
+                        ServerMessage.ReceiverType.All
+                    ));
+                }
+            }
+            break;
+        }case ChatMessage:
+            ChatMessageData cmd = (ChatMessageData)data;
+            int senderIndex = message.getParam();
+            int senderId = getPlayerId(senderIndex);
+            sendExcept(data, senderIndex);
+            if(game != null && game.verifyPassword(cmd.message, senderId)){
+                game.updateCurrentTurnWinner(cmd.time, senderId);
+                // tell every client that the turn has ended
+                if(acceptEndSignalCount == -1){
+                    acceptEndSignalCount = 0;
+                    sendAll(new SendableSignal(DataType.TurnEndedSignal, Client.getTime()));
+                }
+            }
+            break;
+        default:
+            switch(message.getReceiverType()){
+            case All:
+                sendAll(data);
+                break;
+            case AllExcept:
+                sendExcept(data, message.getParam());
+                break;
+            case One:
+                sendTo(data, message.getParam());
+                break;
+            }
+        }
+    }
+    private static void sendDataToClients(){
+        while(!Thread.interrupted()){
+            while(messagesToHandle.size() > 0){
+                ServerMessage message = getFirstMessageToHandle();
+                send(message);
+            }
+            try {
+                TimeUnit.MILLISECONDS.sleep(10);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }   
+    }
+    
+    
+    /*
+        get data from clients when avaliable and save in messagesToHandle array
+        for the sending thread to take care of
+    */
     public static void handleIncomingData(){
         while(!Thread.interrupted()){
-            for(int i = 0; i < clientsCount; i++){ // for every client
+            boolean hadData = false;
+            for(int i = 0; i < clientsCount; i++){
                 try{
                     clientsInMutex.lock();
                     if(i < clientsCount && clients.get(i).hasDataToReceive()){
+                        hadData = true;
+                        
                         //receive messsage and send it to all clients except the sender
                         final SendableData input = clients.get(i).receive();
                         addLastMessageToHandle(
@@ -368,9 +413,22 @@ public class Server {
                     clientsInMutex.unlock();
                 }
             }
+            
+            if(!hadData){
+                try {
+                    TimeUnit.MILLISECONDS.sleep(10);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
         }
     }
     
+    
+    /*
+        time synchronization
+    */
     public static void timeThread(){
         long startTime = System.currentTimeMillis();
         long sleepTime = 1000;
@@ -388,6 +446,10 @@ public class Server {
         }
     }
     
+    
+    /*
+        initializing/controlling the game
+    */
     public static void startGame(){
         game = new Game(600, 90, 3, controller.getPlayers());
         game.start();
