@@ -167,8 +167,11 @@ public class MainWindowController implements Initializable {
         host buttons clicked
     */
     @FXML public void onPlayButtonPressed(){
+        numberOfTurnsSlider.setDisable(true);
+        subTurnTimeSlider.setDisable(true);
         int numberOfTurns = (int)numberOfTurnsSlider.getValue();
         int subTurnTime = (int)subTurnTimeSlider.getValue()*5;
+        
         Server.startGame(numberOfTurns, subTurnTime);
         playButton.setDisable(true);
         pauseButton.setDisable(false);
@@ -286,6 +289,8 @@ public class MainWindowController implements Initializable {
             pauseButton.setDisable(true);
             stopButton.setDisable(true);
             skipButton.setDisable(true);
+            numberOfTurnsSlider.setDisable(false);
+            subTurnTimeSlider.setDisable(false);
         });
         updateDrawingPlayer(-1);
         
@@ -315,7 +320,11 @@ public class MainWindowController implements Initializable {
         }
     }
     public void gameStopped(SendableSignal signal){
-        drawingBoard.setDisable(true);
+        Platform.runLater(() -> {
+            drawingBoard.setDisable(true);
+            numberOfTurnsSlider.setDisable(false);
+            subTurnTimeSlider.setDisable(false);
+        });
         updateDrawingPlayer(-1);
         chat.handleNewSystemMessage(new SystemMessage(
             "Gra została zakończona przez hosta", signal.time, SystemMessageType.Information
