@@ -379,7 +379,7 @@ public class Server {
                 send(message);
             }
             try {
-                TimeUnit.MILLISECONDS.sleep(10);
+                TimeUnit.MILLISECONDS.sleep(5);
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
                 return;
@@ -416,7 +416,7 @@ public class Server {
             
             if(!hadData){
                 try {
-                    TimeUnit.MILLISECONDS.sleep(10);
+                    TimeUnit.MILLISECONDS.sleep(5);
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     return;

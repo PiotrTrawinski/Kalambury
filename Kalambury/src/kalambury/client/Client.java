@@ -227,6 +227,13 @@ public class Client {
                     }
                 }
             }
+            
+            try {
+                TimeUnit.MILLISECONDS.sleep(5);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
     
@@ -278,13 +285,20 @@ public class Client {
     private static void listening(){
         while(!Thread.interrupted()){
             try {
-                if(in.available() > 0){
+                while(in.available() > 0){
                     SendableData data = SendableData.receive(in);
                     menageReceivedData(data);
                 }
             } catch(IOException ex) {
                 quit();
                 break;
+            }
+            
+            try {
+                TimeUnit.MILLISECONDS.sleep(5);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
