@@ -39,7 +39,6 @@ public class Server {
     private static Thread sendOutDataThread;
     private static Thread timeThreadObject;
     
-    private static final int maxClients = 5;
     private static final Lock clientsInMutex = new ReentrantLock(true);
     private static final Lock clientsOutMutex = new ReentrantLock(true);
     private static ArrayList<ClientSocket> clients;
@@ -155,13 +154,11 @@ public class Server {
     private static void acceptNewClients(ServerSocket serverSocket) throws IOException{
         serverSocket.setSoTimeout(1000);
         while (!Thread.interrupted()) {
-            if(clientsCount < maxClients){
-                try{
-                    Socket socket = serverSocket.accept();
-                    acceptNewClient(socket);
-                } catch(SocketTimeoutException ex){
-                    
-                }
+            try{
+                Socket socket = serverSocket.accept();
+                acceptNewClient(socket);
+            } catch(SocketTimeoutException ex){
+
             }
         }
         serverSocket.close();
@@ -392,7 +389,7 @@ public class Server {
     }
     
     public static void startGame(){
-        game = new Game(maxClients,600,90,3,controller.getPlayers());
+        game = new Game(600, 90, 3, controller.getPlayers());
         game.start();
         addLastMessageToHandle(new ServerMessage(
             new GameStartedData(3, Client.getTime()),

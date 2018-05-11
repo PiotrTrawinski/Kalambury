@@ -27,7 +27,7 @@ public class Game {
     long winnerTime;
     int winnerId = NO_ID;
     
-    public Game(int maxPlayers, int maxPoints, int maxTimeSeconds, int numberOfFullTurns, ObservableList<Player> players){
+    public Game(int maxPoints, int maxTimeSeconds, int numberOfFullTurns, ObservableList<Player> players){
         this.maxTimeSeconds = maxTimeSeconds;
         this.maxPoints = maxPoints;
         this.round = 0;
