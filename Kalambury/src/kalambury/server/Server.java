@@ -62,6 +62,7 @@ public class Server {
     
     private static int acceptEndSignalCount;
     private static boolean gamePaused = false;
+    private static long turnStartTime = -1;
     
     public static void initialize(int port){
         //set the port that server is working on, and start it on a new thread
@@ -289,6 +290,12 @@ public class Server {
         
         // some messages require specific handling 
         switch(data.getType()){
+        case TurnTimeOutSignal:
+            sendAll(data);
+            if(!gamePaused){
+                gameNextTurn();
+            }
+            break;
         case GameStoppedSignal:
             game = null;
             sendAll(data);
@@ -328,6 +335,7 @@ public class Server {
                 // tell every client that the turn has ended
                 if(acceptEndSignalCount == -1){
                     acceptEndSignalCount = 0;
+                    turnStartTime = -1;
                     sendAll(new SendableSignal(DataType.TurnEndedSignal, Client.getTime()));
                 }
             }
@@ -405,7 +413,8 @@ public class Server {
     */
     public static void timeThread(){
         long startTime = System.currentTimeMillis();
-        long sleepTime = 1000;
+        long sleepTime = 100;
+        int sleepCount = 0;
         TimeData timeData = new TimeData(0);
         
         while(!Thread.interrupted()){
@@ -415,8 +424,16 @@ public class Server {
                 Thread.currentThread().interrupt();
             }
             timeData.time = System.currentTimeMillis() - startTime;
-            
-            addFirstMessageToHandle(new ServerMessage(timeData, ServerMessage.ReceiverType.All));
+            if(game!=null && turnStartTime!=-1 && (timeData.time - turnStartTime)/1000 > game.getTurnTime()){
+                addFirstMessageToHandle(new ServerMessage(
+                    new SendableSignal(DataType.TurnTimeOutSignal, Client.getTime()), ServerMessage.ReceiverType.All)
+                );
+                turnStartTime = -1;
+            }
+            sleepCount++;
+            if(sleepCount % 10 == 0){
+                addFirstMessageToHandle(new ServerMessage(timeData, ServerMessage.ReceiverType.All));
+            }
         }
     }
     
@@ -440,7 +457,8 @@ public class Server {
             int drawingPlayerId = game.chooseNextPlayer();
             int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
             GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-            TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
+            turnStartTime = Client.getTime();
+            TurnStartedData tsd = new TurnStartedData(turnStartTime, game.getTurnTime(), true, drawingPlayerId);
             addLastMessageToHandle(new ServerMessage(tsd, ServerMessage.ReceiverType.One, drawingPlayerIndex));
             addLastMessageToHandle(new ServerMessage(passwordData, ServerMessage.ReceiverType.One, drawingPlayerIndex));
             TurnStartedData tsd2 = new TurnStartedData(tsd.startTime, tsd.turnTime, false, drawingPlayerId);
@@ -453,7 +471,8 @@ public class Server {
         if(drawingPlayerId != -1){
             int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
             GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-            TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
+            turnStartTime = Client.getTime();
+            TurnStartedData tsd = new TurnStartedData(turnStartTime, game.getTurnTime(), true, drawingPlayerId);
             sendTo(tsd, drawingPlayerIndex);
             sendTo(passwordData, drawingPlayerIndex);
             tsd.isDrawing = false;
@@ -470,6 +489,7 @@ public class Server {
     
     public static void stopGame(){
         gamePaused = false;
+        turnStartTime = -1;
         addLastMessageToHandle(new ServerMessage(
             new SendableSignal(DataType.GameStoppedSignal, Client.getTime()), 
             ServerMessage.ReceiverType.All
@@ -477,6 +497,7 @@ public class Server {
     }
     
     public static void skipTurn(){
+        turnStartTime = -1;
         addLastMessageToHandle(new ServerMessage(
             new SendableSignal(DataType.TurnSkippedSignal, Client.getTime()), 
             ServerMessage.ReceiverType.All

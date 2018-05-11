@@ -242,6 +242,17 @@ public class MainWindowController implements Initializable {
         ));
         players.remove(player);
     }
+    public void turnTimeOut(SendableSignal signal){
+        Platform.runLater(() -> {
+            drawingBoard.setDisable(true);
+            skipButton.setDisable(true);
+            timeLabel.setNew(0, 0);
+        });
+        updateDrawingPlayer(-1);
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Koniec czasu! Nikt nie zgadł hasła", signal.time, SystemMessageType.Information
+        ));
+    }
     public void gamePaused(SendableSignal signal){
         chat.handleNewSystemMessage(new SystemMessage(
             "Gra zostanie wstrzymana po tej turze",
