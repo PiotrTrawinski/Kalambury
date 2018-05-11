@@ -67,6 +67,7 @@ public class WelcomeWindowController implements Initializable {
         // close old window
         Stage stage = (Stage) label_create_game.getScene().getWindow();
         stage.close();
+        label_info.setText("Info");
     }
     
     
