@@ -227,6 +227,13 @@ public class Client {
                     }
                 }
             }
+            
+            try {
+                TimeUnit.MILLISECONDS.sleep(5);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
     
@@ -270,6 +277,7 @@ public class Client {
         case TurnSkippedSignal: controller.turnSkipped((SendableSignal)data);     break;
         case SkipRequestSignal: controller.skipRequest((SendableSignal)data);     break;
         case PlayerQuit:        controller.playerQuit((PlayerQuitData)data);      break;
+        case GamePausedSignal:  controller.gamePaused((SendableSignal)data);      break;
         default: break;
         }
     }
@@ -278,13 +286,20 @@ public class Client {
     private static void listening(){
         while(!Thread.interrupted()){
             try {
-                if(in.available() > 0){
+                while(in.available() > 0){
                     SendableData data = SendableData.receive(in);
                     menageReceivedData(data);
                 }
             } catch(IOException ex) {
                 quit();
                 break;
+            }
+            
+            try {
+                TimeUnit.MILLISECONDS.sleep(5);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
