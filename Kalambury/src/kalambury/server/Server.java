@@ -61,7 +61,7 @@ public class Server {
     private static Game game = null;
     
     private static int acceptEndSignalCount;
-    
+    private static boolean gamePaused = false;
     
     public static void initialize(int port){
         //set the port that server is working on, and start it on a new thread
@@ -296,21 +296,8 @@ public class Server {
         case TurnSkippedSignal:{
             acceptEndSignalCount = -1;
             sendAll(data);
-            int drawingPlayerId = game.chooseNextPlayer();
-            if(drawingPlayerId != -1){
-                int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
-                GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-                TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
-                sendTo(tsd, drawingPlayerIndex);
-                sendTo(passwordData, drawingPlayerIndex);
-                tsd.isDrawing = false;
-                sendExcept(tsd, drawingPlayerIndex);
-            } else {
-                game = null;
-                addLastMessageToHandle(new ServerMessage(
-                    new SendableSignal(DataType.GameEndedSignal, Client.getTime()),
-                    ServerMessage.ReceiverType.All
-                ));
+            if(!gamePaused){
+                gameNextTurn();
             }
             break;
         }case TurnEndedAcceptSignal:{
@@ -325,22 +312,9 @@ public class Server {
                 }
                 TurnEndedData ted = new TurnEndedData(updatedScores, winnerNick, Client.getTime());
                 sendAll(ted);
-
-                int drawingPlayerId = game.chooseNextPlayer();
-                if(drawingPlayerId != -1){
-                    int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
-                    GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-                    TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
-                    sendTo(tsd, drawingPlayerIndex);
-                    sendTo(passwordData, drawingPlayerIndex);
-                    tsd.isDrawing = false;
-                    sendExcept(tsd, drawingPlayerIndex);
-                } else {
-                    game = null;
-                    addLastMessageToHandle(new ServerMessage(
-                        new SendableSignal(DataType.GameEndedSignal, Client.getTime()),
-                        ServerMessage.ReceiverType.All
-                    ));
+                
+                if(!gamePaused){
+                    gameNextTurn();
                 }
             }
             break;
@@ -451,23 +425,51 @@ public class Server {
         initializing/controlling the game
     */
     public static void startGame(){
-        game = new Game(600, 90, 3, controller.getPlayers());
-        game.start();
-        addLastMessageToHandle(new ServerMessage(
-            new GameStartedData(3, Client.getTime()),
-            ServerMessage.ReceiverType.All
-        ));
+        if(gamePaused){
+            // continue the previous unfinished game
+            gameNextTurn();
+        } else {
+            // create new game
+            game = new Game(600, 90, 3, controller.getPlayers());
+            game.start();
+            gamePaused = false;
+            addLastMessageToHandle(new ServerMessage(
+                new GameStartedData(3, Client.getTime()),
+                ServerMessage.ReceiverType.All
+            ));
+            int drawingPlayerId = game.chooseNextPlayer();
+            int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
+            GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+            TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
+            addLastMessageToHandle(new ServerMessage(tsd, ServerMessage.ReceiverType.One, drawingPlayerIndex));
+            addLastMessageToHandle(new ServerMessage(passwordData, ServerMessage.ReceiverType.One, drawingPlayerIndex));
+            TurnStartedData tsd2 = new TurnStartedData(tsd.startTime, tsd.turnTime, false, drawingPlayerId);
+            addLastMessageToHandle(new ServerMessage(tsd2, ServerMessage.ReceiverType.AllExcept, drawingPlayerIndex));
+        }
+    }
+    
+    private static void gameNextTurn(){
         int drawingPlayerId = game.chooseNextPlayer();
-        int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
-        GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-        TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
-        addLastMessageToHandle(new ServerMessage(tsd, ServerMessage.ReceiverType.One, drawingPlayerIndex));
-        addLastMessageToHandle(new ServerMessage(passwordData, ServerMessage.ReceiverType.One, drawingPlayerIndex));
-        TurnStartedData tsd2 = new TurnStartedData(tsd.startTime, tsd.turnTime, false, drawingPlayerId);
-        addLastMessageToHandle(new ServerMessage(tsd2, ServerMessage.ReceiverType.AllExcept, drawingPlayerIndex));
+        if(drawingPlayerId != -1){
+            int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
+            GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+            TurnStartedData tsd = new TurnStartedData(Client.getTime(), game.getTurnTime(), true, drawingPlayerId);
+            sendTo(tsd, drawingPlayerIndex);
+            sendTo(passwordData, drawingPlayerIndex);
+            tsd.isDrawing = false;
+            sendExcept(tsd, drawingPlayerIndex);
+            gamePaused = false;
+        } else {
+            game = null;
+            addLastMessageToHandle(new ServerMessage(
+                new SendableSignal(DataType.GameEndedSignal, Client.getTime()),
+                ServerMessage.ReceiverType.All
+            ));
+        }
     }
     
     public static void stopGame(){
+        gamePaused = false;
         addLastMessageToHandle(new ServerMessage(
             new SendableSignal(DataType.GameStoppedSignal, Client.getTime()), 
             ServerMessage.ReceiverType.All
@@ -479,6 +481,14 @@ public class Server {
             new SendableSignal(DataType.TurnSkippedSignal, Client.getTime()), 
             ServerMessage.ReceiverType.All
         ));
+    }
+    
+    public static void pauseGame(){
+        addLastMessageToHandle(new ServerMessage(
+            new SendableSignal(DataType.GamePausedSignal, Client.getTime()), 
+            ServerMessage.ReceiverType.All
+        ));
+        gamePaused = true;
     }
 }
 

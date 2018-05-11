@@ -277,6 +277,7 @@ public class Client {
         case TurnSkippedSignal: controller.turnSkipped((SendableSignal)data);     break;
         case SkipRequestSignal: controller.skipRequest((SendableSignal)data);     break;
         case PlayerQuit:        controller.playerQuit((PlayerQuitData)data);      break;
+        case GamePausedSignal:  controller.gamePaused((SendableSignal)data);      break;
         default: break;
         }
     }

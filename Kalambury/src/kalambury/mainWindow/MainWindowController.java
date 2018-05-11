@@ -173,10 +173,11 @@ public class MainWindowController implements Initializable {
         skipButton.setDisable(true);
     }
     @FXML public void onPauseButtonPressed(){
+        Server.pauseGame();
         playButton.setDisable(false);
         pauseButton.setDisable(true);
         stopButton.setDisable(false);
-        skipButton.setDisable(true);
+        skipButton.setDisable(false);
     }
     @FXML public void onSkipButtonPressed(){
         Server.skipTurn();
@@ -231,12 +232,25 @@ public class MainWindowController implements Initializable {
         ));
         players.remove(player);
     }
+    public void gamePaused(SendableSignal signal){
+        chat.handleNewSystemMessage(new SystemMessage(
+            "Gra zostanie wstrzymana po tej turze",
+            signal.time,
+            SystemMessageType.Information
+        ));
+    }
     public void skipRequest(SendableSignal signal){
         chat.handleNewSystemMessage(new SystemMessage(
             "Gracz poprosił o pominięcie tury", signal.time, SystemMessageType.Information
         ));
     }
     public void turnSkipped(SendableSignal signal){
+        Platform.runLater(() -> {
+            drawingBoard.setDisable(true);
+            skipButton.setDisable(true);
+            timeLabel.setNew(0, 0);
+        });
+        updateDrawingPlayer(-1);
         chat.handleNewSystemMessage(new SystemMessage(
             "Tura została pominięta",
             signal.time,
@@ -247,6 +261,10 @@ public class MainWindowController implements Initializable {
         Platform.runLater(() -> {
             drawingBoard.setDisable(true);
             timeLabel.setNew(0, 0);
+            playButton.setDisable(false);
+            pauseButton.setDisable(true);
+            stopButton.setDisable(true);
+            skipButton.setDisable(true);
         });
         updateDrawingPlayer(-1);
         
@@ -284,7 +302,11 @@ public class MainWindowController implements Initializable {
         timeLabel.setNew(0, 0);
     }
     public void turnEndedSignal(SendableSignal signal){
-        drawingBoard.setDisable(true);
+        Platform.runLater(() -> {
+            drawingBoard.setDisable(true);
+            skipButton.setDisable(true);
+            timeLabel.setNew(0, 0);
+        });
         updateDrawingPlayer(-1);
         chat.handleNewSystemMessage(new SystemMessage(
             "Koniec tury!", signal.time, SystemMessageType.Information
@@ -303,6 +325,7 @@ public class MainWindowController implements Initializable {
     public void turnStarted(TurnStartedData tsd){
         Platform.runLater(() -> {
             turnLabel.nextTurn();
+            skipButton.setDisable(false);
         });
         drawingBoard.clear();
         timeLabel.setNew(tsd.startTime, tsd.turnTime);
