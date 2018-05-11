@@ -35,25 +35,26 @@ public class DrawingBoard extends ResizableCanvas{
     }
     
     public void mousePressed(int x, int y){
-        inDrawingMode = true;
-        switch(drawingTool){
-        case PENCIL:
-            mouseLastPos.x = x;
-            mouseLastPos.y = y;
-            LineDrawData lineDrawData = drawLineOwn(mouseLastPos, mouseLastPos);
-            sendToServer(lineDrawData);
-            break;
-        case COLOR_PICKER:
-            colorWidget.setColor(getPixelInCanvasRatio(x-drawArea.x, y-drawArea.y));
-            break;
-        case BUCKET:
-            FloodFillData floodFillData = floodFillOwn(x, y, colorWidget.getColor());
-            if(floodFillData != null){
-                sendToServer(floodFillData);
+        if(!isDisabled()){
+            inDrawingMode = true;
+            switch(drawingTool){
+            case PENCIL:
+                mouseLastPos.x = x;
+                mouseLastPos.y = y;
+                LineDrawData lineDrawData = drawLineOwn(mouseLastPos, mouseLastPos);
+                sendToServer(lineDrawData);
+                break;
+            case COLOR_PICKER:
+                colorWidget.setColor(getPixelInCanvasRatio(x-drawArea.x, y-drawArea.y));
+                break;
+            case BUCKET:
+                FloodFillData floodFillData = floodFillOwn(x, y, colorWidget.getColor());
+                if(floodFillData != null){
+                    sendToServer(floodFillData);
+                }
+                break;
             }
-            break;
         }
-        
     }
     
     public void mouseReleased(){
@@ -61,7 +62,7 @@ public class DrawingBoard extends ResizableCanvas{
     }
     
     public void mouseMovedTo(int x, int y){
-        if(inDrawingMode){
+        if(!isDisabled() && inDrawingMode){
             switch(drawingTool){
             case PENCIL:
                 LineDrawData lineDrawData = drawLineOwn(mouseLastPos, new Point(x, y));
