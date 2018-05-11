@@ -103,6 +103,14 @@ public class MainWindowController implements Initializable {
     @FXML private Button skipButton;
     @FXML private Button skipRequestButton;
     @FXML private Button quitGameButton;
+    @FXML private Label numberOfTurnsLabelLabel;
+    @FXML private Label numberOfTurnsLabel;
+    @FXML private Slider numberOfTurnsSlider;
+    @FXML private Label subTurnTimeLabelLabel;
+    @FXML private Label subTurnTimeLabel;
+    @FXML private Slider subTurnTimeSlider;
+    
+    private double scalingFactor;
     
     private ColorWidget colorWidget;
     private Chat chat;
@@ -159,7 +167,9 @@ public class MainWindowController implements Initializable {
         host buttons clicked
     */
     @FXML public void onPlayButtonPressed(){
-        Server.startGame();
+        int numberOfTurns = (int)numberOfTurnsSlider.getValue();
+        int subTurnTime = (int)subTurnTimeSlider.getValue()*5;
+        Server.startGame(numberOfTurns, subTurnTime);
         playButton.setDisable(true);
         pauseButton.setDisable(false);
         stopButton.setDisable(false);
@@ -454,7 +464,7 @@ public class MainWindowController implements Initializable {
         canvas.setHeight((int)(canvas.getHeight()*scalingFactor));
     }
     
-    private void scaleWidgetsToScreen(double scalingFactor){
+    private void scaleWidgetsToScreen(){
         scaleGridPane(gridPane, scalingFactor);
         scaleGridPane(actionsGridPane, scalingFactor);
         scaleLabel(timeLabel, "System Bold", scalingFactor);
@@ -466,6 +476,10 @@ public class MainWindowController implements Initializable {
         scaleLabel(drawToolsLabel, "System Bold", scalingFactor);
         scaleLabel(colorLabel, "System Bold", scalingFactor);
         scaleLabel(actionsLabel, "System Bold", scalingFactor);
+        scaleLabel(numberOfTurnsLabelLabel, "System Bold", scalingFactor);
+        scaleLabel(numberOfTurnsLabel, "System Bold", scalingFactor);
+        scaleLabel(subTurnTimeLabelLabel, "System Bold", scalingFactor);
+        scaleLabel(subTurnTimeLabel, "System Bold", scalingFactor);
         scaleButton(pencilButton, "System Regular", scalingFactor);
         scaleButton(colorPickerButton, "System Regular", scalingFactor);
         scaleButton(bucketButton, "System Regular", scalingFactor);
@@ -504,10 +518,41 @@ public class MainWindowController implements Initializable {
         actionsGridPane.getChildren().remove(stopButton);
         actionsGridPane.getChildren().remove(skipButton);
         actionsGridPane.getChildren().remove(skipRequestButton);
+        actionsGridPane.getChildren().remove(numberOfTurnsLabelLabel);
+        actionsGridPane.getChildren().remove(numberOfTurnsLabel);
+        actionsGridPane.getChildren().remove(numberOfTurnsSlider);
+        actionsGridPane.getChildren().remove(subTurnTimeLabelLabel);
+        actionsGridPane.getChildren().remove(subTurnTimeLabel);
+        actionsGridPane.getChildren().remove(subTurnTimeSlider);
         actionsGridPane.getChildren().add(playButton);
         actionsGridPane.getChildren().add(pauseButton);
         actionsGridPane.getChildren().add(stopButton);
         actionsGridPane.getChildren().add(skipButton);
+        actionsGridPane.getChildren().add(numberOfTurnsLabelLabel);
+        actionsGridPane.getChildren().add(numberOfTurnsLabel);
+        actionsGridPane.getChildren().add(numberOfTurnsSlider);
+        actionsGridPane.getChildren().add(subTurnTimeLabelLabel);
+        actionsGridPane.getChildren().add(subTurnTimeLabel);
+        actionsGridPane.getChildren().add(subTurnTimeSlider);
+        
+        RowConstraints rowCon = actionsGridPane.getRowConstraints().get(3);
+        rowCon.setMinHeight((int)(33*scalingFactor));
+        rowCon.setMaxHeight((int)(33*scalingFactor));
+        rowCon.setPrefHeight((int)(33*scalingFactor));
+        
+        RowConstraints rowCon4 = actionsGridPane.getRowConstraints().get(4);
+        rowCon4.setMinHeight((int)(33*scalingFactor));
+        rowCon4.setMaxHeight((int)(33*scalingFactor));
+        rowCon4.setPrefHeight((int)(33*scalingFactor));
+        
+        RowConstraints rowCon2 = gridPane.getRowConstraints().get(3);
+        rowCon2.setMinHeight((int)(166*scalingFactor));
+        rowCon2.setMaxHeight((int)(166*scalingFactor));
+        rowCon2.setPrefHeight((int)(166*scalingFactor));
+        
+        RowConstraints rowCon3 = gridPane.getRowConstraints().get(2);
+        rowCon3.setMinHeight((int)(213*scalingFactor));
+        rowCon3.setPrefHeight((int)(213*scalingFactor));
     }
     public void setupClient(){
         // client has skip request button
@@ -516,7 +561,32 @@ public class MainWindowController implements Initializable {
         actionsGridPane.getChildren().remove(stopButton);
         actionsGridPane.getChildren().remove(skipButton);
         actionsGridPane.getChildren().remove(skipRequestButton);
+        actionsGridPane.getChildren().remove(numberOfTurnsLabelLabel);
+        actionsGridPane.getChildren().remove(numberOfTurnsLabel);
+        actionsGridPane.getChildren().remove(numberOfTurnsSlider);
+        actionsGridPane.getChildren().remove(subTurnTimeLabelLabel);
+        actionsGridPane.getChildren().remove(subTurnTimeLabel);
+        actionsGridPane.getChildren().remove(subTurnTimeSlider);
         actionsGridPane.getChildren().add(skipRequestButton);
+        
+        RowConstraints rowCon = actionsGridPane.getRowConstraints().get(3);
+        rowCon.setMinHeight(0);
+        rowCon.setMaxHeight(0);
+        rowCon.setPrefHeight(0);
+        
+        RowConstraints rowCon4 = actionsGridPane.getRowConstraints().get(4);
+        rowCon4.setMinHeight(0);
+        rowCon4.setMaxHeight(0);
+        rowCon4.setPrefHeight(0);
+        
+        RowConstraints rowCon2 = gridPane.getRowConstraints().get(3);
+        rowCon2.setMinHeight((int)(100*scalingFactor));
+        rowCon2.setMaxHeight((int)(100*scalingFactor));
+        rowCon2.setPrefHeight((int)(100*scalingFactor));
+        
+        RowConstraints rowCon3 = gridPane.getRowConstraints().get(2);
+        rowCon3.setMinHeight((int)(273*scalingFactor));
+        rowCon3.setPrefHeight((int)(273*scalingFactor));
     }
     
     
@@ -525,8 +595,8 @@ public class MainWindowController implements Initializable {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         double width = screenSize.getWidth();
         double height = screenSize.getHeight();
-        double scalingFactor = width/1366.0;
-        scaleWidgetsToScreen(scalingFactor);
+        scalingFactor = width/1366.0;
+        scaleWidgetsToScreen();
   
         startTimeLabelThread();
         
@@ -542,6 +612,20 @@ public class MainWindowController implements Initializable {
             public void changed(ObservableValue<? extends Number> ov, Number oldValue, Number newValue){
                 thicknessLabel.setText(Integer.toString(newValue.intValue()));
                 drawingBoard.setLineThickness(newValue.intValue());
+            }
+        });
+        
+        // numberOfTurnsSlider
+        numberOfTurnsSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            public void changed(ObservableValue<? extends Number> ov, Number oldValue, Number newValue){
+                numberOfTurnsLabel.setText(Integer.toString(newValue.intValue()));
+            }
+        });
+        
+        // subTurnTimeSlider
+        subTurnTimeSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            public void changed(ObservableValue<? extends Number> ov, Number oldValue, Number newValue){
+                subTurnTimeLabel.setText(Integer.toString(newValue.intValue()*5));
             }
         });
         
@@ -579,7 +663,7 @@ public class MainWindowController implements Initializable {
         scoreTableNickNameColumn.setCellValueFactory(
             player -> player.getValue().getNickNameProperty()
         );
-        scoreTableView.setFixedCellSize(40*scalingFactor);
+        scoreTableView.setFixedCellSize(35*scalingFactor);
         scoreTableNickNameColumn.setCellFactory(new Callback<TableColumn<Player, String>, TableCell<Player,String>>() {
             @Override public TableCell call(TableColumn param) {
                 return new TableCell<Player, String>() {
@@ -589,7 +673,7 @@ public class MainWindowController implements Initializable {
                             setText("");
                         } else{
                             Font timeLabelFont = this.getFont();
-                            this.setFont(new Font("System Regular", 22*scalingFactor));
+                            this.setFont(new Font("System Regular", 18*scalingFactor));
                             setText(item);
                         }
                     }
@@ -608,7 +692,7 @@ public class MainWindowController implements Initializable {
                             setText("");
                         } else{
                             Font timeLabelFont = this.getFont();
-                            this.setFont(new Font("System Regular", 22*scalingFactor));
+                            this.setFont(new Font("System Regular", 18*scalingFactor));
                             setText(item.toString());
                         }
                     }

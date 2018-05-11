@@ -40,8 +40,8 @@
    <rowConstraints>
       <RowConstraints maxHeight="27.0" minHeight="27.0" prefHeight="27.0" vgrow="NEVER" />
       <RowConstraints maxHeight="33.0" minHeight="33.0" prefHeight="33.0" vgrow="NEVER" />
-      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="273.0" prefHeight="273.0" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="100.0" prefHeight="100.0" vgrow="NEVER" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="213.0" prefHeight="213.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="166.0" minHeight="166.0" prefHeight="166.0" vgrow="NEVER" />
       <RowConstraints maxHeight="130.0" minHeight="130.0" prefHeight="130.0" vgrow="NEVER" />
       <RowConstraints maxHeight="34.0" minHeight="34.0" prefHeight="34.0" vgrow="NEVER" />
    </rowConstraints>
@@ -140,6 +140,8 @@
           <RowConstraints maxHeight="34.0" minHeight="34.0" prefHeight="34.0" vgrow="SOMETIMES" />
           <RowConstraints maxHeight="33.0" minHeight="33.0" prefHeight="33.0" vgrow="SOMETIMES" />
           <RowConstraints maxHeight="33.0" minHeight="33.0" prefHeight="33.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="33.0" minHeight="33.0" prefHeight="33.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="33.0" minHeight="33.0" prefHeight="33.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
             <Label fx:id="actionsLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Akcje" GridPane.columnSpan="4">
@@ -147,20 +149,42 @@
                   <Font name="System Bold" size="15.0" />
                </font>
             </Label>
-            <Button fx:id="playButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onPlayButtonPressed" text="⏵" GridPane.rowIndex="1" />
-            <Button fx:id="stopButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onStopButtonPressed" text="⏹" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <Button fx:id="pauseButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onPauseButtonPressed" text="⏸" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-            <Button fx:id="skipButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onSkipButtonPressed" text="⏭" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-            <Button fx:id="quitGameButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onQuitGameButtonPressed" text="Zakończ i wróc do menu" GridPane.columnSpan="4" GridPane.rowIndex="2">
+            <Button fx:id="playButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onPlayButtonPressed" text="⏵" GridPane.rowIndex="2" />
+            <Button fx:id="stopButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onStopButtonPressed" text="⏹" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <Button fx:id="pauseButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onPauseButtonPressed" text="⏸" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+            <Button fx:id="skipButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onSkipButtonPressed" text="⏭" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+            <Button fx:id="quitGameButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onQuitGameButtonPressed" text="Zakończ i wróc do menu" GridPane.columnSpan="4" GridPane.rowIndex="1">
                <font>
                   <Font size="15.0" />
                </font>
             </Button>
-            <Button fx:id="skipRequestButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onSkipRequestButtonPressed" text="Poproś o pominięcie" GridPane.columnSpan="4" GridPane.rowIndex="1">
+            <Button fx:id="skipRequestButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onSkipRequestButtonPressed" text="Poproś o pominięcie" GridPane.columnSpan="4" GridPane.rowIndex="2">
                <font>
                   <Font size="15.0" />
                </font>
             </Button>
+            <Slider fx:id="numberOfTurnsSlider" blockIncrement="1.0" majorTickUnit="1.0" max="9.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" min="1.0" minorTickCount="1" showTickMarks="true" value="3.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="3" />
+            <Label fx:id="numberOfTurnsLabelLabel" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Liczba tur :" GridPane.rowIndex="3">
+               <font>
+                  <Font name="System Bold" size="15.0" />
+               </font>
+            </Label>
+            <Label fx:id="numberOfTurnsLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="3" GridPane.columnIndex="1" GridPane.rowIndex="3">
+               <font>
+                  <Font name="System Bold" size="15.0" />
+               </font>
+            </Label>
+            <Label fx:id="subTurnTimeLabelLabel" alignment="CENTER_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Czas rys. :" GridPane.rowIndex="4">
+               <font>
+                  <Font name="System Bold" size="15.0" />
+               </font>
+            </Label>
+            <Label fx:id="subTurnTimeLabel" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="90" GridPane.columnIndex="1" GridPane.rowIndex="4">
+               <font>
+                  <Font name="System Bold" size="15.0" />
+               </font>
+            </Label>
+            <Slider fx:id="subTurnTimeSlider" blockIncrement="1.0" majorTickUnit="5.0" max="60.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" min="2.0" minorTickCount="1" showTickMarks="true" snapToTicks="true" value="18.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="4" />
          </children>
       </GridPane>
       <Slider fx:id="colorBrightnessSlider" blockIncrement="16.0" majorTickUnit="16.0" max="255.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minorTickCount="0" showTickMarks="true" style="-fx-border-color: #C8C8C8; -fx-border-width: 0 2 2 2;" GridPane.columnIndex="5" GridPane.rowIndex="1" />

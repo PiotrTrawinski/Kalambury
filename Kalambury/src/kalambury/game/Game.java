@@ -14,11 +14,10 @@ public class Game {
     private final ObservableList<Player> players;
     private final List<Integer> playersIdSequence;
     private final int round;
-    private final int maxPoints;
     private final int numberOfFullTurns;
+    private final int subTurnTime;
     private int currentSubTurn;
     private int currentTurn;
-    private final int maxTimeSeconds;
     private String currentPassword;
     private int currentlyDrawingUserID;
     private final int NO_ID = -1;
@@ -27,11 +26,10 @@ public class Game {
     long winnerTime;
     int winnerId = NO_ID;
     
-    public Game(int maxPoints, int maxTimeSeconds, int numberOfFullTurns, ObservableList<Player> players){
-        this.maxTimeSeconds = maxTimeSeconds;
-        this.maxPoints = maxPoints;
+    public Game(int numberOfFullTurns, int subTurnTime, ObservableList<Player> players){
         this.round = 0;
         this.numberOfFullTurns = numberOfFullTurns;
+        this.subTurnTime = subTurnTime;
         this.players = players;
         currentlyDrawingUserID = NO_ID;
         playersIdSequence = new ArrayList<>();
@@ -78,7 +76,7 @@ public class Game {
     }
     
     public int getTurnTime(){
-        return maxTimeSeconds;
+        return subTurnTime;
     }
     
     public String chooseNextPassword(){

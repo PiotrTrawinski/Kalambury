@@ -424,17 +424,17 @@ public class Server {
     /*
         initializing/controlling the game
     */
-    public static void startGame(){
+    public static void startGame(int numberOfTurns, int subTurnTime){
         if(gamePaused){
             // continue the previous unfinished game
             gameNextTurn();
         } else {
             // create new game
-            game = new Game(600, 90, 3, controller.getPlayers());
+            game = new Game(numberOfTurns, subTurnTime, controller.getPlayers());
             game.start();
             gamePaused = false;
             addLastMessageToHandle(new ServerMessage(
-                new GameStartedData(3, Client.getTime()),
+                new GameStartedData(numberOfTurns, Client.getTime()),
                 ServerMessage.ReceiverType.All
             ));
             int drawingPlayerId = game.chooseNextPlayer();
