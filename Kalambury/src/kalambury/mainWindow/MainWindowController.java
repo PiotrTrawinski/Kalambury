@@ -655,18 +655,18 @@ public class MainWindowController implements Initializable {
         });
         
         // drawing tools
-        Image penImage = new Image(getClass().getResourceAsStream("images/pencil2.png"));
+        Image penImage = new Image(getClass().getResourceAsStream("images/pencil.png"));
         ImageView penImageView = new ImageView(penImage);
         penImageView.setFitHeight(30*scalingFactor);
         penImageView.setFitWidth(30*scalingFactor);
         pencilButton.setGraphic(penImageView);
         pencilButton.setStyle("-fx-background-color: #AAAAAA;");
-        Image bucketImage = new Image(getClass().getResourceAsStream("images/bucket2.png"));
+        Image bucketImage = new Image(getClass().getResourceAsStream("images/bucket.png"));
         ImageView bucketImageView = new ImageView(bucketImage);
         bucketImageView.setFitHeight(30*scalingFactor);
         bucketImageView.setFitWidth(30*scalingFactor);
         bucketButton.setGraphic(bucketImageView);
-        Image colorPickerImage = new Image(getClass().getResourceAsStream("images/colorPicker2.png"));
+        Image colorPickerImage = new Image(getClass().getResourceAsStream("images/colorPicker.png"));
         ImageView colorPickerImageView = new ImageView(colorPickerImage);
         colorPickerImageView.setFitHeight(30*scalingFactor);
         colorPickerImageView.setFitWidth(30*scalingFactor);
