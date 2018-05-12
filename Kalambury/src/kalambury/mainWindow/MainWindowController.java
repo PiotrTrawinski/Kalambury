@@ -571,8 +571,8 @@ public class MainWindowController implements Initializable {
         rowCon2.setPrefHeight((int)(166*scalingFactor));
         
         RowConstraints rowCon3 = gridPane.getRowConstraints().get(2);
-        rowCon3.setMinHeight((int)(213*scalingFactor));
-        rowCon3.setPrefHeight((int)(213*scalingFactor));
+        rowCon3.setMinHeight((int)(207*scalingFactor));
+        rowCon3.setPrefHeight((int)(207*scalingFactor));
     }
     public void setupClient(){
         // client has skip request button
