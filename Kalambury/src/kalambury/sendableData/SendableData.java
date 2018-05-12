@@ -27,6 +27,7 @@ public abstract class SendableData {
         case TurnStarted:      return new TurnStartedData(in);
         case PlayerQuit:       return new PlayerQuitData(in);
         case GameStarted:      return new GameStartedData(in);
+        case SkipRequest:      return new SkipRequestData(in);
         default:               return new SendableSignal(type, in);
         }
     }

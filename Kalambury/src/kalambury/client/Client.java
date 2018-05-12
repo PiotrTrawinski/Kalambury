@@ -30,6 +30,7 @@ import kalambury.sendableData.TimeData;
 import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
 import kalambury.sendableData.GameStartedData;
+import kalambury.sendableData.SkipRequestData;
 import kalambury.server.Server;
 
 
@@ -275,7 +276,7 @@ public class Client {
         case GameStoppedSignal: controller.gameStopped((SendableSignal)data);     break;
         case GameStarted:       controller.gameStarted((GameStartedData)data);    break;
         case TurnSkippedSignal: controller.turnSkipped((SendableSignal)data);     break;
-        case SkipRequestSignal: controller.skipRequest((SendableSignal)data);     break;
+        case SkipRequest:       controller.skipRequest((SkipRequestData)data);    break;
         case PlayerQuit:        controller.playerQuit((PlayerQuitData)data);      break;
         case GamePausedSignal:  controller.gamePaused((SendableSignal)data);      break;
         case TurnTimeOutSignal: controller.turnTimeOut((SendableSignal)data);     break;
@@ -305,8 +306,8 @@ public class Client {
         }
     }
  
-    public static void skipRequest(){
-        appendToSend(new SendableSignal(DataType.SkipRequestSignal, Client.getTime()));
+    public static void skipRequest(String nickName){
+        appendToSend(new SkipRequestData(nickName, Client.getTime()));
     }
     
     
