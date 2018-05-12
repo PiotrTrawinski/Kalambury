@@ -4,6 +4,8 @@ import java.util.concurrent.TimeUnit;
 import kalambury.sendableData.SendableData;
 import kalambury.sendableData.ChatMessageData;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
@@ -30,6 +32,15 @@ public class Chat {
         userInput.setFont(this.font);
         this.logPane.focusedProperty().addListener((observable,  oldValue,  newValue) -> {
             this.userInput.requestFocus();
+        });
+        userInput.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (userInput.getText().length() > 80) {
+                    String s = userInput.getText().substring(0, 80);
+                    userInput.setText(s);
+                }
+            }
         });
         
         this.log.prefWidthProperty().bind(this.logPane.widthProperty());

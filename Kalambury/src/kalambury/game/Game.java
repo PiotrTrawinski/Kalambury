@@ -13,7 +13,6 @@ public class Game {
     private final int pointsForGuess = 8;
     private final ObservableList<Player> players;
     private final List<Integer> playersIdSequence;
-    private final int round;
     private final int numberOfFullTurns;
     private final int subTurnTime;
     private int currentSubTurn;
@@ -27,7 +26,6 @@ public class Game {
     int winnerId = NO_ID;
     
     public Game(int numberOfFullTurns, int subTurnTime, ObservableList<Player> players){
-        this.round = 0;
         this.numberOfFullTurns = numberOfFullTurns;
         this.subTurnTime = subTurnTime;
         this.players = players;
