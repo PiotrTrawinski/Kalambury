@@ -2,6 +2,7 @@ package kalambury.welcomeWindow;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -30,12 +31,13 @@ public class WelcomeWindowController implements Initializable {
     public void onCreateGameClicked(){
         kalambury.getMainWindowController().setupHost();
         Server.initialize(Integer.parseInt(textfield_port.getText()));
-        label_info.setText("Connecting...");
+        setStatus("Próbuje się połączyć...");
         Client.initialize(
             textfield_ip.getText(), 
             Integer.parseInt(textfield_port.getText()), 
             textfield_nick.getText(),
             this::switchToMainStage,
+            this::setStatus,
             true
         );
     }
@@ -43,18 +45,19 @@ public class WelcomeWindowController implements Initializable {
     
     public void onJoinGameClicked(){
         kalambury.getMainWindowController().setupClient();
-        label_info.setText("Connecting...");
+        setStatus("Próbuje się połączyć...");
         Client.initialize(
             textfield_ip.getText(), 
             Integer.parseInt(textfield_port.getText()), 
             textfield_nick.getText(),
             this::switchToMainStage,
+            this::setStatus,
             false
         );
     }
     
     private void switchToMainStage(){
-        label_info.setText("Connection established");
+        setStatus("Udało się połączyć");
         
         // open main window
         try{
@@ -67,7 +70,13 @@ public class WelcomeWindowController implements Initializable {
         // close old window
         Stage stage = (Stage) label_create_game.getScene().getWindow();
         stage.close();
-        label_info.setText("Info");
+        setStatus("Info");
+    }
+    
+    private void setStatus(String status){
+        Platform.runLater(() -> {
+            label_info.setText(status);
+        });
     }
     
     

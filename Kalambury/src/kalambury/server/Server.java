@@ -48,8 +48,7 @@ public class Server {
     private static final Lock messagesToHandleMutex = new ReentrantLock(true);
     
     // array with connected clients
-    private static ArrayList<ClientSocket> clients;
-    private static volatile int clientsCount;
+    private static volatile ArrayList<ClientSocket> clients;
     private static final Lock clientsInMutex = new ReentrantLock(true);
     private static final Lock clientsOutMutex = new ReentrantLock(true);
     private static Integer port = null;
@@ -68,7 +67,6 @@ public class Server {
         //set the port that server is working on, and start it on a new thread
         Server.port = port;
         acceptEndSignalCount = -1;
-        clientsCount = 0;
         messagesToHandle = new ArrayDeque<>();
         clients = new ArrayList<>();
         game = null;
@@ -178,17 +176,15 @@ public class Server {
             clientSocket.send(new SendableSignal(DataType.JoinRejectSignal, Client.getTime()));
             return;
         }
-        clients.add(clientSocket);
-        clients.get(clientsCount).send(new SendableSignal(DataType.JoinAcceptSignal, Client.getTime()));
+        clientSocket.send(new SendableSignal(DataType.JoinAcceptSignal, Client.getTime()));
         
-        NewPlayerData newPlayerData = (NewPlayerData)clients.get(clientsCount).receive();
+        NewPlayerData newPlayerData = (NewPlayerData)clientSocket.receive();
         newPlayerData.id = createNewId();
         newPlayerData.time = Client.getTime();
-        playerIndexes.put(newPlayerData.id, clientsCount);
+        playerIndexes.put(newPlayerData.id, clients.size());
         StartServerData startServerData = new StartServerData(controller.getPlayers(), Client.getTime());
-        addLastMessageToHandle(new ServerMessage(startServerData, ServerMessage.ReceiverType.One, clientsCount));
-
-        clientsCount++;
+        clients.add(clientSocket);
+        addLastMessageToHandle(new ServerMessage(startServerData, ServerMessage.ReceiverType.One, clients.size()-1));
 
         addLastMessageToHandle(new ServerMessage(newPlayerData, ServerMessage.ReceiverType.All));
     }
@@ -220,7 +216,6 @@ public class Server {
                 playerIndexes.put(getPlayerId(i+1), i);
             }
             clients.remove(clients.size()-1);
-            clientsCount--;
         } finally{
             clientsInMutex.unlock();
             clientsOutMutex.unlock();
@@ -271,7 +266,7 @@ public class Server {
     private static void sendTo(SendableData data, int clientIndex){
         try{
             clientsOutMutex.lock();
-            if(clientIndex < clientsCount){
+            if(clientIndex < clients.size()){
                 clients.get(clientIndex).send(data);
             }
         }
@@ -282,14 +277,14 @@ public class Server {
         }
     }
     private static void sendExcept(SendableData data, int exceptIndex){
-        for(int i = 0; i < clientsCount; i++){
+        for(int i = 0; i < clients.size(); i++){
             if(i != exceptIndex){
                 sendTo(data, i);
             }
         }
     }
     private static void sendAll(SendableData data){
-        for(int i = 0; i < clientsCount; i++){
+        for(int i = 0; i < clients.size(); i++){
             sendTo(data, i);
         }
     }
@@ -317,7 +312,7 @@ public class Server {
             break;
         }case TurnEndedAcceptSignal:{
             acceptEndSignalCount++;
-            if(acceptEndSignalCount == clientsCount){
+            if(acceptEndSignalCount == clients.size()){
                 // everyone accepted that turn has ended
                 acceptEndSignalCount = -1;
                 String winnerNick = game.endTurn();
@@ -385,10 +380,10 @@ public class Server {
     public static void handleIncomingData(){
         while(!Thread.interrupted()){
             boolean hadData = false;
-            for(int i = 0; i < clientsCount; i++){
+            for(int i = 0; i < clients.size(); i++){
                 try{
                     clientsInMutex.lock();
-                    if(i < clientsCount && clients.get(i).hasDataToReceive()){
+                    if(i < clients.size() && clients.get(i).hasDataToReceive()){
                         hadData = true;
                         
                         //receive messsage and send it to all clients except the sender
