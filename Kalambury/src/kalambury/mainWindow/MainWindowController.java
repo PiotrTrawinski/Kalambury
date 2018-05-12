@@ -45,6 +45,7 @@ import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.NewPlayerData;
 import kalambury.sendableData.PlayerQuitData;
 import kalambury.sendableData.SendableSignal;
+import kalambury.sendableData.SkipRequestData;
 import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
@@ -200,12 +201,13 @@ public class MainWindowController implements Initializable {
         client specific buttons clicked 
     */
     @FXML public void onSkipRequestButtonPressed(){
+        skipRequestButton.setDisable(true);
         chat.handleNewSystemMessage(new SystemMessage(
             "Poprosiłeś o pominięcie tury",
             Client.getTime(),
             SystemMessageType.Information
         ));
-        Client.skipRequest();
+        Client.skipRequest(Client.getNick());
     }
     
     
@@ -263,9 +265,9 @@ public class MainWindowController implements Initializable {
             SystemMessageType.Information
         ));
     }
-    public void skipRequest(SendableSignal signal){
+    public void skipRequest(SkipRequestData srd){
         chat.handleNewSystemMessage(new SystemMessage(
-            "Gracz poprosił o pominięcie tury", signal.time, SystemMessageType.Information
+            srd.nickName + " poprosił o pominięcie tury", srd.time, SystemMessageType.Information
         ));
     }
     public void turnSkipped(SendableSignal signal){
@@ -335,6 +337,7 @@ public class MainWindowController implements Initializable {
         Platform.runLater(() -> {
             drawingBoard.setDisable(true);
             skipButton.setDisable(true);
+            skipRequestButton.setDisable(true);
             timeLabel.setNew(0, 0);
         });
         updateDrawingPlayer(-1);
@@ -355,6 +358,7 @@ public class MainWindowController implements Initializable {
     public void turnStarted(TurnStartedData tsd){
         Platform.runLater(() -> {
             turnLabel.nextTurn();
+            skipRequestButton.setDisable(false);
             skipButton.setDisable(false);
         });
         drawingBoard.clear();
@@ -588,6 +592,7 @@ public class MainWindowController implements Initializable {
         actionsGridPane.getChildren().remove(subTurnTimeLabel);
         actionsGridPane.getChildren().remove(subTurnTimeSlider);
         actionsGridPane.getChildren().add(skipRequestButton);
+        skipRequestButton.setDisable(true);
         
         RowConstraints rowCon = actionsGridPane.getRowConstraints().get(3);
         rowCon.setMinHeight(0);
