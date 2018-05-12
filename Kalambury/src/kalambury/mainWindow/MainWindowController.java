@@ -601,7 +601,7 @@ public class MainWindowController implements Initializable {
         
         // thicknessSlider
         thicknessSlider.valueProperty().addListener(new ChangeListener<Number>() {
-            public void changed(ObservableValue<? extends Number> ov, Number oldValue, Number newValue){
+            @Override public void changed(ObservableValue<? extends Number> ov, Number oldValue, Number newValue){
                 thicknessLabel.setText(Integer.toString(newValue.intValue()));
                 drawingBoard.setLineThickness(newValue.intValue());
             }
@@ -609,14 +609,14 @@ public class MainWindowController implements Initializable {
         
         // numberOfTurnsSlider
         numberOfTurnsSlider.valueProperty().addListener(new ChangeListener<Number>() {
-            public void changed(ObservableValue<? extends Number> ov, Number oldValue, Number newValue){
+            @Override public void changed(ObservableValue<? extends Number> ov, Number oldValue, Number newValue){
                 numberOfTurnsLabel.setText(Integer.toString(newValue.intValue()));
             }
         });
         
         // subTurnTimeSlider
         subTurnTimeSlider.valueProperty().addListener(new ChangeListener<Number>() {
-            public void changed(ObservableValue<? extends Number> ov, Number oldValue, Number newValue){
+            @Override public void changed(ObservableValue<? extends Number> ov, Number oldValue, Number newValue){
                 subTurnTimeLabel.setText(Integer.toString(newValue.intValue()*5));
             }
         });
