@@ -389,16 +389,7 @@ public class MainWindowController implements Initializable {
         });
         setPassword(null);
     }
-    
-    
-    /*
-        seperate thread for time-showing label to update
-    */
-    public void startTimeLabelThread(){
-        Thread timeLabelThread = new Thread(()->timeLabel.startUpdating());
-        timeLabelThread.setDaemon(true);
-        timeLabelThread.start();
-    }
+
     
     
     public ObservableList<Player> getPlayers(){
@@ -590,7 +581,8 @@ public class MainWindowController implements Initializable {
         scalingFactor = width/1366.0;
         scaleWidgetsToScreen();
   
-        startTimeLabelThread();
+        // timeLabel
+        timeLabel.startThread();
         
         // colorChooser
         colorWidget = new ColorWidget(
