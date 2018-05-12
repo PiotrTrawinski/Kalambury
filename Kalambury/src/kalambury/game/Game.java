@@ -79,6 +79,10 @@ public class Game {
         return subTurnTime;
     }
     
+    public int playersSequenceSize(){
+        return playersIdSequence.size();
+    }
+    
     public String chooseNextPassword(){
         currentPassword = randomGenerator.chooseRandom();
         return currentPassword;

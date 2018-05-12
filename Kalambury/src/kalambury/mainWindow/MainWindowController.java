@@ -181,7 +181,7 @@ public class MainWindowController implements Initializable {
     }
     @FXML public void onStopButtonPressed(){
         Server.stopGame();
-        playButton.setDisable(false);
+        playButton.setDisable(players.size() < 2);
         pauseButton.setDisable(true);
         stopButton.setDisable(true);
         skipButton.setDisable(true);
@@ -236,9 +236,6 @@ public class MainWindowController implements Initializable {
         });
     }
     public void playerQuit(PlayerQuitData pqd){
-        Platform.runLater(() -> {
-            turnLabel.setNumberOfSubTurns(players.size());
-        });
         Player player = players.get(pqd.index);
         chat.handleNewSystemMessage(new SystemMessage(
             "Gracz " + player.getNickName() + " wyszedł z gry",
@@ -246,6 +243,10 @@ public class MainWindowController implements Initializable {
             SystemMessageType.Information
         ));
         players.remove(player);
+        Platform.runLater(() -> {
+            turnLabel.setNumberOfSubTurns(players.size());
+            playButton.setDisable(players.size() < 2);
+        });
     }
     public void turnTimeOut(SendableSignal signal){
         Platform.runLater(() -> {
@@ -287,7 +288,7 @@ public class MainWindowController implements Initializable {
         Platform.runLater(() -> {
             drawingBoard.setDisable(true);
             timeLabel.setNew(0, 0);
-            playButton.setDisable(false);
+            playButton.setDisable(players.size() < 2);
             pauseButton.setDisable(true);
             stopButton.setDisable(true);
             skipButton.setDisable(true);
@@ -326,10 +327,14 @@ public class MainWindowController implements Initializable {
             drawingBoard.setDisable(true);
             numberOfTurnsSlider.setDisable(false);
             subTurnTimeSlider.setDisable(false);
+            playButton.setDisable(players.size() < 2);
+            pauseButton.setDisable(true);
+            stopButton.setDisable(true);
+            skipButton.setDisable(true);
         });
         updateDrawingPlayer(-1);
         chat.handleNewSystemMessage(new SystemMessage(
-            "Gra została zakończona przez hosta", signal.time, SystemMessageType.Information
+            "Gra została zakończona", signal.time, SystemMessageType.Information
         ));
         timeLabel.setNew(0, 0);
     }
@@ -383,6 +388,9 @@ public class MainWindowController implements Initializable {
     }
     public void newPlayer(NewPlayerData npd){
         players.add(new Player(npd.nickName, 0, npd.id));
+        Platform.runLater(() -> {
+            playButton.setDisable(players.size() < 2);
+        });
         chat.handleNewSystemMessage(new SystemMessage(
             npd.nickName + " dołączył do gry",
             npd.time,
@@ -531,7 +539,7 @@ public class MainWindowController implements Initializable {
     public void setupHost(){
         Server.setController(this);
         
-        playButton.setDisable(false);
+        playButton.setDisable(true);
         pauseButton.setDisable(true);
         stopButton.setDisable(true);
         skipButton.setDisable(true);
