@@ -21,7 +21,10 @@ public enum DataType {
     TimeAcceptSignal(18),
     GameEndedSignal(19),
     GamePausedSignal(20),
-    TurnTimeOutSignal(21);
+    TurnTimeOutSignal(21),
+    JoinRequestSignal(22),
+    JoinAcceptSignal(23),
+    JoinRejectSignal(24);
    
     private final int value;
     private DataType(int value) {

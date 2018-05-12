@@ -80,7 +80,6 @@ public class Client {
         Client.port = port;
         Client.nick = (!nick.equals("") ? nick : "???");
         Client.isHostFlag = isHost;
-        
         // try to connect to the server
         Task<Void> serverConnectTask = new ServerConnectTask(ip, port);
         executor = Executors.newSingleThreadExecutor();
@@ -88,9 +87,24 @@ public class Client {
         
         // when succesfully connect - complete initialization
         serverConnectTask.setOnSucceeded(event->{
+            executor.shutdown();
             if(Client.isSocketSet()){
-                executor.shutdown();
-                
+                sendData(new SendableSignal(DataType.JoinRequestSignal, Client.getTime()));
+                SendableData joinData;
+                try {
+                    joinData = SendableData.receive(in);
+                } catch (IOException ex) {
+                    return;
+                }
+                if(joinData.getType() != DataType.JoinAcceptSignal){
+                    try {
+                        in.close();
+                        out.close();
+                        socket.close();
+                    } catch (IOException ex) {}
+                    socket = null;
+                    return;
+                }
                 // initialize queue for data transfer
                 dataToSend = new ArrayDeque<>();
 
@@ -163,12 +177,14 @@ public class Client {
         } catch (InterruptedException ex) {}
         
         // close connection
-        try {
-            in.close();
-            out.close();
-            socket.close();
-        } catch (IOException ex) {}
-        socket = null;
+        if(socket != null){
+            try {
+                in.close();
+                out.close();
+                socket.close();
+            } catch (IOException ex) {}
+            socket = null;
+        }
         
         Server.quit();
  

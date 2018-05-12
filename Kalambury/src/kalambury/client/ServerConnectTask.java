@@ -18,9 +18,8 @@ public class ServerConnectTask extends Task<Void> {
          try{
             Socket socket = new Socket(ip, port);
             Client.setSocket(socket);
-        }catch(IOException ex){
-            System.out.println(ex.getMessage());
-        }
+        }catch(IOException ex){}
+         
          return null;
     }
 }

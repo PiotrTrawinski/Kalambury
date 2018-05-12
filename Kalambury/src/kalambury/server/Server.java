@@ -171,8 +171,16 @@ public class Server {
         Accepting the new clients
     */
     private static void acceptNewClient(Socket socket) throws IOException{
-        clients.add(new ClientSocket(socket));
-
+        ClientSocket clientSocket = new ClientSocket(socket);
+        
+        clientSocket.receive();
+        if(game != null){
+            clientSocket.send(new SendableSignal(DataType.JoinRejectSignal, Client.getTime()));
+            return;
+        }
+        clients.add(clientSocket);
+        clients.get(clientsCount).send(new SendableSignal(DataType.JoinAcceptSignal, Client.getTime()));
+        
         NewPlayerData newPlayerData = (NewPlayerData)clients.get(clientsCount).receive();
         newPlayerData.id = createNewId();
         newPlayerData.time = Client.getTime();
