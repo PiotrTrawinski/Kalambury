@@ -15,6 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import javafx.concurrent.Task;
 import kalambury.Kalambury;
 import kalambury.mainWindow.MainWindowController;
@@ -73,7 +74,8 @@ public class Client {
     
     public static void initialize(
             String ip, int port, String nick, 
-            Runnable switchToMainStage, boolean isHost
+            Runnable switchToMainStage, Consumer<String> setStatus, 
+            boolean isHost
     ){
         // save parameters
         Client.ip = ip;
@@ -84,53 +86,58 @@ public class Client {
         Task<Void> serverConnectTask = new ServerConnectTask(ip, port);
         executor = Executors.newSingleThreadExecutor();
         executor.submit(serverConnectTask);
-        
         // when succesfully connect - complete initialization
         serverConnectTask.setOnSucceeded(event->{
             executor.shutdown();
-            if(Client.isSocketSet()){
-                sendData(new SendableSignal(DataType.JoinRequestSignal, Client.getTime()));
-                SendableData joinData;
-                try {
-                    joinData = SendableData.receive(in);
-                } catch (IOException ex) {
-                    return;
-                }
-                if(joinData.getType() != DataType.JoinAcceptSignal){
-                    try {
-                        in.close();
-                        out.close();
-                        socket.close();
-                    } catch (IOException ex) {}
-                    socket = null;
-                    return;
-                }
-                // initialize queue for data transfer
-                dataToSend = new ArrayDeque<>();
-
-                // initialize thread for time synchronization
-                timeThreadObject = new Thread(() -> Client.timeThread());
-                timeThreadObject.setDaemon(true);
-                timeThreadObject.setPriority(MAX_PRIORITY);
-                timeThreadObject.start();
-                
-                // initialize thread for listening the server
-                listenThread = new Thread(() -> Client.listening());
-                listenThread.setDaemon(true);
-                listenThread.start();
-                
-                // initialize thread for sending the data to the server
-                sendThread = new Thread(() -> Client.sending());
-                sendThread.setDaemon(true);
-                sendThread.start();
-                
-                // send your info to the server; id will be set by server, client has no idea of it
-                NewPlayerData newPlayerData = new NewPlayerData(Client.nick, -1, Client.getTime());
-                appendToSend(newPlayerData);
-                
-                // fully connected - switch to the main window
-                switchToMainStage.run();
+            
+            if(!Client.isSocketSet()){
+                setStatus.accept("Nie udało się połączyć z serwerem");
+                return;
             }
+            
+            sendData(new SendableSignal(DataType.JoinRequestSignal, Client.getTime()));
+            SendableData joinData;
+            try {
+                joinData = SendableData.receive(in);
+            } catch (IOException ex) {
+                setStatus.accept("Nie udało się połączyć z serwerem");
+                return;
+            }
+            if(joinData.getType() != DataType.JoinAcceptSignal){
+                try {
+                    in.close();
+                    out.close();
+                    socket.close();
+                } catch (IOException ex) {}
+                socket = null;
+                setStatus.accept("Nie można się połączyć - gra w trakcie");
+                return;
+            }
+            // initialize queue for data transfer
+            dataToSend = new ArrayDeque<>();
+
+            // initialize thread for time synchronization
+            timeThreadObject = new Thread(() -> Client.timeThread());
+            timeThreadObject.setDaemon(true);
+            timeThreadObject.setPriority(MAX_PRIORITY);
+            timeThreadObject.start();
+
+            // initialize thread for listening the server
+            listenThread = new Thread(() -> Client.listening());
+            listenThread.setDaemon(true);
+            listenThread.start();
+
+            // initialize thread for sending the data to the server
+            sendThread = new Thread(() -> Client.sending());
+            sendThread.setDaemon(true);
+            sendThread.start();
+
+            // send your info to the server; id will be set by server, client has no idea of it
+            NewPlayerData newPlayerData = new NewPlayerData(Client.nick, -1, Client.getTime());
+            appendToSend(newPlayerData);
+
+            // fully connected - switch to the main window
+            switchToMainStage.run();
         });
     }
     
