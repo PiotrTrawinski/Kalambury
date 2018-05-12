@@ -1,14 +1,15 @@
 package kalambury.game;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Random;
 
 public class RandomFileReader {
-    private File file;
-    private String path;
-    private char separator;
-    private Random rand = new Random();
+    private final File file;
+    private final String path;
+    private final char separator;
+    private final Random rand = new Random();
     public RandomFileReader(String path,char separator){
         this.file = new File(path);
         this.path = path;
@@ -24,7 +25,7 @@ public class RandomFileReader {
             f.seek(pos);
             byte read;
             if(pos != 0){
-                while((read = f.readByte()) != separator){
+                while(f.readByte() != separator){
                     f.seek(f.getFilePointer() - 2);
                     if(f.getFilePointer() == 0){
                         break;
@@ -39,9 +40,9 @@ public class RandomFileReader {
             ret = new String(wordRead, "UTF-8");
             ret = ret.trim();
         }
-        catch(Exception ex){
+        catch(IOException ex){
             System.out.println(ex.getMessage());
-        };
+        }
 
         return ret;
     }

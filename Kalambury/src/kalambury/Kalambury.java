@@ -44,6 +44,8 @@ public class Kalambury extends Application {
         welcomeStage.show();
         welcomeStage.setMinHeight(stage.getHeight());
         welcomeStage.setMinWidth(stage.getWidth());
+        welcomeStage.setMaxHeight(stage.getHeight());
+        welcomeStage.setMaxWidth(stage.getWidth());
     }
     
     
@@ -62,6 +64,8 @@ public class Kalambury extends Application {
             welcomeStage.show();
             welcomeStage.setMinHeight(welcomeStage.getHeight());
             welcomeStage.setMinWidth(welcomeStage.getWidth());
+            welcomeStage.setMaxHeight(welcomeStage.getHeight());
+            welcomeStage.setMaxWidth(welcomeStage.getWidth());
         });
     }
     

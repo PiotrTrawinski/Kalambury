@@ -165,18 +165,7 @@ public class Chat {
         Text timeText = getTimeText(systemMessage.time);
         Text statusText = getStatusText("SYSTEM");
         Text nickText = getEmptyText();
-        Text messageText;
-        switch(systemMessage.type){
-        case Information:
-            messageText = getMessageText(" " + systemMessage.message, Color.DARKGREEN);
-            break;
-        case Error:
-            messageText = getMessageText(" " + systemMessage.message, Color.RED);
-            break;
-        default:
-            messageText = getEmptyText();
-            break;
-        }
+        Text messageText = getMessageText(" " + systemMessage.message, Color.DARKGREEN);
         Text exactTimeText = getExactTimeText(systemMessage.time);
         addTextNodesToCorrectTimePlace(timeText, statusText, nickText, messageText, exactTimeText);
     }

@@ -206,7 +206,7 @@ public class Server {
     private static void removeClient(int clientIndex){
         int playerId = getPlayerId(clientIndex);
         if(game != null){
-            game.removePlayerFromSequence(playerId);  
+            game.removePlayerFromSequence(playerId);
         }
         clientsInMutex.lock();
         clientsOutMutex.lock();
@@ -223,6 +223,10 @@ public class Server {
         addLastMessageToHandle(
             new ServerMessage(new PlayerQuitData(clientIndex, Client.getTime()), ServerMessage.ReceiverType.All)
         );
+        if(game != null && game.playersSequenceSize() < 2){
+            stopGame();
+            game = null;
+        }
         if(game != null && playerId == game.getDrawingPlayerId()){
             skipTurn();
         }

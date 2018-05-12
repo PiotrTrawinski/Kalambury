@@ -41,7 +41,7 @@ public class ColorWidget {
         colorChooserTable = new Color[(int)chooser.getWidth()*(int)chooser.getHeight()];
         
         brightnessSlider.valueProperty().addListener(new ChangeListener<Number>() {
-            public void changed(ObservableValue<? extends Number> ov, Number oldValue, Number newValue){
+            @Override public void changed(ObservableValue<? extends Number> ov, Number oldValue, Number newValue){
                 updateChosenColor();
             }
         });

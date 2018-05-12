@@ -29,12 +29,20 @@ public class WelcomeWindowController implements Initializable {
     }
     
     public void onCreateGameClicked(){
+        int port;
+        try{
+            port = Integer.parseInt(textfield_port.getText());
+        } catch (NumberFormatException ex){
+            setStatus("port jest niepoprawny");
+            return;
+        }
+        
         kalambury.getMainWindowController().setupHost();
-        Server.initialize(Integer.parseInt(textfield_port.getText()));
+        Server.initialize(port);
         setStatus("Próbuje się połączyć...");
         Client.initialize(
             textfield_ip.getText(), 
-            Integer.parseInt(textfield_port.getText()), 
+            port, 
             textfield_nick.getText(),
             this::switchToMainStage,
             this::setStatus,
@@ -44,11 +52,20 @@ public class WelcomeWindowController implements Initializable {
     
     
     public void onJoinGameClicked(){
+        
+        int port;
+        try{
+            port = Integer.parseInt(textfield_port.getText());
+        } catch (NumberFormatException ex){
+            setStatus("port jest niepoprawny");
+            return;
+        }
+        
         kalambury.getMainWindowController().setupClient();
         setStatus("Próbuje się połączyć...");
         Client.initialize(
             textfield_ip.getText(), 
-            Integer.parseInt(textfield_port.getText()), 
+            port, 
             textfield_nick.getText(),
             this::switchToMainStage,
             this::setStatus,
