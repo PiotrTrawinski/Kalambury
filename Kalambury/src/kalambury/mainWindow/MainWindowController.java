@@ -51,7 +51,6 @@ import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
 import kalambury.server.Server;
 import kalambury.server.SystemMessage;
-import kalambury.server.SystemMessageType;
 
 
 public class MainWindowController implements Initializable {
@@ -203,9 +202,7 @@ public class MainWindowController implements Initializable {
     @FXML public void onSkipRequestButtonPressed(){
         skipRequestButton.setDisable(true);
         chat.handleNewSystemMessage(new SystemMessage(
-            "Poprosiłeś o pominięcie tury",
-            Client.getTime(),
-            SystemMessageType.Information
+            "Poprosiłeś o pominięcie tury", Client.getTime()
         ));
         Client.skipRequest(Client.getNick());
     }
@@ -238,9 +235,7 @@ public class MainWindowController implements Initializable {
     public void playerQuit(PlayerQuitData pqd){
         Player player = players.get(pqd.index);
         chat.handleNewSystemMessage(new SystemMessage(
-            "Gracz " + player.getNickName() + " wyszedł z gry",
-            pqd.time,
-            SystemMessageType.Information
+            "Gracz " + player.getNickName() + " wyszedł z gry", pqd.time
         ));
         players.remove(player);
         Platform.runLater(() -> {
@@ -255,21 +250,13 @@ public class MainWindowController implements Initializable {
             timeLabel.setNew(0, 0);
         });
         updateDrawingPlayer(-1);
-        chat.handleNewSystemMessage(new SystemMessage(
-            "Koniec czasu! Nikt nie zgadł hasła", signal.time, SystemMessageType.Information
-        ));
+        chat.handleNewSystemMessage(new SystemMessage("Koniec czasu! Nikt nie zgadł hasła", signal.time));
     }
     public void gamePaused(SendableSignal signal){
-        chat.handleNewSystemMessage(new SystemMessage(
-            "Gra zostanie wstrzymana po tej turze",
-            signal.time,
-            SystemMessageType.Information
-        ));
+        chat.handleNewSystemMessage(new SystemMessage("Gra zostanie wstrzymana po tej turze", signal.time));
     }
     public void skipRequest(SkipRequestData srd){
-        chat.handleNewSystemMessage(new SystemMessage(
-            srd.nickName + " poprosił o pominięcie tury", srd.time, SystemMessageType.Information
-        ));
+        chat.handleNewSystemMessage(new SystemMessage(srd.nickName + " poprosił o pominięcie tury", srd.time));
     }
     public void turnSkipped(SendableSignal signal){
         Platform.runLater(() -> {
@@ -278,11 +265,7 @@ public class MainWindowController implements Initializable {
             timeLabel.setNew(0, 0);
         });
         updateDrawingPlayer(-1);
-        chat.handleNewSystemMessage(new SystemMessage(
-            "Tura została pominięta",
-            signal.time,
-            SystemMessageType.Information
-        ));
+        chat.handleNewSystemMessage(new SystemMessage("Tura została pominięta", signal.time));
     }
     public void gameEnded(SendableSignal signal){
         Platform.runLater(() -> {
@@ -307,17 +290,13 @@ public class MainWindowController implements Initializable {
                 results += "\n";
             }
         }
-        chat.handleNewSystemMessage(new SystemMessage(
-            "Gra została zakończona. Wyniki:\n"+results, signal.time, SystemMessageType.Information
-        ));
+        chat.handleNewSystemMessage(new SystemMessage("Gra została zakończona. Wyniki:\n"+results, signal.time));
     }
     public void gameStarted(GameStartedData gsd){
         Platform.runLater(() -> {
             turnLabel.start(players.size(), gsd.numberOfTurns);
         });
-        chat.handleNewSystemMessage(new SystemMessage(
-            "Gra została rozpoczęta", gsd.time, SystemMessageType.Information
-        ));
+        chat.handleNewSystemMessage(new SystemMessage("Gra została rozpoczęta", gsd.time));
         for(int i = 0; i < players.size(); ++i){
             players.get(i).setScore(0);
         }
@@ -333,9 +312,7 @@ public class MainWindowController implements Initializable {
             skipButton.setDisable(true);
         });
         updateDrawingPlayer(-1);
-        chat.handleNewSystemMessage(new SystemMessage(
-            "Gra została zakończona", signal.time, SystemMessageType.Information
-        ));
+        chat.handleNewSystemMessage(new SystemMessage("Gra została zakończona", signal.time));
         timeLabel.setNew(0, 0);
     }
     public void turnEndedSignal(SendableSignal signal){
@@ -346,16 +323,10 @@ public class MainWindowController implements Initializable {
             timeLabel.setNew(0, 0);
         });
         updateDrawingPlayer(-1);
-        chat.handleNewSystemMessage(new SystemMessage(
-            "Koniec tury!", signal.time, SystemMessageType.Information
-        ));
+        chat.handleNewSystemMessage(new SystemMessage("Koniec tury!", signal.time));
     }
     public void turnEnded(TurnEndedData ted){
-        chat.handleNewSystemMessage(new SystemMessage(
-            ted.winnerNickName + " wygrał!",
-            ted.time,
-            SystemMessageType.Information
-        ));
+        chat.handleNewSystemMessage(new SystemMessage(ted.winnerNickName + " wygrał!", ted.time));
         for(int i = 0; i < players.size(); ++i){
             players.get(i).setScore(ted.updatedScores.get(i));
         }
@@ -371,19 +342,11 @@ public class MainWindowController implements Initializable {
         updateDrawingPlayer(tsd.drawingPlayerId);
         if(tsd.isDrawing){
             drawingBoard.setDisable(false);
-            chat.handleNewSystemMessage(new SystemMessage(
-                "Rysuj hasło!",
-                tsd.startTime,
-                SystemMessageType.Information
-            ));
+            chat.handleNewSystemMessage(new SystemMessage("Rysuj hasło!", tsd.startTime));
         } else {
             drawingBoard.setDisable(true);
             setPassword(null);
-            chat.handleNewSystemMessage(new SystemMessage(
-                "Zgaduj hasło!",
-                tsd.startTime,
-                SystemMessageType.Information
-            ));
+            chat.handleNewSystemMessage(new SystemMessage("Zgaduj hasło!", tsd.startTime));
         }
     }
     public void newPlayer(NewPlayerData npd){
@@ -391,11 +354,7 @@ public class MainWindowController implements Initializable {
         Platform.runLater(() -> {
             playButton.setDisable(players.size() < 2);
         });
-        chat.handleNewSystemMessage(new SystemMessage(
-            npd.nickName + " dołączył do gry",
-            npd.time,
-            SystemMessageType.Information
-        ));
+        chat.handleNewSystemMessage(new SystemMessage(npd.nickName + " dołączył do gry", npd.time));
     }
     public void floodFill(FloodFillData ffd){
         drawingBoard.floodFillRemote(ffd);
