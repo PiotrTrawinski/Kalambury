@@ -431,7 +431,7 @@ public class Server {
                 Thread.currentThread().interrupt();
             }
             timeData.time = System.currentTimeMillis() - startTime;
-            if(game!=null && turnStartTime!=-1 && (timeData.time - turnStartTime)/1000 > game.getTurnTime()){
+            if(game!=null && turnStartTime!=-1 && (timeData.time - turnStartTime)/1000.0 > game.getTurnTime()){
                 addFirstMessageToHandle(new ServerMessage(
                     new SendableSignal(DataType.TurnTimeOutSignal, Client.getTime()), ServerMessage.ReceiverType.All)
                 );
