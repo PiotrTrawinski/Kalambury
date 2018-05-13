@@ -44,7 +44,7 @@ public class Server {
     private static Thread timeThreadObject;
     
     // array for the data that should be send by sendOutDataThread
-     private static volatile ArrayDeque<ServerMessage>  messagesToHandle;
+    private static volatile ArrayDeque<ServerMessage>  messagesToHandle;
     private static final Lock messagesToHandleMutex = new ReentrantLock(true);
     
     // array with connected clients

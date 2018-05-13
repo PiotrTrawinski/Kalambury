@@ -9,10 +9,16 @@ import kalambury.client.Client;
 public class TimeLabel extends Label{
     private long startTime = 0;
     private long timePeriod = 0;
-    
+    private final Thread thread;
     
     public TimeLabel(){
         super();
+        thread = new Thread(()->startUpdating());
+        thread.setDaemon(true);
+    }
+    
+    public void startThread(){
+        thread.start();
     }
     
     public void setNew(long startTime, long timePeriodInSeconds){
@@ -20,7 +26,7 @@ public class TimeLabel extends Label{
         this.timePeriod = timePeriodInSeconds;
     }
     
-    public void startUpdating(){
+    private void startUpdating(){
         while(true){
             long time = timePeriod*1000 + startTime - Client.getTime();
             String stringTime;

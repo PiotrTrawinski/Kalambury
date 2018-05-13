@@ -1,7 +1,6 @@
 package kalambury.client;
 
 import kalambury.sendableData.SendableData;
-import kalambury.sendableData.ChatMessageData;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -20,17 +19,10 @@ import javafx.concurrent.Task;
 import kalambury.Kalambury;
 import kalambury.mainWindow.MainWindowController;
 import kalambury.sendableData.DataType;
-import kalambury.sendableData.FloodFillData;
-import kalambury.sendableData.GamePasswordData;
-import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.NewPlayerData;
-import kalambury.sendableData.PlayerQuitData;
 import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TimeData;
-import kalambury.sendableData.TurnEndedData;
-import kalambury.sendableData.TurnStartedData;
-import kalambury.sendableData.GameStartedData;
 import kalambury.sendableData.SkipRequestData;
 import kalambury.server.Server;
 
@@ -268,10 +260,10 @@ public class Client {
     */
     
     private static void menageReceivedData(SendableData data){
+        controller.addDataToHandle(data);
         switch(data.getType()){
         case StartServerData:
             StartServerData ssd = (StartServerData)data;
-            controller.startInfoFromServer(ssd);
             time = ssd.time;
             break;
         case Time:
@@ -281,29 +273,11 @@ public class Client {
             timeBeforeSleep = System.currentTimeMillis();
             time = syncTime;
             break;
-        case GameEndedSignal:
-            controller.gameEnded((SendableSignal)data);
-            appendToSend(new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()));
-            break;
         case TurnEndedSignal:   
-            controller.turnEndedSignal((SendableSignal)data); 
             appendToSend(new SendableSignal(DataType.TurnEndedAcceptSignal, Client.getTime()));
             break;
-        case ChatMessage:       controller.chatMessage((ChatMessageData)data);    break;
-        case LineDraw:          controller.lineDraw((LineDrawData)data);          break;
-        case FloodFill:         controller.floodFill((FloodFillData)data);        break;
-        case NewPlayerData:     controller.newPlayer((NewPlayerData)data);        break;
-        case TurnStarted:       controller.turnStarted((TurnStartedData)data);    break;
-        case GamePassword:      controller.setPassword((GamePasswordData)data);   break;
-        case TurnEndedData:     controller.turnEnded((TurnEndedData)data);        break;
-        case GameStoppedSignal: controller.gameStopped((SendableSignal)data);     break;
-        case GameStarted:       controller.gameStarted((GameStartedData)data);    break;
-        case TurnSkippedSignal: controller.turnSkipped((SendableSignal)data);     break;
-        case SkipRequest:       controller.skipRequest((SkipRequestData)data);    break;
-        case PlayerQuit:        controller.playerQuit((PlayerQuitData)data);      break;
-        case GamePausedSignal:  controller.gamePaused((SendableSignal)data);      break;
-        case TurnTimeOutSignal: controller.turnTimeOut((SendableSignal)data);     break;
-        default: break;
+        default: 
+            break;
         }
     }
     

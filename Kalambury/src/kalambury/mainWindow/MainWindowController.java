@@ -6,7 +6,11 @@ import kalambury.mainWindow.drawingBoard.ColorWidget;
 import kalambury.mainWindow.drawingBoard.DrawingBoard;
 import kalambury.mainWindow.drawingBoard.DrawingTool;
 import java.net.URL;
+import java.util.ArrayDeque;
 import java.util.ResourceBundle;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -44,6 +48,7 @@ import kalambury.sendableData.GameStartedData;
 import kalambury.sendableData.LineDrawData;
 import kalambury.sendableData.NewPlayerData;
 import kalambury.sendableData.PlayerQuitData;
+import kalambury.sendableData.SendableData;
 import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.SkipRequestData;
 import kalambury.sendableData.StartServerData;
@@ -116,6 +121,9 @@ public class MainWindowController implements Initializable {
     private Chat chat;
     private static final ObservableList<Player> players = FXCollections.observableArrayList();
     
+    private Thread handleDataThread;
+    private volatile ArrayDeque<SendableData> dataToHandle;
+    private final Lock dataToHandleMutex = new ReentrantLock(true);
     
     /*
         Mouse events
@@ -212,6 +220,7 @@ public class MainWindowController implements Initializable {
         buttons clicked
     */
     @FXML public void onQuitGameButtonPressed(){
+        dataToHandle.clear();
         Client.quit();
     }
     
@@ -227,146 +236,208 @@ public class MainWindowController implements Initializable {
     /*
         update depending on data received from server
     */
+    public void addDataToHandle(SendableData data){
+        dataToHandleMutex.lock();
+        try {
+            dataToHandle.addLast(data);
+        } finally {
+            dataToHandleMutex.unlock();
+        }
+    }
+    private SendableData getDataToHandle(){
+        dataToHandleMutex.lock();
+        SendableData data = null;
+        try {
+            data = dataToHandle.removeFirst();
+        } finally {
+            dataToHandleMutex.unlock();
+        }
+        return data;
+    }
+    
+    private void handleData(SendableData data){
+        switch(data.getType()){
+        case StartServerData:{
+            StartServerData ssd = (StartServerData)data;
+            players.addAll(ssd.players);
+            break;
+        }case GameEndedSignal:{
+            SendableSignal signal = (SendableSignal)data;
+            Platform.runLater(() -> {
+                drawingBoard.setDisable(true);
+                timeLabel.setNew(0, 0);
+                playButton.setDisable(players.size() < 2);
+                pauseButton.setDisable(true);
+                stopButton.setDisable(true);
+                skipButton.setDisable(true);
+                numberOfTurnsSlider.setDisable(false);
+                subTurnTimeSlider.setDisable(false);
+            });
+            updateDrawingPlayer(-1);
+
+            String results = new String();
+            for(int j = 0; j < players.size(); ++j){
+                for(int i = 0; i < 19; ++i){
+                    results += " ";
+                }
+                results += players.get(j).getNickName() + ": " + Integer.toString(players.get(j).getScore());
+                if(j != players.size() - 1){
+                    results += "\n";
+                }
+            }
+            chat.handleNewSystemMessage(new SystemMessage("Gra została zakończona. Wyniki:\n"+results, signal.time));
+            break;
+        }case TurnEndedSignal:  { 
+            SendableSignal signal = (SendableSignal)data;
+            Platform.runLater(() -> {
+                drawingBoard.setDisable(true);
+                skipButton.setDisable(true);
+                skipRequestButton.setDisable(true);
+                timeLabel.setNew(0, 0);
+            });
+            updateDrawingPlayer(-1);
+            chat.handleNewSystemMessage(new SystemMessage("Koniec tury!", signal.time));
+            break;
+        }case ChatMessage:{
+            ChatMessageData cmd = (ChatMessageData)data;
+            chat.handleNewServerMessage(cmd);
+            break;
+        }case LineDraw:{
+            LineDrawData ldd = (LineDrawData)data;
+            drawingBoard.drawLineRemote(ldd);
+            break;
+        }case FloodFill:{
+            FloodFillData ffd = (FloodFillData)data;
+            drawingBoard.floodFillRemote(ffd);
+            break;
+        }case NewPlayerData:{
+            NewPlayerData npd = (NewPlayerData)data;
+            players.add(new Player(npd.nickName, 0, npd.id));
+            Platform.runLater(() -> {
+                playButton.setDisable(players.size() < 2);
+            });
+            chat.handleNewSystemMessage(new SystemMessage(npd.nickName + " dołączył do gry", npd.time));
+            break;
+        }case TurnStarted:{
+            TurnStartedData tsd = (TurnStartedData)data;
+            Platform.runLater(() -> {
+                turnLabel.nextTurn();
+                skipRequestButton.setDisable(false);
+                skipButton.setDisable(false);
+            });
+            drawingBoard.clear();
+            timeLabel.setNew(tsd.startTime, tsd.turnTime);
+            updateDrawingPlayer(tsd.drawingPlayerId);
+            if(tsd.isDrawing){
+                drawingBoard.setDisable(false);
+                chat.handleNewSystemMessage(new SystemMessage("Rysuj hasło!", tsd.startTime));
+            } else {
+                drawingBoard.setDisable(true);
+                setPassword(null);
+                chat.handleNewSystemMessage(new SystemMessage("Zgaduj hasło!", tsd.startTime));
+            }
+            break;
+        }case GamePassword:{  
+            setPassword((GamePasswordData)data);
+            break;
+        }case TurnEndedData:{ 
+            TurnEndedData ted = (TurnEndedData)data;
+            chat.handleNewSystemMessage(new SystemMessage(ted.winnerNickName + " wygrał!", ted.time));
+            for(int i = 0; i < players.size(); ++i){
+                players.get(i).setScore(ted.updatedScores.get(i));
+            }
+            break;
+        }case GameStoppedSignal:{
+            SendableSignal signal = (SendableSignal)data;
+                Platform.runLater(() -> {
+                drawingBoard.setDisable(true);
+                numberOfTurnsSlider.setDisable(false);
+                subTurnTimeSlider.setDisable(false);
+                playButton.setDisable(players.size() < 2);
+                pauseButton.setDisable(true);
+                stopButton.setDisable(true);
+                skipButton.setDisable(true);
+            });
+            updateDrawingPlayer(-1);
+            chat.handleNewSystemMessage(new SystemMessage("Gra została zakończona", signal.time));
+            timeLabel.setNew(0, 0);
+            break;
+        }case GameStarted:{ 
+            GameStartedData gsd = (GameStartedData)data;
+            Platform.runLater(() -> {
+                turnLabel.start(players.size(), gsd.numberOfTurns);
+            });
+            chat.handleNewSystemMessage(new SystemMessage("Gra została rozpoczęta", gsd.time));
+            for(int i = 0; i < players.size(); ++i){
+                players.get(i).setScore(0);
+            }
+            break;
+        }case TurnSkippedSignal:{
+            SendableSignal signal = (SendableSignal)data;
+            Platform.runLater(() -> {
+                drawingBoard.setDisable(true);
+                skipButton.setDisable(true);
+                timeLabel.setNew(0, 0);
+            });
+            updateDrawingPlayer(-1);
+            chat.handleNewSystemMessage(new SystemMessage("Tura została pominięta", signal.time));
+            break;
+        }case SkipRequest:{
+            SkipRequestData srd = (SkipRequestData)data;
+            chat.handleNewSystemMessage(new SystemMessage(srd.nickName + " poprosił o pominięcie tury", srd.time));
+            break;
+        }case PlayerQuit:{
+            PlayerQuitData pqd = (PlayerQuitData)data;
+            Player player = players.get(pqd.index);
+            chat.handleNewSystemMessage(new SystemMessage(
+                "Gracz " + player.getNickName() + " wyszedł z gry", pqd.time
+            ));
+            players.remove(player);
+            Platform.runLater(() -> {
+                turnLabel.setNumberOfSubTurns(players.size());
+                playButton.setDisable(players.size() < 2);
+            });
+            break;
+        }case GamePausedSignal:{
+            SendableSignal signal = (SendableSignal)data;
+            chat.handleNewSystemMessage(new SystemMessage("Gra zostanie wstrzymana po tej turze", signal.time));
+            break;
+        }case TurnTimeOutSignal:{
+            SendableSignal signal = (SendableSignal)data;
+            Platform.runLater(() -> {
+                drawingBoard.setDisable(true);
+                skipButton.setDisable(true);
+                timeLabel.setNew(0, 0);
+            });
+            updateDrawingPlayer(-1);
+            chat.handleNewSystemMessage(new SystemMessage("Koniec czasu! Nikt nie zgadł hasła", signal.time));
+            break;
+        }default:
+            break;
+        }
+    }
+    
+    private void handleIncomingData(){
+        while(!Thread.interrupted()){
+            while(dataToHandle.size() > 0){
+                SendableData data = getDataToHandle();
+                if(data != null){
+                    handleData(data);
+                }
+            }
+            try {
+                TimeUnit.MILLISECONDS.sleep(5);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+    
     public void setPassword(GamePasswordData gpd){
         Platform.runLater(() -> {
             passwordLabel.setText(gpd != null ? gpd.password : "???");
         });
-    }
-    public void playerQuit(PlayerQuitData pqd){
-        Player player = players.get(pqd.index);
-        chat.handleNewSystemMessage(new SystemMessage(
-            "Gracz " + player.getNickName() + " wyszedł z gry", pqd.time
-        ));
-        players.remove(player);
-        Platform.runLater(() -> {
-            turnLabel.setNumberOfSubTurns(players.size());
-            playButton.setDisable(players.size() < 2);
-        });
-    }
-    public void turnTimeOut(SendableSignal signal){
-        Platform.runLater(() -> {
-            drawingBoard.setDisable(true);
-            skipButton.setDisable(true);
-            timeLabel.setNew(0, 0);
-        });
-        updateDrawingPlayer(-1);
-        chat.handleNewSystemMessage(new SystemMessage("Koniec czasu! Nikt nie zgadł hasła", signal.time));
-    }
-    public void gamePaused(SendableSignal signal){
-        chat.handleNewSystemMessage(new SystemMessage("Gra zostanie wstrzymana po tej turze", signal.time));
-    }
-    public void skipRequest(SkipRequestData srd){
-        chat.handleNewSystemMessage(new SystemMessage(srd.nickName + " poprosił o pominięcie tury", srd.time));
-    }
-    public void turnSkipped(SendableSignal signal){
-        Platform.runLater(() -> {
-            drawingBoard.setDisable(true);
-            skipButton.setDisable(true);
-            timeLabel.setNew(0, 0);
-        });
-        updateDrawingPlayer(-1);
-        chat.handleNewSystemMessage(new SystemMessage("Tura została pominięta", signal.time));
-    }
-    public void gameEnded(SendableSignal signal){
-        Platform.runLater(() -> {
-            drawingBoard.setDisable(true);
-            timeLabel.setNew(0, 0);
-            playButton.setDisable(players.size() < 2);
-            pauseButton.setDisable(true);
-            stopButton.setDisable(true);
-            skipButton.setDisable(true);
-            numberOfTurnsSlider.setDisable(false);
-            subTurnTimeSlider.setDisable(false);
-        });
-        updateDrawingPlayer(-1);
-        
-        String results = new String();
-        for(int j = 0; j < players.size(); ++j){
-            for(int i = 0; i < 19; ++i){
-                results += " ";
-            }
-            results += players.get(j).getNickName() + ": " + Integer.toString(players.get(j).getScore());
-            if(j != players.size() - 1){
-                results += "\n";
-            }
-        }
-        chat.handleNewSystemMessage(new SystemMessage("Gra została zakończona. Wyniki:\n"+results, signal.time));
-    }
-    public void gameStarted(GameStartedData gsd){
-        Platform.runLater(() -> {
-            turnLabel.start(players.size(), gsd.numberOfTurns);
-        });
-        chat.handleNewSystemMessage(new SystemMessage("Gra została rozpoczęta", gsd.time));
-        for(int i = 0; i < players.size(); ++i){
-            players.get(i).setScore(0);
-        }
-    }
-    public void gameStopped(SendableSignal signal){
-        Platform.runLater(() -> {
-            drawingBoard.setDisable(true);
-            numberOfTurnsSlider.setDisable(false);
-            subTurnTimeSlider.setDisable(false);
-            playButton.setDisable(players.size() < 2);
-            pauseButton.setDisable(true);
-            stopButton.setDisable(true);
-            skipButton.setDisable(true);
-        });
-        updateDrawingPlayer(-1);
-        chat.handleNewSystemMessage(new SystemMessage("Gra została zakończona", signal.time));
-        timeLabel.setNew(0, 0);
-    }
-    public void turnEndedSignal(SendableSignal signal){
-        Platform.runLater(() -> {
-            drawingBoard.setDisable(true);
-            skipButton.setDisable(true);
-            skipRequestButton.setDisable(true);
-            timeLabel.setNew(0, 0);
-        });
-        updateDrawingPlayer(-1);
-        chat.handleNewSystemMessage(new SystemMessage("Koniec tury!", signal.time));
-    }
-    public void turnEnded(TurnEndedData ted){
-        chat.handleNewSystemMessage(new SystemMessage(ted.winnerNickName + " wygrał!", ted.time));
-        for(int i = 0; i < players.size(); ++i){
-            players.get(i).setScore(ted.updatedScores.get(i));
-        }
-    }
-    public void turnStarted(TurnStartedData tsd){
-        Platform.runLater(() -> {
-            turnLabel.nextTurn();
-            skipRequestButton.setDisable(false);
-            skipButton.setDisable(false);
-        });
-        drawingBoard.clear();
-        timeLabel.setNew(tsd.startTime, tsd.turnTime);
-        updateDrawingPlayer(tsd.drawingPlayerId);
-        if(tsd.isDrawing){
-            drawingBoard.setDisable(false);
-            chat.handleNewSystemMessage(new SystemMessage("Rysuj hasło!", tsd.startTime));
-        } else {
-            drawingBoard.setDisable(true);
-            setPassword(null);
-            chat.handleNewSystemMessage(new SystemMessage("Zgaduj hasło!", tsd.startTime));
-        }
-    }
-    public void newPlayer(NewPlayerData npd){
-        players.add(new Player(npd.nickName, 0, npd.id));
-        Platform.runLater(() -> {
-            playButton.setDisable(players.size() < 2);
-        });
-        chat.handleNewSystemMessage(new SystemMessage(npd.nickName + " dołączył do gry", npd.time));
-    }
-    public void floodFill(FloodFillData ffd){
-        drawingBoard.floodFillRemote(ffd);
-    }
-    public void lineDraw(LineDrawData ldd){
-        drawingBoard.drawLineRemote(ldd);
-    }
-    public void chatMessage(ChatMessageData cmd){
-        chat.handleNewServerMessage(cmd);
-    }
-    public void startInfoFromServer(StartServerData ssd){
-        players.addAll(ssd.players);
     }
     private void updateDrawingPlayer(int drawingId){
         for(int i = 0; i < players.size(); ++i){
@@ -389,16 +460,7 @@ public class MainWindowController implements Initializable {
         });
         setPassword(null);
     }
-    
-    
-    /*
-        seperate thread for time-showing label to update
-    */
-    public void startTimeLabelThread(){
-        Thread timeLabelThread = new Thread(()->timeLabel.startUpdating());
-        timeLabelThread.setDaemon(true);
-        timeLabelThread.start();
-    }
+
     
     
     public ObservableList<Player> getPlayers(){
@@ -590,7 +652,13 @@ public class MainWindowController implements Initializable {
         scalingFactor = width/1366.0;
         scaleWidgetsToScreen();
   
-        startTimeLabelThread();
+        dataToHandle = new ArrayDeque<>();
+        handleDataThread = new Thread(() -> handleIncomingData());
+        handleDataThread.setDaemon(true);
+        handleDataThread.start();
+        
+        // timeLabel
+        timeLabel.startThread();
         
         // colorChooser
         colorWidget = new ColorWidget(
