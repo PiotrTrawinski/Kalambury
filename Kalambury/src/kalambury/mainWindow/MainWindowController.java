@@ -54,6 +54,7 @@ import kalambury.sendableData.SkipRequestData;
 import kalambury.sendableData.StartServerData;
 import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
+import kalambury.sendableData.TurnTimeOutData;
 import kalambury.server.Server;
 import kalambury.server.SystemMessage;
 
@@ -406,15 +407,15 @@ public class MainWindowController implements Initializable {
             SendableSignal signal = (SendableSignal)data;
             chat.handleNewSystemMessage(new SystemMessage("Gra zostanie wstrzymana po tej turze", signal.time));
             break;
-        }case TurnTimeOutSignal:{
-            SendableSignal signal = (SendableSignal)data;
+        }case TurnTimeOut:{
+            TurnTimeOutData ttod = (TurnTimeOutData)data;
             Platform.runLater(() -> {
                 drawingBoard.setDisable(true);
                 skipButton.setDisable(true);
             });
             timeLabel.setNew(0, 0);
             updateDrawingPlayer(-1);
-            chat.handleNewSystemMessage(new SystemMessage("Koniec czasu! Nikt nie zgadł hasła", signal.time));
+            chat.handleNewSystemMessage(new SystemMessage("Koniec czasu! Poprawne haslo: "+ttod.password, ttod.time));
             break;
         }default:
             break;
