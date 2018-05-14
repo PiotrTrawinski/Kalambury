@@ -30,7 +30,7 @@ public class TimeLabel extends Label{
         while(true){
             long time = timePeriod*1000 + startTime - Client.getTime();
             String stringTime;
-            
+
             if(time > 0){
                 stringTime = String.format("%02d:%02d", 
                     TimeUnit.MILLISECONDS.toMinutes(time),
