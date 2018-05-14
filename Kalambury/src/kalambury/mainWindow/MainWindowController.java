@@ -196,7 +196,6 @@ public class MainWindowController implements Initializable {
     }
     @FXML public void onPauseButtonPressed(){
         Server.pauseGame();
-        playButton.setDisable(false);
         pauseButton.setDisable(true);
         stopButton.setDisable(false);
         skipButton.setDisable(false);
@@ -291,6 +290,7 @@ public class MainWindowController implements Initializable {
         }case TurnEndedSignal:  { 
             SendableSignal signal = (SendableSignal)data;
             Platform.runLater(() -> {
+                playButton.setDisable(false);
                 drawingBoard.setDisable(true);
                 skipButton.setDisable(true);
                 skipRequestButton.setDisable(true);
@@ -325,6 +325,7 @@ public class MainWindowController implements Initializable {
                 turnLabel.nextTurn();
                 skipRequestButton.setDisable(false);
                 skipButton.setDisable(false);
+                playButton.setDisable(true);
             });
             drawingBoard.clear();
             timeLabel.setNew(tsd.startTime, tsd.turnTime);
@@ -382,6 +383,7 @@ public class MainWindowController implements Initializable {
             Platform.runLater(() -> {
                 drawingBoard.setDisable(true);
                 skipButton.setDisable(true);
+                playButton.setDisable(false);
             });
             timeLabel.setNew(0, 0);
             updateDrawingPlayer(-1);
@@ -412,6 +414,7 @@ public class MainWindowController implements Initializable {
             Platform.runLater(() -> {
                 drawingBoard.setDisable(true);
                 skipButton.setDisable(true);
+                playButton.setDisable(false);
             });
             timeLabel.setNew(0, 0);
             updateDrawingPlayer(-1);
