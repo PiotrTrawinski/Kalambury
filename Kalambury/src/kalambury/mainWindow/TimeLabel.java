@@ -7,8 +7,8 @@ import kalambury.client.Client;
 
 
 public class TimeLabel extends Label{
-    private long startTime = 0;
-    private long timePeriod = 0;
+    private volatile long startTime = 0;
+    private volatile long timePeriod = 0;
     private final Thread thread;
     
     public TimeLabel(){

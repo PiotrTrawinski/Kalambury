@@ -329,10 +329,14 @@ public class MainWindowController implements Initializable {
             timeLabel.setNew(tsd.startTime, tsd.turnTime);
             updateDrawingPlayer(tsd.drawingPlayerId);
             if(tsd.isDrawing){
-                drawingBoard.setDisable(false);
+                Platform.runLater(() -> {
+                    drawingBoard.setDisable(false);
+                });
                 chat.handleNewSystemMessage(new SystemMessage("Rysuj hasło!", tsd.startTime));
             } else {
-                drawingBoard.setDisable(true);
+                Platform.runLater(() -> {
+                    drawingBoard.setDisable(true);
+                });
                 setPassword(null);
                 chat.handleNewSystemMessage(new SystemMessage("Zgaduj hasło!", tsd.startTime));
             }
@@ -706,6 +710,31 @@ public class MainWindowController implements Initializable {
         colorPickerImageView.setFitHeight(30*scalingFactor);
         colorPickerImageView.setFitWidth(30*scalingFactor);
         colorPickerButton.setGraphic(colorPickerImageView);
+        
+        // host buttons
+        Image playImage = new Image(getClass().getResourceAsStream("images/play.png"));
+        ImageView playImageView = new ImageView(playImage);
+        playImageView.setFitHeight(20*scalingFactor);
+        playImageView.setFitWidth(20*scalingFactor);
+        playButton.setGraphic(playImageView);
+        
+        Image stopImage = new Image(getClass().getResourceAsStream("images/stop.png"));
+        ImageView stopImageView = new ImageView(stopImage);
+        stopImageView.setFitHeight(20*scalingFactor);
+        stopImageView.setFitWidth(20*scalingFactor);
+        stopButton.setGraphic(stopImageView);
+        
+        Image pauseImage = new Image(getClass().getResourceAsStream("images/pause.png"));
+        ImageView pauseImageView = new ImageView(pauseImage);
+        pauseImageView.setFitHeight(20*scalingFactor);
+        pauseImageView.setFitWidth(20*scalingFactor);
+        pauseButton.setGraphic(pauseImageView);
+        
+        Image skipImage = new Image(getClass().getResourceAsStream("images/skip.png"));
+        ImageView skipImageView = new ImageView(skipImage);
+        skipImageView.setFitHeight(20*scalingFactor);
+        skipImageView.setFitWidth(20*scalingFactor);
+        skipButton.setGraphic(skipImageView);
         
         // drawingBoard
         drawingBoard.bindSize(pane.widthProperty(), pane.heightProperty());

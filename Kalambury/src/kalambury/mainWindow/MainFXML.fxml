@@ -149,10 +149,10 @@
                   <Font name="System Bold" size="15.0" />
                </font>
             </Label>
-            <Button fx:id="playButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onPlayButtonPressed" text="⏵" GridPane.rowIndex="2" />
-            <Button fx:id="stopButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onStopButtonPressed" text="⏹" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <Button fx:id="pauseButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onPauseButtonPressed" text="⏸" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-            <Button fx:id="skipButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onSkipButtonPressed" text="⏭" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+            <Button fx:id="playButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onPlayButtonPressed" text="" GridPane.rowIndex="2" />
+            <Button fx:id="stopButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onStopButtonPressed" text="" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <Button fx:id="pauseButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onPauseButtonPressed" text="" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+            <Button fx:id="skipButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onSkipButtonPressed" text="" GridPane.columnIndex="3" GridPane.rowIndex="2" />
             <Button fx:id="quitGameButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onQuitGameButtonPressed" text="Zakończ i wróc do menu" GridPane.columnSpan="4" GridPane.rowIndex="1">
                <font>
                   <Font size="15.0" />
