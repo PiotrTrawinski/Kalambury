@@ -452,6 +452,7 @@ public class Server {
         if(gamePaused){
             // continue the previous unfinished game
             gameNextTurn();
+            gamePaused = false;
         } else {
             // create new game
             game = new Game(numberOfTurns, subTurnTime, controller.getPlayers());

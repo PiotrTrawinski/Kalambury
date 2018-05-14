@@ -263,9 +263,9 @@ public class MainWindowController implements Initializable {
             break;
         }case GameEndedSignal:{
             SendableSignal signal = (SendableSignal)data;
+            timeLabel.setNew(0, 0);
             Platform.runLater(() -> {
                 drawingBoard.setDisable(true);
-                timeLabel.setNew(0, 0);
                 playButton.setDisable(players.size() < 2);
                 pauseButton.setDisable(true);
                 stopButton.setDisable(true);
@@ -293,8 +293,8 @@ public class MainWindowController implements Initializable {
                 drawingBoard.setDisable(true);
                 skipButton.setDisable(true);
                 skipRequestButton.setDisable(true);
-                timeLabel.setNew(0, 0);
             });
+            timeLabel.setNew(0, 0);
             updateDrawingPlayer(-1);
             chat.handleNewSystemMessage(new SystemMessage("Koniec tury!", signal.time));
             break;
@@ -381,8 +381,8 @@ public class MainWindowController implements Initializable {
             Platform.runLater(() -> {
                 drawingBoard.setDisable(true);
                 skipButton.setDisable(true);
-                timeLabel.setNew(0, 0);
             });
+            timeLabel.setNew(0, 0);
             updateDrawingPlayer(-1);
             chat.handleNewSystemMessage(new SystemMessage("Tura została pominięta", signal.time));
             break;
@@ -411,8 +411,8 @@ public class MainWindowController implements Initializable {
             Platform.runLater(() -> {
                 drawingBoard.setDisable(true);
                 skipButton.setDisable(true);
-                timeLabel.setNew(0, 0);
             });
+            timeLabel.setNew(0, 0);
             updateDrawingPlayer(-1);
             chat.handleNewSystemMessage(new SystemMessage("Koniec czasu! Nikt nie zgadł hasła", signal.time));
             break;
@@ -460,8 +460,8 @@ public class MainWindowController implements Initializable {
         players.clear();
         Platform.runLater(() -> {
             drawingBoard.setDisable(true);
-            timeLabel.setNew(0, 0);
         });
+        timeLabel.setNew(0, 0);
         setPassword(null);
     }
 
