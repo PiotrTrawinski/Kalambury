@@ -86,6 +86,10 @@ public class Game {
         return currentPassword;
     }
     
+    public String getPassword(){
+        return currentPassword;
+    }
+    
     public String endTurn(){
         players.get(Server.getPlayerIndex(currentlyDrawingUserID)).setScore(
             players.get(Server.getPlayerIndex(currentlyDrawingUserID)).getScore() + pointsForDrawing

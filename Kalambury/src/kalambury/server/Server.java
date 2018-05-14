@@ -28,6 +28,7 @@ import kalambury.sendableData.SendableSignal;
 import kalambury.sendableData.TimeData;
 import kalambury.sendableData.TurnEndedData;
 import kalambury.sendableData.TurnStartedData;
+import kalambury.sendableData.TurnTimeOutData;
 
 public class Server {
     // reference to controller for communication
@@ -297,7 +298,7 @@ public class Server {
         
         // some messages require specific handling 
         switch(data.getType()){
-        case TurnTimeOutSignal:
+        case TurnTimeOut:
             sendAll(data);
             if(!gamePaused){
                 gameNextTurn();
@@ -433,7 +434,7 @@ public class Server {
             timeData.time = System.currentTimeMillis() - startTime;
             if(game!=null && turnStartTime!=-1 && (timeData.time - turnStartTime)/1000.0 > game.getTurnTime()){
                 addFirstMessageToHandle(new ServerMessage(
-                    new SendableSignal(DataType.TurnTimeOutSignal, Client.getTime()), ServerMessage.ReceiverType.All)
+                    new TurnTimeOutData(Client.getTime(), game.getPassword()), ServerMessage.ReceiverType.All)
                 );
                 turnStartTime = -1;
             }
