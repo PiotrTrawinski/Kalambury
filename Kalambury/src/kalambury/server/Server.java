@@ -474,23 +474,25 @@ public class Server {
     }
     
     private static void gameNextTurn(){
-        int drawingPlayerId = game.chooseNextPlayer();
-        if(drawingPlayerId != -1){
-            int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
-            GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
-            turnStartTime = Client.getTime();
-            TurnStartedData tsd = new TurnStartedData(turnStartTime, game.getTurnTime(), true, drawingPlayerId);
-            sendTo(tsd, drawingPlayerIndex);
-            sendTo(passwordData, drawingPlayerIndex);
-            tsd.isDrawing = false;
-            sendExcept(tsd, drawingPlayerIndex);
-            gamePaused = false;
-        } else {
-            game = null;
-            addLastMessageToHandle(new ServerMessage(
-                new SendableSignal(DataType.GameEndedSignal, Client.getTime()),
-                ServerMessage.ReceiverType.All
-            ));
+        if(game != null){
+            int drawingPlayerId = game.chooseNextPlayer();
+            if(drawingPlayerId != -1){
+                int drawingPlayerIndex = getPlayerIndex(drawingPlayerId);
+                GamePasswordData passwordData = new GamePasswordData(game.chooseNextPassword());
+                turnStartTime = Client.getTime();
+                TurnStartedData tsd = new TurnStartedData(turnStartTime, game.getTurnTime(), true, drawingPlayerId);
+                sendTo(tsd, drawingPlayerIndex);
+                sendTo(passwordData, drawingPlayerIndex);
+                tsd.isDrawing = false;
+                sendExcept(tsd, drawingPlayerIndex);
+                gamePaused = false;
+            } else {
+                game = null;
+                addLastMessageToHandle(new ServerMessage(
+                    new SendableSignal(DataType.GameEndedSignal, Client.getTime()),
+                    ServerMessage.ReceiverType.All
+                ));
+            }
         }
     }
     
